@@ -391,7 +391,7 @@ Economizei.Pedido = (function() {
         var estId = est[COLUNAS.ID_UNICO];
         currentEstId = estId;
         carrinho = []; cupomDesconto = 0;
-        abrirModalPedido(nome, estId, null, null, true);
+        abrirModalPedido(nome, estId, null, null, false); // CORRIGIDO: false (não true) — com true, o modal renderiza só o spinner e nunca cria a div #produtosContainer, então quando o cardápio chega do Firestore não há onde inserir os produtos.
         Core.db.collection('lojistas').where('estabelecimentoId', '==', estId).limit(1).get()
             .then(function(snap) { if (snap.empty) { mostrarErroNoModal('Estabelecimento não configurado para pedidos.'); return; } var lojistaDoc = snap.docs[0]; currentLojistaId = lojistaDoc.id; var data = lojistaDoc.data(); atualizarStatusLojaUI(data.statusLoja || 'aberta', data.statusMessage || ''); iniciarListenersTempoReal(); })
             .catch(function(err) { mostrarErroNoModal('Erro ao carregar dados: ' + err.message); });
