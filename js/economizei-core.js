@@ -33,6 +33,30 @@
 var Economizei = Economizei || {};
 
 // ============================================================
+// DETECÇÃO DE MODO APP (mesma lógica já usada em categorias.html)
+// Adiciona a classe "modo-app" no <html> e <body> quando a página
+// está sendo aberta dentro do app (WebView) ou como PWA instalado.
+// CSS e módulos usam essa classe para reservar espaço para a barra
+// inferior do app em elementos fixos que não rolam com a página
+// (ex. rodapé de modais) — ver .modal-footer no CSS de cada página.
+// ============================================================
+(function() {
+    'use strict';
+    function isAppMode() {
+        if (window.location.search.includes('app=1') || window.location.search.includes('app=true')) return true;
+        if (window.navigator.standalone === true) return true;
+        if (window.matchMedia('(display-mode: standalone)').matches) return true;
+        var ua = navigator.userAgent.toLowerCase();
+        if (ua.includes('wv') || ua.includes('webview')) return true;
+        return false;
+    }
+    if (isAppMode()) {
+        document.documentElement.classList.add('modo-app-inicial');
+        document.addEventListener('DOMContentLoaded', function() { document.body.classList.add('modo-app'); });
+    }
+})();
+
+// ============================================================
 // MÓDULO CORE
 // ============================================================
 Economizei.Core = (function() {
