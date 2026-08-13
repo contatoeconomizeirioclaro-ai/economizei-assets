@@ -353,7 +353,17 @@ Economizei.Pedido = (function() {
         unsubscribeFretes = Core.db.collection('lojistas').doc(currentLojistaId).collection('fretes').onSnapshot(function(snap) { var fretes = []; snap.forEach(function(doc) { fretes.push({ localidade: doc.data().localidade, taxa: parseFloat(doc.data().taxa) || 0 }); }); fretesCache = fretes; var select = document.getElementById('selectFrete'); if (select) { select.innerHTML = '<option value="">Selecione o frete</option>' + fretes.map(function(f) { return '<option value="' + f.taxa + '">' + Core.sanitize(f.localidade) + ' - R$ ' + f.taxa.toFixed(2) + '</option>'; }).join('') + (fretes.length === 0 ? '<option value="0">Retirada no local - Grátis</option>' : ''); } }, function(err) { console.error('Erro no listener de fretes:', err); });
         unsubscribeSabores = Core.db.collection('lojistas').doc(currentLojistaId).collection('sabores').onSnapshot(function(snap) { saboresGlobais = []; snap.forEach(function(doc) { var data = doc.data(); saboresGlobais.push({ id: doc.id, nome: data.nome, descricao: data.descricao || '', precos: data.precos || {}, categorias: data.categorias || '', imagem: data.imagem || '' }); }); }, function(err) { console.error('Erro no listener de sabores:', err); });
         unsubscribeExtras = Core.db.collection('lojistas').doc(currentLojistaId).collection('extras').onSnapshot(function(snap) { extrasGlobais = []; snap.forEach(function(doc) { var data = doc.data(); extrasGlobais.push({ id: doc.id, nome: data.nome, preco: parseFloat(data.preco) || 0, descricao: data.descricao || '', max: data.max ? parseInt(data.max) : 0, categorias: data.categorias || '', imagem: data.imagem || '' }); }); }, function(err) { console.error('Erro no listener de extras:', err); });
-        iniciarListenerPedidos();
+        // CORRIGIDO: iniciarListenerPedidos() removido daqui. A consulta que
+        // ela faz (pedidos filtrados só por estabelecimentoId, sem filtro por
+        // codigoCurto) nunca passa nas regras de segurança do Firestore para
+        // um visitante não autenticado — Firestore rejeita a consulta inteira
+        // porque "regras não são filtros": ele não consegue garantir, a partir
+        // da própria consulta, que todo documento retornado teria
+        // codigoCurto != null, mesmo que isso seja sempre verdade na prática.
+        // A aba "Acompanhar" já resolve isso de forma compatível com a regra
+        // através do botão "Consultar" (consultarPedido), que busca por
+        // codigoCurto específico — esse SIM passa, porque o próprio filtro
+        // da consulta garante a condição da regra.
     }
 
     function pararListenerPedidos() { if (unsubscribePedidos) { unsubscribePedidos(); unsubscribePedidos = null; } listenerAtivo = false; }
