@@ -47,6 +47,32 @@ Economizei.Pedido = (function() {
     var listenerAtivo = false;
     var mesaQR = null;
     var enviandoPedido = false; // NOVO: trava contra duplo clique
+    function instalarEstilosModaisPedidos() {
+        if (document.getElementById('estilos-modais-pedidos-reais')) return;
+        var style = document.createElement('style');
+        style.id = 'estilos-modais-pedidos-reais';
+        style.textContent = '\n'
+            + '.modal-conteudo.modal-tamanhos-extras{width:min(980px,calc(100vw - 24px)) !important;max-width:980px !important;height:min(760px,calc(100vh - 24px));max-height:calc(100vh - 24px);}'
+            + '.modal-tamanhos-extras .modal-body{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:1.25rem;min-height:0;overflow-y:auto;align-items:start;}'
+            + '.modal-tamanhos-extras .pedido-opcoes-coluna{min-width:0;}'
+            + '.modal-tamanhos-extras .pedido-resumo-coluna{position:sticky;top:0;align-self:start;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:1rem;}'
+            + '.modal-tamanhos-extras #extrasContainerModal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem;margin-top:.65rem !important;}'
+            + '.modal-tamanhos-extras .item-extra{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"head controls" "desc controls";align-items:center;gap:.25rem .75rem;height:100%;padding:.75rem;border:1px solid #e2e8f0;border-radius:12px;background:#fff;}'
+            + '.modal-tamanhos-extras .item-extra .item-header{grid-area:head;min-width:0;}'
+            + '.modal-tamanhos-extras .item-extra .item-descricao{grid-area:desc;min-width:0;}'
+            + '.modal-tamanhos-extras .item-extra>div:last-child{grid-area:controls;padding:0 !important;}'
+            + '.modal-tamanhos-extras .extra-qtd{display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;}'
+            + '.modal-tamanhos-extras .extra-qtd button{width:30px;height:30px;border:1px solid #cbd5e1;border-radius:50%;background:#fff;cursor:pointer;font-size:1rem;line-height:1;}'
+            + '.modal-tamanhos-extras .extra-qtd span{min-width:1.25rem;text-align:center;font-weight:700;}'
+            + '.modal-customizacao-full{width:min(1000px,calc(100vw - 24px)) !important;max-width:1000px !important;height:min(820px,calc(100vh - 24px));max-height:calc(100vh - 24px);}'
+            + '.modal-customizacao-full .modal-body{min-height:0;overflow-y:auto;}'
+            + '.modal-customizacao-full .customizacao-layout{display:grid;grid-template-columns:minmax(220px,.85fr) minmax(0,1.65fr);gap:1.25rem;align-items:start;}'
+            + '.modal-customizacao-full .customizacao-opcoes{min-width:0;}'
+            + '.modal-customizacao-full #saboresLista,.modal-customizacao-full #extrasLista{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;}'
+            + '@media(max-width:700px){.modal-conteudo.modal-tamanhos-extras,.modal-customizacao-full{width:calc(100vw - 12px) !important;max-width:none !important;height:calc(100vh - 12px);max-height:calc(100vh - 12px);}.modal-tamanhos-extras .modal-body{display:block;padding:.75rem;}.modal-tamanhos-extras .pedido-resumo-coluna{position:static;margin-top:1rem;}.modal-tamanhos-extras #extrasContainerModal{grid-template-columns:1fr;}.modal-customizacao-full .customizacao-layout{display:block;}.modal-customizacao-full #saboresLista,.modal-customizacao-full #extrasLista{grid-template-columns:1fr;}}';
+        document.head.appendChild(style);
+    }
+    instalarEstilosModaisPedidos();
 
     // ------------------------------------------------------------
     // Registro no Core: o botão "Fazer pedido" aparece automaticamente
@@ -134,7 +160,7 @@ Economizei.Pedido = (function() {
         document.body.appendChild(overlay); UI.trapFocus(overlay);
     }
 
-    function abrirImagemProduto(prodId) { var produto = produtosCache.find(function(p) { return p.id === prodId; }); if (produto) abrirModalImagemFull(produto); else UI.mostrarToast('Produto não encontrado.'); }
+    function abrirImagemProduto(prodId) { var produto = produtosCache.find(function(p) { return p.id === prodId; }); if (!produto) { UI.mostrarToast('Produto não encontrado.'); return; } if (produto.personalizavel === true) { abrirModalCustomizacaoCompleta(produto); } else if (produto.tamanhos && Array.isArray(produto.tamanhos) && produto.tamanhos.length > 0) { abrirModalTamanhosExtras(produto); } else { abrirModalImagemFull(produto); } }
 
     function abrirModalImagemFull(produto) {
         var imagens = [produto.imagem]; if (produto.imagens && produto.imagens.length) imagens = produto.imagens.filter(function(url) { return url && url.trim() !== ''; });
@@ -196,7 +222,7 @@ Economizei.Pedido = (function() {
         else { extrasDisponiveis = extrasGlobais.filter(function(e) { if (!e.categorias || e.categorias === '') return true; var cats = e.categorias.split(',').map(function(c) { return c.trim(); }); return cats.indexOf(categoriaProduto) !== -1; }); }
         var selecaoExtras = extrasDisponiveis.map(function(e) { return Object.assign({}, e, { quantidade: 0 }); });
         var modal = document.createElement('div'); modal.className = 'modal-overlay'; modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true'); modal.setAttribute('aria-label', 'Escolher tamanho de ' + produto.nome); modal.style.display = 'flex';
-        modal.innerHTML = '<div class="modal-conteudo" style="max-width:500px;"><div class="modal-header"><h3>' + Core.sanitize(produto.nome) + '</h3><button class="btn-modal-fechar" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Fechar">✕</button></div><div class="modal-body"><div style="margin-bottom:1rem;"><strong>Tamanho</strong></div><div class="tamanho-botoes-modal" id="tamanhosContainerModal">' + tamanhos.map(function(t, index) { return '<button class="btn-tamanho-modal ' + (index === 0 ? 'ativo' : '') + '" data-tamanho="' + Core.sanitize(t.nome) + '" data-preco="' + t.preco + '">' + Core.sanitize(t.nome) + ' - R$ ' + parseFloat(t.preco).toFixed(2) + '</button>'; }).join('') + '</div><div style="margin-top:1rem;"><strong>Extras</strong></div><div id="extrasContainerModal" style="margin-top:0.5rem;">' + (selecaoExtras.length === 0 ? '<p style="text-align:center;color:var(--gray-500);">Nenhum extra disponível.</p>' : '') + '</div><div id="precoTotalTamanho" class="preco-total-custom" style="margin-top:1rem;">Total: R$ ' + parseFloat(tamanhos[0].preco).toFixed(2) + '</div></div><div class="modal-footer"><button class="btn-pedido-cta" id="btnAddTamanhoExtras">Adicionar ao carrinho</button></div></div>';
+        modal.innerHTML = '<div class="modal-conteudo modal-tamanhos-extras"><div class="modal-header"><h3>' + Core.sanitize(produto.nome) + '</h3><button class="btn-modal-fechar" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Fechar">✕</button></div><div class="modal-body"><div class="pedido-opcoes-coluna"><div style="margin-bottom:1rem;"><strong>Tamanho</strong></div><div class="tamanho-botoes-modal" id="tamanhosContainerModal">' + tamanhos.map(function(t, index) { return '<button class="btn-tamanho-modal ' + (index === 0 ? 'ativo' : '') + '" data-tamanho="' + Core.sanitize(t.nome) + '" data-preco="' + t.preco + '">' + Core.sanitize(t.nome) + ' - R$ ' + parseFloat(t.preco).toFixed(2) + '</button>'; }).join('') + '</div><div style="margin-top:1rem;"><strong>Extras</strong></div><div id="extrasContainerModal" style="margin-top:0.5rem;">' + (selecaoExtras.length === 0 ? '<p style="text-align:center;color:var(--gray-500);">Nenhum extra disponível.</p>' : '') + '</div></div><aside class="pedido-resumo-coluna"><div style="font-weight:700;margin-bottom:.5rem;">Resumo do pedido</div><div id="precoTotalTamanho" class="preco-total-custom" style="margin-top:1rem;">Total: R$ ' + parseFloat(tamanhos[0].preco).toFixed(2) + '</div></aside></div><div class="modal-footer"><button class="btn-pedido-cta" id="btnAddTamanhoExtras">Adicionar ao carrinho</button></div></div>';
         document.body.appendChild(modal); UI.trapFocus(modal);
         var extrasContainer = modal.querySelector('#extrasContainerModal');
         var tamanhosContainer = modal.querySelector('#tamanhosContainerModal');
