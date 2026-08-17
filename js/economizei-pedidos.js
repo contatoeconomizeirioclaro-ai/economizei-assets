@@ -53,7 +53,7 @@ var enviandoPedido = false; // NOVO: trava contra duplo clique
         if (document.getElementById('economizei-pedidos-layout-fixes')) return;
         var style = document.createElement('style');
         style.id = 'economizei-pedidos-layout-fixes';
-        style.textContent = '.modal-extras-responsivo{width:min(96vw,1100px)!important;max-width:none!important;max-height:92vh;display:flex;flex-direction:column}.modal-extras-responsivo .modal-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:clamp(1rem,2vw,2rem)}.modal-extras-responsivo .modal-footer{flex:0 0 auto;position:sticky;bottom:0;z-index:2;background:inherit}.modal-extras-responsivo #extrasContainerModal,.modal-extras-responsivo #extrasSimplesContainer{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:.75rem}.modal-extras-responsivo .item-extra{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"header controls" "description controls";align-items:center;gap:.25rem .75rem;padding:.75rem}.modal-extras-responsivo .item-extra .item-header{grid-area:header;min-width:0}.modal-extras-responsivo .item-extra .item-descricao{grid-area:description;min-width:0}.modal-extras-responsivo .item-extra .extra-controles-inline{grid-area:controls;padding:0!important;align-self:center}.modal-extras-responsivo .extra-qtd{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;white-space:nowrap}.modal-extras-responsivo .extra-qtd button{width:2rem;height:2rem;border-radius:50%;cursor:pointer}.modal-imagem-full .container-imagem{overflow:auto}.modal-imagem-full .lado-direito{max-height:92vh;overflow-y:auto;justify-content:flex-start!important;padding-bottom:max(1rem,env(safe-area-inset-bottom))!important}.modal-imagem-full #addImagem{flex:0 0 auto;margin-bottom:.5rem;position:sticky;bottom:0;z-index:2}@media(max-width:700px){.modal-extras-responsivo{width:100vw!important;max-width:none!important;max-height:100dvh;height:100dvh;border-radius:0!important}.modal-extras-responsivo #extrasContainerModal,.modal-extras-responsivo #extrasSimplesContainer{grid-template-columns:1fr}.modal-imagem-full .container-imagem{align-items:flex-start!important;flex-direction:column;flex-wrap:nowrap!important;overflow-y:auto}.modal-imagem-full .lado-esquerdo{flex:0 0 auto!important;width:100%;height:auto!important;max-height:48dvh}.modal-imagem-full .lado-direito{flex:0 0 auto!important;width:100%;max-height:none;height:auto!important}}';
+        style.textContent = '.modal-extras-responsivo{width:min(98vw,1400px)!important;max-width:none!important;max-height:94vh;display:flex;flex-direction:column}.modal-extras-responsivo .modal-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:clamp(1rem,2vw,2rem)}.modal-extras-responsivo .modal-footer{flex:0 0 auto;position:sticky;bottom:0;z-index:2;background:inherit}.modal-extras-responsivo #extrasContainerModal,.modal-extras-responsivo #extrasSimplesContainer{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:.75rem}.modal-extras-responsivo .item-extra{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"header controls" "description controls";align-items:center;gap:.25rem .75rem;padding:.75rem}.modal-extras-responsivo .item-extra .item-header{grid-area:header;min-width:0}.modal-extras-responsivo .item-extra .item-descricao{grid-area:description;min-width:0}.modal-extras-responsivo .item-extra .extra-controles-inline{grid-area:controls;padding:0!important;align-self:center}.modal-extras-responsivo .extra-qtd{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;white-space:nowrap}.modal-extras-responsivo .extra-qtd button{width:2rem;height:2rem;border-radius:50%;cursor:pointer}.modal-imagem-full .container-imagem{overflow:auto}.modal-imagem-full .lado-direito{max-height:92vh;overflow-y:auto;justify-content:flex-start!important;padding-bottom:max(1rem,env(safe-area-inset-bottom))!important}.modal-imagem-full #addImagem{flex:0 0 auto;margin-bottom:.5rem;position:sticky;bottom:0;z-index:2}@media(max-width:700px){.modal-extras-responsivo{width:100vw!important;max-width:none!important;max-height:100dvh;height:100dvh;border-radius:0!important}.modal-extras-responsivo #extrasContainerModal,.modal-extras-responsivo #extrasSimplesContainer{grid-template-columns:1fr}.modal-imagem-full .container-imagem{align-items:flex-start!important;flex-direction:column;flex-wrap:nowrap!important;overflow-y:auto}.modal-imagem-full .lado-esquerdo{flex:0 0 auto!important;width:100%;height:auto!important;max-height:48dvh}.modal-imagem-full .lado-direito{flex:0 0 auto!important;width:100%;max-height:none;height:auto!important}}';
         document.head.appendChild(style);
     }
     garantirEstilosModaisPedidos();
@@ -362,11 +362,21 @@ var enviandoPedido = false; // NOVO: trava contra duplo clique
         var msgDiv = document.getElementById('statusLojaMsg');
         var btnFinalizar = document.getElementById('btnFinalizarPedido');
         var bloqueado = (statusLoja === 'fechada' || statusLoja === 'pausada');
+        var mensagem = typeof statusMessage === 'string' ? statusMessage.trim() : '';
+        var temMensagem = mensagem !== '';
         statusLojaAtual = statusLoja;
         if (msgDiv) {
-            if (bloqueado) { msgDiv.style.display = 'block'; msgDiv.innerHTML = (statusLoja === 'fechada' ? '🔴 Loja fechada: ' : '🟡 Pedidos pausados: ') + Core.sanitize(statusMessage || 'Indisponível no momento.'); msgDiv.setAttribute('role', 'alert'); }
-            else { msgDiv.style.display = 'none'; }
+            if (bloqueado || temMensagem) {
+                var prefixo = statusLoja === 'fechada' ? '🔴 Loja fechada: ' : (statusLoja === 'pausada' ? '🟡 Pedidos pausados: ' : '🔵 Aviso da loja: ');
+                msgDiv.style.display = 'block';
+                msgDiv.innerHTML = prefixo + Core.sanitize(mensagem || 'Indisponível no momento.');
+                msgDiv.setAttribute('role', 'alert');
+            } else {
+                msgDiv.innerHTML = '';
+                msgDiv.style.display = 'none';
+            }
         }
+
         if (btnFinalizar) { if (bloqueado) { btnFinalizar.classList.add('disabled'); btnFinalizar.setAttribute('aria-disabled', 'true'); } else { btnFinalizar.classList.remove('disabled'); btnFinalizar.removeAttribute('aria-disabled'); } }
     }
 
