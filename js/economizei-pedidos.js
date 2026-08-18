@@ -143,6 +143,7 @@ Economizei.Pedido = (function() {
         document.body.appendChild(overlay); UI.trapFocus(overlay);
     }
 
+    function abrirProdutoPeloCard(prodId) { var produto = produtosCache.find(function(p) { return p.id === prodId; }); if (!produto) { UI.mostrarToast('Produto não encontrado.'); return; } if (produto.personalizavel === true || produto.tipo === 'personalizavel') { abrirModalCustomizacaoCompleta(produto); } else { abrirImagemProduto(prodId); } }
     function abrirImagemProduto(prodId, visualizarImagem) { var produto = produtosCache.find(function(p) { return p.id === prodId; }); if (!produto) { UI.mostrarToast('Produto não encontrado.'); return; } if ((produto.personalizavel === true || produto.tipo === 'personalizavel') && !visualizarImagem) { abrirModalCustomizacaoCompleta(produto); return; } abrirModalImagemFull(produto); }
 
     function abrirModalImagemFull(produto) {
@@ -460,7 +461,7 @@ Economizei.Pedido = (function() {
         var estoqueAtual = (prod.estoque !== null && prod.estoque !== undefined && prod.estoque !== '') ? parseInt(prod.estoque) : null;
         var estoqueInfo = ''; var botaoDesabilitado = false;
         if (estoqueAtual !== null && !isNaN(estoqueAtual)) { estoqueInfo = '<div style="font-size:0.65rem; color:' + (estoqueAtual <= 5 ? '#dc3545' : '#64748b') + ';">Estoque: ' + estoqueAtual + '</div>'; if (estoqueAtual <= 0) botaoDesabilitado = true; }
-        var imgHtml = temImagem ? '<img src="' + prod.imagem + '" loading="lazy" onclick="Economizei.Pedido.abrirImagemProduto(\'' + Core.jsEscape(prod.id) + '\')" style="cursor:pointer;" alt="' + Core.sanitize(prod.nome) + '">' : '<div style="width:100%;aspect-ratio:1;background:#f1f5f9;border-radius:0.5rem;display:flex;align-items:center;justify-content:center;" aria-label="Imagem não disponível">📷</div>';
+        var imgHtml = temImagem ? '<img src="' + prod.imagem + '" loading="lazy" onclick="Economizei.Pedido.abrirProdutoPeloCard(\'' + Core.jsEscape(prod.id) + '\')" style="cursor:pointer;" alt="' + Core.sanitize(prod.nome) + '">' : '<div style="width:100%;aspect-ratio:1;background:#f1f5f9;border-radius:0.5rem;display:flex;align-items:center;justify-content:center;" aria-label="Imagem não disponível">📷</div>';
         var buttonsHtml = '';
         if (isPersonalizavel || temTamanhos) {
             buttonsHtml = '<button class="btn-escolher" data-prod-id="' + prod.id + '" data-tipo="' + (isPersonalizavel ? 'personalizavel' : 'tamanhos') + '"' + (botaoDesabilitado ? ' disabled aria-disabled="true"' : '') + '>' + (botaoDesabilitado ? 'Indisponível' : 'Escolher') + '</button>';
@@ -511,7 +512,7 @@ Economizei.Pedido = (function() {
     function fecharModalPedido() { pararTodosListeners(); var modal = document.getElementById('modalPedidoRest'); if (modal) { modal.style.display = 'none'; modal.remove(); } UI.restoreFocus(); }
 
     return {
-        abrirModal:abrirModal, abrirImagemProduto:abrirImagemProduto,
+        abrirModal:abrirModal, abrirImagemProduto:abrirImagemProduto, abrirProdutoPeloCard:abrirProdutoPeloCard,
         atualizarCarrinhoVisual:atualizarCarrinhoVisual, alterarQuantidade:alterarQuantidade, removerItem:removerItem,
         atualizarBadgeCarrinho:atualizarBadgeCarrinho, recalcularTotal:recalcularTotal, aplicarCupom:aplicarCupom,
         toggleTroco:toggleTroco, finalizarPedido:finalizarPedido, consultarPedido:consultarPedido,
