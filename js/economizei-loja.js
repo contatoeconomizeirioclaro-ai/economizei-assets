@@ -45,6 +45,7 @@ window.abrirModalLoja = function(idx) {
     }
 
     function obterImagensBaseProduto(produto) {
+        if (produto && produto.__imagemFallbackVariacao) return normalizarImagens(produto.imagens);
         var imagens = [];
         if (produto && produto.imagem) imagens.push(String(produto.imagem).trim());
         imagens = imagens.concat(normalizarImagens(produto && produto.imagens));
@@ -60,12 +61,24 @@ window.abrirModalLoja = function(idx) {
     }
 
     function obterImagensProduto(produto) {
-        var imagens = obterImagensBaseProduto(produto);
+        return obterGaleriaProduto(produto).map(function(item) { return item.url; });
+    }
+
+    function obterGaleriaProduto(produto) {
+        var galeria = [];
+        var urlsVistas = {};
+        function adicionar(url, variacao) {
+            url = String(url || '').trim();
+            if (!url || urlsVistas[url]) return;
+            urlsVistas[url] = true;
+            galeria.push({ url: url, variacao: variacao || null });
+        }
+        obterImagensBaseProduto(produto).forEach(function(url) { adicionar(url, null); });
         var variacoes = produto && Array.isArray(produto.variacoes) ? produto.variacoes : [];
         variacoes.forEach(function(variacao) {
-            imagens = imagens.concat(obterImagensVariacao(variacao));
+            obterImagensVariacao(variacao).forEach(function(url) { adicionar(url, variacao); });
         });
-        return normalizarImagens(imagens);
+        return galeria;
     }
 
     function obterImagemPrincipalProduto(produto) {
@@ -132,7 +145,8 @@ window.abrirModalLoja = function(idx) {
     }
 
     function abrirModalImagemFullLoja(produto) {
-        var imagens = obterImagensProduto(produto);
+        var galeria = obterGaleriaProduto(produto);
+        var imagens = galeria.map(function(item) { return item.url; });
 
         if (imagens.length === 0) {
             UI.mostrarToast('Sem imagem para este produto.');
@@ -154,12 +168,17 @@ window.abrirModalLoja = function(idx) {
         }
 
         function atualizarModal() {
-            var precoContexto = produto.__precoSelecionado !== undefined && produto.__precoSelecionado !== null ? parseFloat(produto.__precoSelecionado) : NaN;
-            var precoBase = !isNaN(precoContexto) ? precoContexto : (parseFloat(produto.preco) || 0);
-            if (isNaN(precoContexto) && produto.tipo === 'variavel' && produto.variacoes && produto.variacoes.length > 0) {
+            var variacaoDaImagem = galeria[currentIndex] && galeria[currentIndex].variacao;
+            var precoDaImagem = variacaoDaImagem ? parseFloat(variacaoDaImagem.preco) : NaN;
+            var precoSelecionado = !isNaN(precoDaImagem) ? precoDaImagem : (produto.__precoSelecionado !== undefined && produto.__precoSelecionado !== null ? parseFloat(produto.__precoSelecionado) : NaN);
+            var precoBase = !isNaN(precoSelecionado) ? precoSelecionado : (parseFloat(produto.preco) || 0);
+            if (isNaN(precoSelecionado) && produto.tipo === 'variavel' && produto.variacoes && produto.variacoes.length > 0) {
                 var precos = produto.variacoes.map(function(v) { return parseFloat(v.preco) || 0; });
                 precoBase = Math.min.apply(null, precos);
             }
+            var estoqueDaImagem = variacaoDaImagem ? variacaoDaImagem.estoque : produto.__estoqueSelecionado;
+            var estoqueNumerico = estoqueDaImagem !== undefined && estoqueDaImagem !== null && estoqueDaImagem !== '' ? parseInt(estoqueDaImagem) : NaN;
+            var estoqueImagemHtml = !isNaN(estoqueNumerico) ? '<div class="estoque-imagem" style="font-size:.8rem;color:#cbd5e1;">Estoque disponível: ' + estoqueNumerico + '</div>' : '';
             var html = '<div class="container-imagem" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; width:100%; height:100%; background:#000; position:relative;">' +
                 '<div class="fechar" onclick="this.closest(\'.modal-imagem-full\').remove()" aria-label="Fechar imagem" style="position:absolute; top:1rem; right:1rem; color:white; font-size:2rem; cursor:pointer; background:rgba(0,0,0,0.5); width:2rem; height:2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10;">×</div>' +
                 '<div class="lado-esquerdo" style="flex:2; min-width:200px; text-align:center; padding:1rem; display:flex; flex-direction:column; justify-content:center; height:100%; position:relative;">' +
@@ -173,6 +192,7 @@ window.abrirModalLoja = function(idx) {
                 '<div class="lado-direito" style="flex:1; padding:1rem; background:#111; color:white; border-radius:0; height:100%; display:flex; flex-direction:column; justify-content:center; gap:1rem;">' +
                 '<div class="produto-nome" style="font-size:1.2rem; font-weight:700; color:white;">' + Core.sanitize(produto.nome) + '</div>' +
                 '<div class="preco" style="font-size:1.2rem; font-weight:700; color:#0a66c2;">R$ ' + precoBase.toFixed(2) + '</div>' +
+                estoqueImagemHtml +
                 '<div class="descricao" style="font-size:0.9rem; color:#ccc;">' + (produto.descricao || 'Sem descrição') + '</div>' +
                 '<div class="produto-quantidade-simples" style="display:flex; align-items:center; gap:8px; margin:8px 0;">' +
                 '<button id="menosQtdImg" style="background:#333; color:white; border:none; border-radius:50%; width:26px; height:26px; font-size:14px; cursor:pointer;" aria-label="Diminuir quantidade">−</button>' +
@@ -1042,12 +1062,15 @@ function abrirModalVariacoes(produto) {
                                 copia.imagem = copia.imagem || imagensVariacao[0] || '';
                                 return copia;
                             }) : [];
-                            var imagemPrincipal = data.imagem || imagens[0] || null;
+                            var imagemPrincipalBase = data.imagem || imagens[0] || null;
+                            var imagemPrincipal = imagemPrincipalBase;
+                            var imagemFallbackVariacao = false;
                             if (!imagemPrincipal) {
                                 for (var indiceImagem = 0; indiceImagem < variacoesNormalizadas.length; indiceImagem++) {
                                     var imagensDaVariacao = obterImagensVariacao(variacoesNormalizadas[indiceImagem]);
                                     if (imagensDaVariacao.length > 0) {
                                         imagemPrincipal = imagensDaVariacao[0];
+                                        imagemFallbackVariacao = true;
                                         break;
                                     }
                                 }
@@ -1058,6 +1081,7 @@ function abrirModalVariacoes(produto) {
                                 nome: data.nome,
                                 preco: parseFloat(data.preco) || 0,
                                 imagem: imagemPrincipal,
+                                __imagemFallbackVariacao: imagemFallbackVariacao,
                                 descricao: data.descricao || '',
                                 estoque: data.estoque !== undefined && data.estoque !== '' ? parseInt(data.estoque) : null,
                                 categoria: data.categoria || 'Geral',
