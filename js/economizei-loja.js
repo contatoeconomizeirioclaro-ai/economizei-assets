@@ -193,7 +193,8 @@ window.abrirModalLoja = function(idx) {
                 '</div>' +
                 '<div class="lado-direito" style="flex:1; padding:1rem; background:#111; color:white; border-radius:0; height:100%; display:flex; flex-direction:column; justify-content:center; gap:1rem;">' +
                 '<div class="produto-nome" style="font-size:1.2rem; font-weight:700; color:white;">' + Core.sanitize(produto.nome) + '</div>' +
-                '<div class="preco" style="font-size:1.2rem; font-weight:700; color:#0a66c2;">R$ ' + precoBase.toFixed(2) + '</div>' +
+                '<div class="preco-unitario-imagem" style="font-size:.82rem; color:#cbd5e1;">Preço unitário: R$ ' + precoBase.toFixed(2) + '</div>' +
+                '<div class="preco" style="font-size:1.2rem; font-weight:700; color:#0a66c2;">Total: R$ ' + precoBase.toFixed(2) + '</div>' +
                 estoqueImagemHtml +
                 '<div class="descricao" style="font-size:0.9rem; color:#ccc;">' + (produto.descricao || 'Sem descrição') + '</div>' +
                 '<div class="produto-quantidade-simples" style="display:flex; align-items:center; gap:8px; margin:8px 0;">' +
@@ -223,9 +224,17 @@ window.abrirModalLoja = function(idx) {
             var precoSpan = modal.querySelector('.preco');
 
             function atualizarPrecoImagem() {
-                var qtd = parseInt(qtdInput.value) || 1;
-                var total = precoBase * qtd;
-                precoSpan.textContent = 'R$ ' + total.toFixed(2);
+                var qtd = Math.max(1, parseInt(qtdInput.value) || 1);
+                qtdInput.value = qtd;
+                var variacaoParaCalculo = variacaoDaImagem || produto.__variacaoSelecionada || null;
+                var ofertaImagem = calcularOfertaItemLoja({
+                    id: produto.id,
+                    variacaoId: obterIdVariacaoLoja(variacaoParaCalculo),
+                    preco: precoBase,
+                    quantidade: qtd
+                });
+                var total = ofertaImagem.subtotalPromocional;
+                precoSpan.innerHTML = ofertaImagem.desconto > 0 ? '<s style="color:#94a3b8;font-size:.8rem;">R$ ' + ofertaImagem.subtotalOriginal.toFixed(2) + '</s> <strong style="color:#34d399;">Total: R$ ' + total.toFixed(2) + '</strong>' : 'Total: R$ ' + total.toFixed(2);
             }
             menosBtn.addEventListener('click', function() { qtdInput.stepDown(); atualizarPrecoImagem(); });
             maisBtn.addEventListener('click', function() { qtdInput.stepUp(); atualizarPrecoImagem(); });
@@ -436,10 +445,6 @@ function abrirModalVariacoes(produto) {
             variacaoSelecionadaAtual = encontrada;
             var preco = parseFloat(encontrada.preco) || 0;
             var estoque = parseInt(encontrada.estoque) || 0;
-            var ofertaVariacao = calcularOfertaItemLoja({ id: produto.id, variacaoId: encontrada.sku, preco: preco, quantidade: 1 });
-            var precoTexto = ofertaVariacao.desconto > 0 ? '<s style="color:#94a3b8;">R$ ' + preco.toFixed(2) + '</s> <strong style="color:#059669;">R$ ' + ofertaVariacao.precoUnitarioPromocional.toFixed(2) + '</strong>' : 'R$ ' + preco.toFixed(2);
-            variacaoInfo.innerHTML = 'Preço: ' + precoTexto + '<br>Estoque disponível: ' + estoque;
-            atualizarTotalVariacaoModal();
             var imagensEncontradas = obterImagensVariacao(encontrada);
             variacaoImagem.src = imagensEncontradas[0] || obterImagemPrincipalProduto(produto) || 'https://via.placeholder.com/150';
             qtdInput.max = estoque > 0 ? estoque : 1;
@@ -462,9 +467,14 @@ function abrirModalVariacoes(produto) {
         if (!totalEl || !variacaoSelecionadaAtual) return;
         var quantidadeAtual = Math.max(1, parseInt(qtdInput.value) || 1);
         var precoUnitario = parseFloat(variacaoSelecionadaAtual.preco) || 0;
-        var ofertaAtual = calcularOfertaItemLoja({ id: produto.id, variacaoId: variacaoSelecionadaAtual.sku, preco: precoUnitario, quantidade: quantidadeAtual });
+        var ofertaAtual = calcularOfertaItemLoja({ id: produto.id, variacaoId: obterIdVariacaoLoja(variacaoSelecionadaAtual), preco: precoUnitario, quantidade: quantidadeAtual });
         var totalOriginal = precoUnitario * quantidadeAtual;
-        totalEl.innerHTML = ofertaAtual.desconto > 0 ? '<s style="color:#94a3b8;font-size:.8rem;">R$ ' + totalOriginal.toFixed(2) + '</s> <strong style="color:#059669;">R$ ' + ofertaAtual.subtotalPromocional.toFixed(2) + '</strong>' : 'R$ ' + totalOriginal.toFixed(2);
+        var estoqueAtual = parseInt(variacaoSelecionadaAtual.estoque) || 0;
+        if (variacaoInfo) {
+            var precoUnitarioHtml = ofertaAtual.desconto > 0 ? '<s style="color:#94a3b8;">R$ ' + precoUnitario.toFixed(2) + '</s> <strong style="color:#059669;">R$ ' + ofertaAtual.precoUnitarioPromocional.toFixed(2) + '</strong>' : 'R$ ' + precoUnitario.toFixed(2);
+            variacaoInfo.innerHTML = 'Preço unitário: ' + precoUnitarioHtml + '<br>Estoque disponível: ' + estoqueAtual;
+        }
+        totalEl.innerHTML = ofertaAtual.desconto > 0 ? '<s style="color:#94a3b8;font-size:.8rem;">R$ ' + totalOriginal.toFixed(2) + '</s> <strong style="color:#059669;">Total: R$ ' + ofertaAtual.subtotalPromocional.toFixed(2) + '</strong>' : 'Total: R$ ' + totalOriginal.toFixed(2);
     }
 
     document.getElementById('variacaoMenosQtd').onclick = function() {
@@ -513,8 +523,9 @@ function abrirModalVariacoes(produto) {
         }
         var nomeCompleto = produto.nome + (atributosStr ? ' (' + atributosStr + ')' : '');
 
+        var variacaoIdCarrinho = obterIdVariacaoLoja(encontrada);
         var existing = carrinho.find(function(item) {
-            return item.id === produto.id && item.variacaoId === encontrada.sku;
+            return item.id === produto.id && item.variacaoId === variacaoIdCarrinho;
         });
         if (existing) {
             existing.quantidade += qtd;
@@ -525,8 +536,8 @@ function abrirModalVariacoes(produto) {
                 preco: parseFloat(encontrada.preco) || 0,
                 quantidade: qtd,
                 imagem: encontrada.imagem || produto.imagem || null,
-                variacaoId: encontrada.sku,
-                atributos: selecaoAtual,
+                variacaoId: variacaoIdCarrinho,
+                atributos: JSON.parse(JSON.stringify(selecaoAtual)),
                 estoque: encontrada.estoque
             });
         }
@@ -644,6 +655,14 @@ function abrirModalVariacoes(produto) {
     }
 
     // ===== PROMOÇÕES AUTOMÁTICAS =====
+    function obterIdVariacaoLoja(variacao) {
+        if (!variacao) return null;
+        if (variacao.variacaoId !== undefined && variacao.variacaoId !== null && String(variacao.variacaoId) !== '') return String(variacao.variacaoId);
+        if (variacao.sku !== undefined && variacao.sku !== null && String(variacao.sku) !== '') return String(variacao.sku);
+        if (variacao.id !== undefined && variacao.id !== null && String(variacao.id) !== '') return String(variacao.id);
+        return JSON.stringify(variacao.atributos || {});
+    }
+
     function promocaoDentroDaValidadeLoja(promocao) {
         if (!promocao || promocao.ativo !== 'sim') return false;
         var hoje = new Date();
@@ -658,47 +677,55 @@ function abrirModalVariacoes(produto) {
         if (!promocaoDentroDaValidadeLoja(promocao)) return false;
         if (!Array.isArray(promocao.produtoIds) || promocao.produtoIds.indexOf(item.id) === -1) return false;
         if (promocao.aplicacao === 'especificas') {
+            var idItem = obterIdVariacaoLoja(item);
             return Array.isArray(promocao.variacoes) && promocao.variacoes.some(function(v) {
-                return v.produtoId === item.id && v.variacaoId === item.variacaoId;
+                return String(v.produtoId) === String(item.id) && String(v.variacaoId) === String(idItem);
             });
         }
         return true;
     }
 
-    function obterPromocaoDoItemLoja(item) {
-        for (var i = 0; i < promocoesCache.length; i++) {
-            if (promocaoAplicaAoItemLoja(promocoesCache[i], item)) return promocoesCache[i];
+    function calcularSubtotalPromocaoLoja(promocao, precoOriginal, quantidade) {
+        var subtotalOriginal = precoOriginal * quantidade;
+        if (!promocao) return subtotalOriginal;
+        if (promocao.tipo === 'preco') {
+            return Math.min(subtotalOriginal, Math.max(0, parseFloat(promocao.valor) || 0) * quantidade);
         }
-        return null;
+        if (promocao.tipo === 'percentual') {
+            var percentual = Math.min(100, Math.max(0, parseFloat(promocao.valor) || 0));
+            return subtotalOriginal * (1 - percentual / 100);
+        }
+        if (promocao.tipo === 'quantidade' && Array.isArray(promocao.faixas)) {
+            var melhorTotal = subtotalOriginal;
+            promocao.faixas.forEach(function(faixa) {
+                var qtdFaixa = parseInt(faixa.quantidade) || 0;
+                var precoFaixa = Math.max(0, parseFloat(faixa.preco) || 0);
+                if (qtdFaixa > 0 && quantidade >= qtdFaixa) {
+                    var pacotes = Math.floor(quantidade / qtdFaixa);
+                    var restante = quantidade % qtdFaixa;
+                    var totalFaixa = pacotes * precoFaixa + restante * precoOriginal;
+                    if (totalFaixa < melhorTotal) melhorTotal = totalFaixa;
+                }
+            });
+            return melhorTotal;
+        }
+        return subtotalOriginal;
     }
 
     function calcularOfertaItemLoja(item) {
         var quantidade = Math.max(1, parseInt(item.quantidade) || 1);
         var precoOriginal = Math.max(0, parseFloat(item.preco) || 0);
         var subtotalOriginal = precoOriginal * quantidade;
-        var promocao = obterPromocaoDoItemLoja(item);
         var subtotalPromocional = subtotalOriginal;
-        if (promocao) {
-            if (promocao.tipo === 'preco') {
-                subtotalPromocional = Math.min(subtotalOriginal, Math.max(0, parseFloat(promocao.valor) || 0) * quantidade);
-            } else if (promocao.tipo === 'percentual') {
-                var percentual = Math.min(100, Math.max(0, parseFloat(promocao.valor) || 0));
-                subtotalPromocional = subtotalOriginal * (1 - percentual / 100);
-            } else if (promocao.tipo === 'quantidade' && Array.isArray(promocao.faixas)) {
-                var melhorTotal = subtotalOriginal;
-                promocao.faixas.forEach(function(faixa) {
-                    var qtdFaixa = parseInt(faixa.quantidade) || 0;
-                    var precoFaixa = Math.max(0, parseFloat(faixa.preco) || 0);
-                    if (qtdFaixa > 0 && quantidade >= qtdFaixa) {
-                        var pacotes = Math.floor(quantidade / qtdFaixa);
-                        var restante = quantidade % qtdFaixa;
-                        var totalFaixa = pacotes * precoFaixa + restante * precoOriginal;
-                        if (totalFaixa < melhorTotal) melhorTotal = totalFaixa;
-                    }
-                });
-                subtotalPromocional = melhorTotal;
+        var promocao = null;
+        promocoesCache.forEach(function(candidata) {
+            if (!promocaoAplicaAoItemLoja(candidata, item)) return;
+            var subtotalCandidato = calcularSubtotalPromocaoLoja(candidata, precoOriginal, quantidade);
+            if (subtotalCandidato < subtotalPromocional) {
+                subtotalPromocional = subtotalCandidato;
+                promocao = candidata;
             }
-        }
+        });
         return {
             promocao: promocao,
             precoOriginal: precoOriginal,
