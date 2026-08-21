@@ -141,8 +141,9 @@ window.abrirModalLoja = function(idx) {
         modal.style.cssText = 'position:fixed; inset:0; background:#000; z-index:20000; display:flex; align-items:center; justify-content:center; width:100vw; height:100vh; margin:0; padding:0;';
 
         function atualizarModal() {
-            var precoBase = parseFloat(produto.preco) || 0;
-            if (produto.tipo === 'variavel' && produto.variacoes && produto.variacoes.length > 0) {
+            var precoContexto = produto.__precoSelecionado !== undefined && produto.__precoSelecionado !== null ? parseFloat(produto.__precoSelecionado) : NaN;
+            var precoBase = !isNaN(precoContexto) ? precoContexto : (parseFloat(produto.preco) || 0);
+            if (isNaN(precoContexto) && produto.tipo === 'variavel' && produto.variacoes && produto.variacoes.length > 0) {
                 var precos = produto.variacoes.map(function(v) { return parseFloat(v.preco) || 0; });
                 precoBase = Math.min.apply(null, precos);
             }
@@ -316,6 +317,11 @@ function abrirModalVariacoes(produto) {
         if (imagensSelecionadas.length === 0) imagensSelecionadas = obterImagensBaseProduto(produto);
         prodClone.imagem = imagensSelecionadas[0] || obterImagemPrincipalProduto(produto) || '';
         prodClone.imagens = imagensSelecionadas.slice(1);
+        if (variacaoSelecionada) {
+            prodClone.__precoSelecionado = parseFloat(variacaoSelecionada.preco) || 0;
+            prodClone.__estoqueSelecionado = variacaoSelecionada.estoque;
+            prodClone.__variacaoSelecionada = JSON.parse(JSON.stringify(variacaoSelecionada));
+        }
         abrirModalImagemFullLoja(prodClone);
     };
 
