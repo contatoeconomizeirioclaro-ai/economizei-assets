@@ -124,6 +124,13 @@ window.abrirModalLoja = function(idx) {
     }
 
     // ===== IMAGEM EM TELA CHEIA =====
+    if (!document.getElementById('economizei-loja-image-navigation-style')) {
+        var imageNavigationStyle = document.createElement('style');
+        imageNavigationStyle.id = 'economizei-loja-image-navigation-style';
+        imageNavigationStyle.textContent = '.imagem-navegacao{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:42px;height:58px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(15,23,42,.72);color:#fff;font-size:42px;line-height:42px;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s ease,transform .15s ease}.imagem-navegacao:hover,.imagem-navegacao:focus-visible{background:#0a66c2;outline:2px solid #fff;outline-offset:2px}.imagem-navegacao:active{transform:translateY(-50%) scale(.94)}.imagem-navegacao-anterior{left:.75rem}.imagem-navegacao-seguinte{right:.75rem}@media(max-width:640px){.imagem-navegacao{width:36px;height:50px;font-size:34px}.imagem-navegacao-anterior{left:.4rem}.imagem-navegacao-seguinte{right:.4rem}}';
+        document.head.appendChild(imageNavigationStyle);
+    }
+
     function abrirModalImagemFullLoja(produto) {
         var imagens = obterImagensProduto(produto);
 
@@ -140,6 +147,12 @@ window.abrirModalLoja = function(idx) {
         modal.setAttribute('aria-label', 'Imagem de ' + produto.nome);
         modal.style.cssText = 'position:fixed; inset:0; background:#000; z-index:20000; display:flex; align-items:center; justify-content:center; width:100vw; height:100vh; margin:0; padding:0;';
 
+        function navegarImagem(delta) {
+            if (imagens.length < 2) return;
+            currentIndex = (currentIndex + delta + imagens.length) % imagens.length;
+            atualizarModal();
+        }
+
         function atualizarModal() {
             var precoContexto = produto.__precoSelecionado !== undefined && produto.__precoSelecionado !== null ? parseFloat(produto.__precoSelecionado) : NaN;
             var precoBase = !isNaN(precoContexto) ? precoContexto : (parseFloat(produto.preco) || 0);
@@ -149,7 +162,8 @@ window.abrirModalLoja = function(idx) {
             }
             var html = '<div class="container-imagem" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; width:100%; height:100%; background:#000; position:relative;">' +
                 '<div class="fechar" onclick="this.closest(\'.modal-imagem-full\').remove()" aria-label="Fechar imagem" style="position:absolute; top:1rem; right:1rem; color:white; font-size:2rem; cursor:pointer; background:rgba(0,0,0,0.5); width:2rem; height:2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10;">×</div>' +
-                '<div class="lado-esquerdo" style="flex:2; min-width:200px; text-align:center; padding:1rem; display:flex; flex-direction:column; justify-content:center; height:100%;">' +
+                '<div class="lado-esquerdo" style="flex:2; min-width:200px; text-align:center; padding:1rem; display:flex; flex-direction:column; justify-content:center; height:100%; position:relative;">' +
+                (imagens.length > 1 ? '<button type="button" id="imagemAnterior" class="imagem-navegacao imagem-navegacao-anterior" aria-label="Imagem anterior" title="Imagem anterior (seta para a esquerda)">‹</button><button type="button" id="imagemSeguinte" class="imagem-navegacao imagem-navegacao-seguinte" aria-label="Próxima imagem" title="Próxima imagem (seta para a direita)">›</button>' : '') +
                 '<img src="' + imagens[currentIndex] + '" class="imagem-principal" alt="' + produto.nome + '" style="max-width:100%; max-height:70vh; object-fit:contain; margin:auto;">' +
                 (imagens.length > 1 ? '<div class="miniaturas" style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;">' +
                     imagens.map(function(img, idx) {
@@ -175,6 +189,11 @@ window.abrirModalLoja = function(idx) {
                     atualizarModal();
                 });
             });
+
+            var imagemAnterior = modal.querySelector('#imagemAnterior');
+            var imagemSeguinte = modal.querySelector('#imagemSeguinte');
+            if (imagemAnterior) imagemAnterior.addEventListener('click', function() { navegarImagem(-1); });
+            if (imagemSeguinte) imagemSeguinte.addEventListener('click', function() { navegarImagem(1); });
 
             var qtdInput = modal.querySelector('#qtdImg');
             var menosBtn = modal.querySelector('#menosQtdImg');
@@ -228,6 +247,20 @@ window.abrirModalLoja = function(idx) {
 
         atualizarModal();
         document.body.appendChild(modal);
+        var navegacaoTeclado = function(e) {
+            if (!document.body.contains(modal)) { document.removeEventListener('keydown', navegacaoTeclado); return; }
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navegarImagem(-1);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                navegarImagem(1);
+            } else if (e.key === 'Escape') {
+                modal.remove();
+                document.removeEventListener('keydown', navegacaoTeclado);
+            }
+        };
+        document.addEventListener('keydown', navegacaoTeclado);
         UI.trapFocus(modal);
     }
 
