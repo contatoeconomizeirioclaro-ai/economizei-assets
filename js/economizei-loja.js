@@ -518,7 +518,7 @@ function abrirModalVariacoes(produto) {
             if (minPreco === maxPreco) {
                 precoExibido = 'R$ ' + minPreco.toFixed(2);
             } else {
-                precoExibido = 'R$ ' + minPreco.toFixed(2) + ' - R$ ' + maxPreco.toFixed(2);
+                precoExibido = 'A partir de R$ ' + minPreco.toFixed(2);
             }
         } else {
             precoExibido = 'R$ ' + (parseFloat(prod.preco) || 0).toFixed(2);
