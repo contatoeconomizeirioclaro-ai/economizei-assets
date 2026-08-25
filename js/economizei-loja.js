@@ -476,8 +476,9 @@ window.abrirModalLoja = function(idx) {
                 '</div>' +
                 '<div class="lado-direito" style="flex:1; padding:1rem; background:#111; color:white; border-radius:0; height:100%; display:flex; flex-direction:column; justify-content:center; gap:1rem;">' +
                 '<div class="produto-nome" style="font-size:1.2rem; font-weight:700; color:white;">' + Core.sanitize(produto.nome) + '</div>' +
-                '<div class="preco-unitario-imagem" style="font-size:.82rem; color:#cbd5e1;">Preço unitário: R$ ' + precoBase.toFixed(2) + '</div>' +
-                '<div class="preco" style="font-size:1.2rem; font-weight:700; color:#0a66c2;">Total: R$ ' + precoBase.toFixed(2) + '</div>' +
+                '<div class="preco-unitario-imagem" id="precoUnitarioImagem" style="font-size:.82rem; color:#cbd5e1;">Preço unitário: ' + formatarValorPromocaoLoja(precoBase) + '</div>' +
+                '<div class="promocao-imagem-info" style="font-size:.78rem; color:#86efac;"></div>' +
+                '<div class="preco" style="font-size:1.2rem; font-weight:700; color:#0a66c2;">Total: ' + formatarValorPromocaoLoja(precoBase) + '</div>' +
                 estoqueImagemHtml +
                 '<div class="descricao" style="font-size:0.9rem; color:#ccc;">' + (produto.descricao || 'Sem descrição') + '</div>' +
                 '<div class="produto-quantidade-simples" style="display:flex; align-items:center; gap:8px; margin:8px 0;">' +
@@ -518,7 +519,20 @@ window.abrirModalLoja = function(idx) {
                     atributos: variacaoParaCalculo && variacaoParaCalculo.atributos ? variacaoParaCalculo.atributos : (produto.__variacaoSelecionada && produto.__variacaoSelecionada.atributos ? produto.__variacaoSelecionada.atributos : null)
                 });
                 var total = ofertaImagem.subtotalPromocional;
-                precoSpan.innerHTML = ofertaImagem.desconto > 0 ? '<s style="color:#94a3b8;font-size:.8rem;">R$ ' + ofertaImagem.subtotalOriginal.toFixed(2) + '</s> <strong style="color:#34d399;">Total: R$ ' + total.toFixed(2) + '</strong>' : 'Total: R$ ' + total.toFixed(2);
+                var unitarioEl = modal.querySelector('#precoUnitarioImagem');
+                var promocaoEl = modal.querySelector('.promocao-imagem-info');
+                if (unitarioEl) unitarioEl.innerHTML = 'Preço unitário: ' + formatarValorPromocaoLoja(precoBase);
+                if (promocaoEl) {
+                    if (ofertaImagem.desconto > 0) {
+                        promocaoEl.innerHTML = '<strong>Promoção:</strong> ' + ofertaImagem.condicaoPromocao + ' · <strong>Desconto:</strong> -' + formatarValorPromocaoLoja(ofertaImagem.desconto);
+                    } else if (ofertaImagem.promocaoDisponivel && ofertaImagem.faixaSeguinte) {
+                        var faltamImagem = Math.max(0, ofertaImagem.faixaSeguinte.quantidade - qtd);
+                        promocaoEl.innerHTML = '<strong>Oferta:</strong> ' + ofertaImagem.faixaSeguinte.quantidade + ' por ' + formatarValorPromocaoLoja(ofertaImagem.faixaSeguinte.preco) + ' · faltam ' + faltamImagem + ' unidade' + (faltamImagem === 1 ? '' : 's');
+                    } else {
+                        promocaoEl.innerHTML = '';
+                    }
+                }
+                precoSpan.innerHTML = ofertaImagem.desconto > 0 ? '<s style="color:#94a3b8;font-size:.8rem;">' + formatarValorPromocaoLoja(ofertaImagem.subtotalOriginal) + '</s> <strong style="color:#34d399;">Total com promoção: ' + formatarValorPromocaoLoja(total) + '</strong>' : 'Total: ' + formatarValorPromocaoLoja(total);
             }
             menosBtn.addEventListener('click', function() { qtdInput.stepDown(); atualizarPrecoImagem(); });
             maisBtn.addEventListener('click', function() { qtdInput.stepUp(); atualizarPrecoImagem(); });
@@ -627,7 +641,7 @@ function abrirModalVariacoes(produto) {
         '<aside class="modal-order-summary"><h4>Resumo da escolha</h4>' +
         '<img id="variacaoImagem" class="variation-summary-image" src="' + imagemInicialVariacao + '" alt="' + Core.sanitize(produto.nome) + '" loading="lazy">' +
         '<p class="variation-summary-description">' + Core.sanitize(produto.descricao || 'Sem descrição') + '</p>' +
-        '<div id="variacaoInfo">Preço: R$ ' + (parseFloat(primeiraComEstoque.preco) || 0).toFixed(2) + '<br>Estoque disponível: ' + (parseInt(primeiraComEstoque.estoque) || 0) + '</div>' +
+        '<div id="variacaoInfo"><strong>Preço unitário:</strong> ' + formatarValorPromocaoLoja(primeiraComEstoque.preco) + '<br><span>Quantidade: 1</span><br><span>Estoque disponível: ' + (parseInt(primeiraComEstoque.estoque) || 0) + '</span></div>' +
         '<div class="variation-quantity"><button id="variacaoMenosQtd" aria-label="Diminuir quantidade">−</button><input type="number" id="variacaoQtd" value="1" min="1" aria-label="Quantidade"><button id="variacaoMaisQtd" aria-label="Aumentar quantidade">+</button></div>' +
         '</aside>' +
         '</div>' +
@@ -755,10 +769,22 @@ function abrirModalVariacoes(produto) {
         var totalOriginal = precoUnitario * quantidadeAtual;
         var estoqueAtual = parseInt(variacaoSelecionadaAtual.estoque) || 0;
         if (variacaoInfo) {
-            var precoUnitarioHtml = ofertaAtual.desconto > 0 ? '<s style="color:#94a3b8;">R$ ' + precoUnitario.toFixed(2) + '</s> <strong style="color:#059669;">R$ ' + ofertaAtual.precoUnitarioPromocional.toFixed(2) + '</strong>' : 'R$ ' + precoUnitario.toFixed(2);
-            variacaoInfo.innerHTML = 'Preço unitário: ' + precoUnitarioHtml + '<br>Estoque disponível: ' + estoqueAtual;
+            var infoHtml = '<div><strong>Preço unitário:</strong> ' + formatarValorPromocaoLoja(precoUnitario) + '</div>';
+            infoHtml += '<div><strong>Quantidade:</strong> ' + quantidadeAtual + '</div>';
+            if (ofertaAtual.desconto > 0) {
+                infoHtml += '<div class="promocao-aplicada-info"><strong>Promoção:</strong> ' + ofertaAtual.condicaoPromocao + '<br><strong>Desconto:</strong> -' + formatarValorPromocaoLoja(ofertaAtual.desconto) + '</div>';
+            } else if (ofertaAtual.promocaoDisponivel && ofertaAtual.faixaSeguinte) {
+                var faltam = Math.max(0, ofertaAtual.faixaSeguinte.quantidade - quantidadeAtual);
+                infoHtml += '<div class="promocao-pendente-info"><strong>Oferta:</strong> ' + ofertaAtual.faixaSeguinte.quantidade + ' por ' + formatarValorPromocaoLoja(ofertaAtual.faixaSeguinte.preco) + '<br>Adicione mais ' + faltam + ' unidade' + (faltam === 1 ? '' : 's') + ' para ativar.</div>';
+            }
+            infoHtml += '<div><strong>Estoque disponível:</strong> ' + estoqueAtual + '</div>';
+            variacaoInfo.innerHTML = infoHtml;
         }
-        totalEl.innerHTML = ofertaAtual.desconto > 0 ? '<s style="color:#94a3b8;font-size:.8rem;">R$ ' + totalOriginal.toFixed(2) + '</s> <strong style="color:#059669;">Total: R$ ' + ofertaAtual.subtotalPromocional.toFixed(2) + '</strong>' : 'Total: R$ ' + totalOriginal.toFixed(2);
+        if (ofertaAtual.desconto > 0) {
+            totalEl.innerHTML = '<span class="total-label">Total com promoção</span> <s style="color:#94a3b8;font-size:.8rem;">' + formatarValorPromocaoLoja(totalOriginal) + '</s> <strong style="color:#059669;">' + formatarValorPromocaoLoja(ofertaAtual.subtotalPromocional) + '</strong>';
+        } else {
+            totalEl.innerHTML = '<span class="total-label">Total</span> <strong>' + formatarValorPromocaoLoja(totalOriginal) + '</strong>';
+        }
     }
 
     document.getElementById('variacaoMenosQtd').onclick = function() {
@@ -1005,6 +1031,31 @@ function abrirModalVariacoes(produto) {
         return true;
     }
 
+    function obterFaixaAplicadaPromocaoLoja(promocao, precoOriginal, quantidade) {
+        if (!promocao || promocao.tipo !== 'quantidade' || !Array.isArray(promocao.faixas)) return null;
+        var subtotalOriginal = precoOriginal * quantidade;
+        var melhor = null;
+        promocao.faixas.forEach(function(faixa) {
+            var qtdFaixa = parseInt(faixa.quantidade) || 0;
+            var precoFaixa = Math.max(0, parseFloat(faixa.preco) || 0);
+            if (qtdFaixa <= 0 || quantidade < qtdFaixa) return;
+            var pacotes = Math.floor(quantidade / qtdFaixa);
+            var restante = quantidade % qtdFaixa;
+            var totalFaixa = pacotes * precoFaixa + restante * precoOriginal;
+            if (totalFaixa < subtotalOriginal && (!melhor || totalFaixa < melhor.subtotalPromocional)) {
+                melhor = { quantidade: qtdFaixa, preco: precoFaixa, pacotes: pacotes, restante: restante, subtotalPromocional: totalFaixa };
+            }
+        });
+        return melhor;
+    }
+
+    function obterProximaFaixaPromocaoLoja(promocao, quantidade) {
+        if (!promocao || promocao.tipo !== 'quantidade' || !Array.isArray(promocao.faixas)) return null;
+        return promocao.faixas.map(function(faixa) {
+            return { quantidade: parseInt(faixa.quantidade) || 0, preco: Math.max(0, parseFloat(faixa.preco) || 0) };
+        }).filter(function(faixa) { return faixa.quantidade > quantidade; }).sort(function(a, b) { return a.quantidade - b.quantidade; })[0] || null;
+    }
+
     function calcularSubtotalPromocaoLoja(promocao, precoOriginal, quantidade) {
         var subtotalOriginal = precoOriginal * quantidade;
         if (!promocao) return subtotalOriginal;
@@ -1015,21 +1066,24 @@ function abrirModalVariacoes(produto) {
             var percentual = Math.min(100, Math.max(0, parseFloat(promocao.valor) || 0));
             return subtotalOriginal * (1 - percentual / 100);
         }
-        if (promocao.tipo === 'quantidade' && Array.isArray(promocao.faixas)) {
-            var melhorTotal = subtotalOriginal;
-            promocao.faixas.forEach(function(faixa) {
-                var qtdFaixa = parseInt(faixa.quantidade) || 0;
-                var precoFaixa = Math.max(0, parseFloat(faixa.preco) || 0);
-                if (qtdFaixa > 0 && quantidade >= qtdFaixa) {
-                    var pacotes = Math.floor(quantidade / qtdFaixa);
-                    var restante = quantidade % qtdFaixa;
-                    var totalFaixa = pacotes * precoFaixa + restante * precoOriginal;
-                    if (totalFaixa < melhorTotal) melhorTotal = totalFaixa;
-                }
-            });
-            return melhorTotal;
+        if (promocao.tipo === 'quantidade') {
+            var faixaAplicada = obterFaixaAplicadaPromocaoLoja(promocao, precoOriginal, quantidade);
+            return faixaAplicada ? faixaAplicada.subtotalPromocional : subtotalOriginal;
         }
         return subtotalOriginal;
+    }
+
+    function formatarValorPromocaoLoja(valor) {
+        return 'R$ ' + (Math.max(0, parseFloat(valor) || 0)).toFixed(2).replace('.', ',');
+    }
+
+    function obterResumoCondicaoPromocaoLoja(promocao, faixaAplicada) {
+        if (!promocao) return '';
+        if (promocao.tipo === 'quantidade' && faixaAplicada) {
+            return faixaAplicada.quantidade + ' por ' + formatarValorPromocaoLoja(faixaAplicada.preco);
+        }
+        if (promocao.tipo === 'percentual') return (parseFloat(promocao.valor) || 0) + '% de desconto';
+        return 'Preço promocional: ' + formatarValorPromocaoLoja(promocao.valor);
     }
 
     function calcularOfertaItemLoja(item) {
@@ -1038,22 +1092,39 @@ function abrirModalVariacoes(produto) {
         var subtotalOriginal = precoOriginal * quantidade;
         var subtotalPromocional = subtotalOriginal;
         var promocao = null;
+        var promocaoDisponivel = null;
+        var proximaFaixa = null;
         promocoesCache.forEach(function(candidata) {
             if (!promocaoAplicaAoItemLoja(candidata, item)) return;
             var subtotalCandidato = calcularSubtotalPromocaoLoja(candidata, precoOriginal, quantidade);
+            if (candidata.tipo === 'quantidade' && subtotalCandidato >= subtotalOriginal) {
+                var faixaSeguinte = obterProximaFaixaPromocaoLoja(candidata, quantidade);
+                if (faixaSeguinte && !proximaFaixa) {
+                    promocaoDisponivel = candidata;
+                    proximaFaixa = faixaSeguinte;
+                }
+            }
             if (subtotalCandidato < subtotalPromocional) {
                 subtotalPromocional = subtotalCandidato;
                 promocao = candidata;
             }
         });
+        var subtotalFinal = Math.max(0, subtotalPromocional);
+        var faixaAplicada = promocao && promocao.tipo === 'quantidade' ? obterFaixaAplicadaPromocaoLoja(promocao, precoOriginal, quantidade) : null;
+        var promocaoParaExibicao = promocao || promocaoDisponivel;
+        var faixaParaExibicao = faixaAplicada || proximaFaixa;
         return {
             promocao: promocao,
+            promocaoDisponivel: promocaoDisponivel,
+            faixaAplicada: faixaAplicada,
+            faixaSeguinte: proximaFaixa,
             precoOriginal: precoOriginal,
             quantidade: quantidade,
             subtotalOriginal: subtotalOriginal,
-            subtotalPromocional: Math.max(0, subtotalPromocional),
-            desconto: Math.max(0, subtotalOriginal - subtotalPromocional),
-            precoUnitarioPromocional: quantidade ? Math.max(0, subtotalPromocional) / quantidade : precoOriginal
+            subtotalPromocional: subtotalFinal,
+            desconto: Math.max(0, subtotalOriginal - subtotalFinal),
+            precoUnitarioPromocional: quantidade ? subtotalFinal / quantidade : precoOriginal,
+            condicaoPromocao: obterResumoCondicaoPromocaoLoja(promocaoParaExibicao, faixaParaExibicao)
         };
     }
 
@@ -1094,7 +1165,11 @@ function abrirModalVariacoes(produto) {
             var texto = promocao.tipo === 'percentual' ? (parseFloat(promocao.valor) || 0) + '% OFF' : 'Oferta';
             return { promocao: promocao, precoOriginal: precoBase, precoPromocional: precoPromocional, texto: texto };
         }
-        return { promocao: promocao, precoOriginal: precoBase, precoPromocional: precoBase, texto: 'Oferta por quantidade' };
+        var primeiraFaixa = Array.isArray(promocao.faixas) ? promocao.faixas.map(function(faixa) {
+            return { quantidade: parseInt(faixa.quantidade) || 0, preco: Math.max(0, parseFloat(faixa.preco) || 0) };
+        }).filter(function(faixa) { return faixa.quantidade > 0; }).sort(function(a, b) { return a.quantidade - b.quantidade; })[0] : null;
+        var textoQuantidade = primeiraFaixa ? primeiraFaixa.quantidade + ' por ' + formatarValorPromocaoLoja(primeiraFaixa.preco) : 'Oferta por quantidade';
+        return { promocao: promocao, precoOriginal: precoBase, precoPromocional: precoBase, texto: textoQuantidade };
     }
 
     function carregarPromocoesLoja() {
@@ -1137,7 +1212,13 @@ function abrirModalVariacoes(produto) {
             var subtotalItem = item.preco * item.quantidade;
             subtotal += subtotalItem;
             var ofertaItem = calcularOfertaItemLoja(item);
-            var precoItemHtml = ofertaItem.desconto > 0 ? '<s style="color:#94a3b8;font-size:.72rem;">R$ ' + item.preco.toFixed(2) + '</s> <strong style="color:#059669;">R$ ' + ofertaItem.precoUnitarioPromocional.toFixed(2) + '</strong>' : 'R$ ' + item.preco.toFixed(2);
+            var precoItemHtml = '<div>Preço unitário: ' + formatarValorPromocaoLoja(item.preco) + '</div>';
+            if (ofertaItem.desconto > 0) {
+                precoItemHtml += '<div style="color:#059669;font-size:.72rem;"><strong>Promoção:</strong> ' + ofertaItem.condicaoPromocao + '<br><strong>Desconto:</strong> -' + formatarValorPromocaoLoja(ofertaItem.desconto) + '</div>';
+                precoItemHtml += '<strong style="color:#059669;">Total do item: ' + formatarValorPromocaoLoja(ofertaItem.subtotalPromocional) + '</strong>';
+            } else {
+                precoItemHtml += '<strong>Total do item: ' + formatarValorPromocaoLoja(ofertaItem.subtotalOriginal) + '</strong>';
+            }
             return '<div class="item-carrinho">' +
                 '<img src="' + (item.imagem || 'https://via.placeholder.com/40') + '" class="item-carrinho-imagem" onerror="this.style.display=\'none\'">' +
                 '<div style="flex:1"><strong>' + Core.sanitize(item.nome) + '</strong><br>' + precoItemHtml + '</div>' +
