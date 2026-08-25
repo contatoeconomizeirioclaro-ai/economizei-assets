@@ -311,6 +311,24 @@ window.abrirModalLoja = function(idx) {
         });
     }
 
+    // A identidade visual do modal deve vir do cadastro correspondente em
+    // lojistas, como no módulo Pedidos. O campo principal é logoUrl;
+    // os demais nomes mantêm compatibilidade com cadastros antigos.
+    function obterLogoDoCadastroLoja(data) {
+        var candidatos = [data && data.logoUrl, data && data.logo, data && data.imagemLogo, data && data.imagem];
+        for (var i = 0; i < candidatos.length; i++) {
+            if (typeof candidatos[i] === 'string' && /^https?:\/\//i.test(candidatos[i].trim())) {
+                return candidatos[i].trim();
+            }
+        }
+        return '';
+    }
+
+    function gerarIniciaisLoja(nome) {
+        var partes = String(nome || 'Loja').trim().split(/\s+/).filter(Boolean);
+        return (partes.slice(0, 2).map(function(p) { return p.charAt(0); }).join('') || 'L').toUpperCase();
+    }
+
     function obterImagensBaseProduto(produto) {
         if (produto && produto.__imagemFallbackVariacao) return normalizarImagens(produto.imagens);
         var imagens = [];
@@ -1424,6 +1442,30 @@ function abrirModalVariacoes(produto) {
         UI.restoreFocus();
     };
 
+    // ===== ATUALIZAR IDENTIDADE VISUAL DA LOJA =====
+    function atualizarLogoLojaUI(data) {
+        var logoBox = document.querySelector('#modalLoja .modal-estabelecimento-logo');
+        if (!logoBox) return;
+        var logoUrl = obterLogoDoCadastroLoja(data) || logoEstab;
+        if (!logoUrl) {
+            logoBox.textContent = gerarIniciaisLoja(nomeEstab);
+            return;
+        }
+        if (logoBox.getAttribute('data-logo-url') === logoUrl) return;
+        logoBox.setAttribute('data-logo-url', logoUrl);
+        logoBox.innerHTML = '';
+        var img = document.createElement('img');
+        img.src = logoUrl;
+        img.alt = 'Logo de ' + nomeEstab;
+        img.loading = 'eager';
+        img.referrerPolicy = 'no-referrer';
+        img.onerror = function() {
+            logoBox.removeAttribute('data-logo-url');
+            logoBox.textContent = gerarIniciaisLoja(nomeEstab);
+        };
+        logoBox.appendChild(img);
+    }
+
     // ===== ATUALIZAR STATUS UI =====
     function atualizarStatusLojaUI(statusLoja, statusMessage) {
         var msgDiv = document.getElementById('statusLojaMsgLoja');
@@ -1464,12 +1506,15 @@ function abrirModalVariacoes(produto) {
             var lojistaDoc = snap.docs[0];
             currentLojistaId = lojistaDoc.id;
             var lojistaData = lojistaDoc.data();
+            logoEstab = obterLogoDoCadastroLoja(lojistaData) || logoEstab;
             atualizarStatusLojaUI(lojistaData.statusLoja || 'aberta', lojistaData.statusMessage || '');
 
             // Listeners em tempo real
             unsubscribeStatusLoja = Core.db.collection('lojistas').doc(currentLojistaId).onSnapshot(function(doc) {
                 if (doc.exists) {
                     var data = doc.data();
+                    logoEstab = obterLogoDoCadastroLoja(data) || logoEstab;
+                    atualizarLogoLojaUI(data);
                     atualizarStatusLojaUI(data.statusLoja || 'aberta', data.statusMessage || '');
                 }
             });
@@ -1619,6 +1664,7 @@ function abrirModalVariacoes(produto) {
                 '</div></div></div>';
 
             document.body.insertAdjacentHTML('beforeend', modalHtml);
+            atualizarLogoLojaUI(lojistaData);
             atualizarStatusLojaUI(lojistaData.statusLoja || 'aberta', lojistaData.statusMessage || '');
 
             // Pré-preencher dados do cliente
