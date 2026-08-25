@@ -29,7 +29,8 @@
                 background:#fff;
             }
             #modalLoja.loja-padronizada .modal-estabelecimento-brand {
-                display:flex; align-items:center; gap:.55rem; min-width:0;
+                display:flex; align-items:center; justify-content:flex-start; gap:.55rem;
+                min-width:0; flex:1; text-align:left;
             }
             #modalLoja.loja-padronizada .modal-estabelecimento-logo {
                 width:42px; height:42px; min-width:42px; flex:0 0 42px;
@@ -85,7 +86,9 @@
                 padding:.75rem; overflow-y:auto; flex:1; min-height:0;
             }
             #modalLoja.loja-padronizada #statusLojaMsgLoja {
-                border-radius:.75rem!important; padding:.75rem!important;
+                display:flex; align-items:center; justify-content:center; gap:.35rem;
+                min-height:2.8rem; box-sizing:border-box;
+                border-radius:.75rem!important; padding:.65rem .75rem!important;
                 margin-bottom:.75rem!important; text-align:center!important;
                 font-weight:600!important;
             }
@@ -99,10 +102,17 @@
                 background:#fef2f2!important; border-color:#fca5a5!important; color:#991b1b!important;
             }
             #modalLoja.loja-padronizada .modal-status-label {
-                display:block; margin-bottom:.12rem; font-size:.65rem;
-                text-transform:uppercase; font-weight:800;
+                display:inline-flex; align-items:center; gap:.35rem;
+                margin:0; font-size:.8rem; text-transform:none; font-weight:700;
+                white-space:nowrap;
             }
-            #modalLoja.loja-padronizada .modal-status-text { display:block; font-weight:650; }
+            #modalLoja.loja-padronizada .modal-status-label::before {
+                content:""; width:8px; height:8px; min-width:8px; border-radius:50%; background:#94a3b8;
+            }
+            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-aberta .modal-status-label::before { background:#22c55e; }
+            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-pausada .modal-status-label::before { background:#f59e0b; }
+            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-fechada .modal-status-label::before { background:#ef4444; }
+            #modalLoja.loja-padronizada .modal-status-text { display:inline; font-size:.8rem; line-height:1.35; font-weight:650; }
             .popup-confirmacao .popup-confirmacao-close {
                 position:static; background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.55); color:#fff;
             }
@@ -1430,8 +1440,8 @@ function abrirModalVariacoes(produto) {
         if (msgDiv) {
             var deveExibirMensagem = bloqueado || mensagem !== '';
             msgDiv.className = 'status-' + statusLoja;
-            msgDiv.style.display = deveExibirMensagem ? 'block' : 'none';
-            msgDiv.innerHTML = '<span class="modal-status-label">Aviso da loja</span><span class="modal-status-text">' + Core.sanitize(mensagem || (statusLoja === 'fechada' ? 'A loja está fechada no momento.' : 'Os pedidos estão pausados no momento.')) + '</span>';
+            msgDiv.style.display = deveExibirMensagem ? 'flex' : 'none';
+            msgDiv.innerHTML = '<span class="modal-status-label">Aviso da loja:</span><span class="modal-status-text">' + Core.sanitize(mensagem || (statusLoja === 'fechada' ? 'A loja está fechada no momento.' : 'Os pedidos estão pausados no momento.')) + '</span>';
             msgDiv.setAttribute('role', 'alert');
         }
         if (btnFinalizar) {
