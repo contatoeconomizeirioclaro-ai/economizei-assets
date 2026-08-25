@@ -1035,6 +1035,18 @@ function abrirModalVariacoes(produto) {
         if (!promocao || promocao.tipo !== 'quantidade' || !Array.isArray(promocao.faixas)) return null;
         var subtotalOriginal = precoOriginal * quantidade;
         var melhor = null;
+        if (promocao.quantidadeModo === 'a_partir') {
+            promocao.faixas.forEach(function(faixa) {
+                var qtdFaixa = parseInt(faixa.quantidade) || 0;
+                var precoFaixa = Math.max(0, parseFloat(faixa.preco) || 0);
+                if (qtdFaixa <= 0 || quantidade < qtdFaixa) return;
+                var totalFaixa = precoFaixa * quantidade;
+                if (totalFaixa < subtotalOriginal && (!melhor || precoFaixa < melhor.preco || (precoFaixa === melhor.preco && qtdFaixa > melhor.quantidade))) {
+                    melhor = { quantidade: qtdFaixa, preco: precoFaixa, pacotes: 0, restante: 0, subtotalPromocional: totalFaixa };
+                }
+            });
+            return melhor;
+        }
         promocao.faixas.forEach(function(faixa) {
             var qtdFaixa = parseInt(faixa.quantidade) || 0;
             var precoFaixa = Math.max(0, parseFloat(faixa.preco) || 0);
@@ -1077,10 +1089,24 @@ function abrirModalVariacoes(produto) {
         return 'R$ ' + (Math.max(0, parseFloat(valor) || 0)).toFixed(2).replace('.', ',');
     }
 
-    function obterResumoCondicaoPromocaoLoja(promocao, faixaAplicada) {
+    function obterResumoCondicaoPromocaoLoja(promocao, faixaAplicada, precoOriginal) {
         if (!promocao) return '';
         if (promocao.tipo === 'quantidade' && faixaAplicada) {
-            return faixaAplicada.quantidade + ' por ' + formatarValorPromocaoLoja(faixaAplicada.preco);
+            if (promocao.quantidadeModo === 'a_partir') return 'A partir de ' + faixaAplicada.quantidade + ' unidades: ' + formatarValorPromocaoLoja(faixaAplicada.preco) + ' por peça';
+            var partes = [];
+            if (faixaAplicada.pacotes > 0) {
+                partes.push(faixaAplicada.pacotes + ' pacote' + (faixaAplicada.pacotes === 1 ? '' : 's') + ' de ' + faixaAplicada.quantidade + ' por ' + formatarValorPromocaoLoja(faixaAplicada.preco));
+            }
+            if (faixaAplicada.restante > 0) {
+                partes.push(faixaAplicada.restante + ' unidade' + (faixaAplicada.restante === 1 ? '' : 's') + ' por ' + formatarValorPromocaoLoja(precoOriginal));
+            }
+            return partes.join(' + ');
+        }
+        if (promocao.tipo === 'quantidade') {
+            var primeiraFaixa = Array.isArray(promocao.faixas) ? promocao.faixas.map(function(faixa) {
+                return { quantidade: parseInt(faixa.quantidade) || 0, preco: Math.max(0, parseFloat(faixa.preco) || 0) };
+            }).filter(function(faixa) { return faixa.quantidade > 0; }).sort(function(a, b) { return a.quantidade - b.quantidade; })[0] : null;
+            return primeiraFaixa ? primeiraFaixa.quantidade + ' por ' + formatarValorPromocaoLoja(primeiraFaixa.preco) : 'Oferta por quantidade';
         }
         if (promocao.tipo === 'percentual') return (parseFloat(promocao.valor) || 0) + '% de desconto';
         return 'Preço promocional: ' + formatarValorPromocaoLoja(promocao.valor);
@@ -1124,7 +1150,7 @@ function abrirModalVariacoes(produto) {
             subtotalPromocional: subtotalFinal,
             desconto: Math.max(0, subtotalOriginal - subtotalFinal),
             precoUnitarioPromocional: quantidade ? subtotalFinal / quantidade : precoOriginal,
-            condicaoPromocao: obterResumoCondicaoPromocaoLoja(promocaoParaExibicao, faixaParaExibicao)
+            condicaoPromocao: obterResumoCondicaoPromocaoLoja(promocaoParaExibicao, faixaParaExibicao, precoOriginal)
         };
     }
 
@@ -1168,7 +1194,9 @@ function abrirModalVariacoes(produto) {
         var primeiraFaixa = Array.isArray(promocao.faixas) ? promocao.faixas.map(function(faixa) {
             return { quantidade: parseInt(faixa.quantidade) || 0, preco: Math.max(0, parseFloat(faixa.preco) || 0) };
         }).filter(function(faixa) { return faixa.quantidade > 0; }).sort(function(a, b) { return a.quantidade - b.quantidade; })[0] : null;
-        var textoQuantidade = primeiraFaixa ? primeiraFaixa.quantidade + ' por ' + formatarValorPromocaoLoja(primeiraFaixa.preco) : 'Oferta por quantidade';
+        var textoQuantidade = primeiraFaixa
+            ? (promocao.quantidadeModo === 'a_partir' ? 'A partir de ' + primeiraFaixa.quantidade + ' un.: ' + formatarValorPromocaoLoja(primeiraFaixa.preco) + '/peça' : 'A cada ' + primeiraFaixa.quantidade + ' un.: ' + formatarValorPromocaoLoja(primeiraFaixa.preco) + '/grupo')
+            : 'Oferta por quantidade';
         return { promocao: promocao, precoOriginal: precoBase, precoPromocional: precoBase, texto: textoQuantidade };
     }
 
