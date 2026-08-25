@@ -7,6 +7,261 @@
 (function() {
     'use strict';
     if (!window.Economizei) window.Economizei = {};
+
+    // ============================================================
+    // IDENTIDADE VISUAL COMPARTILHADA COM ONDE COMER/PEDIDOS
+    // O módulo continua externo e injeta somente a camada visual do
+    // próprio modal. O shell Blogger permanece na página hospedeira.
+    // ============================================================
+    function instalarEstiloVisualLoja() {
+        if (document.getElementById('economizei-loja-visual-compartilhado')) return;
+        var style = document.createElement('style');
+        style.id = 'economizei-loja-visual-compartilhado';
+        style.textContent = `
+            #modalLoja.loja-padronizada > .modal-conteudo.fullscreen {
+                width:100%; height:100%; max-width:100%; max-height:100%;
+                margin:0; border-radius:0; overflow:hidden;
+            }
+            #modalLoja.loja-padronizada .modal-header {
+                padding:.75rem 1rem;
+                border-bottom:1px solid var(--gray-200);
+                display:flex; justify-content:space-between; align-items:center;
+                background:#fff;
+            }
+            #modalLoja.loja-padronizada .modal-estabelecimento-brand {
+                display:flex; align-items:center; gap:.55rem; min-width:0;
+            }
+            #modalLoja.loja-padronizada .modal-estabelecimento-logo {
+                width:42px; height:42px; min-width:42px; flex:0 0 42px;
+                border-radius:50%; overflow:hidden;
+                background:var(--primary-light); border:2px solid var(--primary);
+                display:flex; align-items:center; justify-content:center;
+                color:var(--primary); font-size:.9rem; font-weight:800;
+            }
+            #modalLoja.loja-padronizada .modal-estabelecimento-logo img {
+                width:100%; height:100%; object-fit:cover; display:block;
+            }
+            #modalLoja.loja-padronizada .modal-estabelecimento-meta {
+                min-width:0; display:flex; flex-direction:column; gap:.1rem;
+            }
+            #modalLoja.loja-padronizada .modal-estabelecimento-meta h3 {
+                margin:0; color:var(--gray-800); font-size:1rem; line-height:1.2;
+                white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+            }
+            #modalLoja.loja-padronizada .modal-estabelecimento-status {
+                display:inline-flex; align-items:center; gap:.3rem;
+                font-size:.7rem; font-weight:700; color:var(--gray-500);
+            }
+            #modalLoja.loja-padronizada .modal-estabelecimento-status::before {
+                content:""; width:7px; height:7px; border-radius:50%; background:#94a3b8;
+            }
+            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-aberta { color:#15803d; }
+            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-aberta::before { background:#22c55e; }
+            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-pausada { color:#b45309; }
+            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-pausada::before { background:#f59e0b; }
+            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-fechada { color:#b91c1c; }
+            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-fechada::before { background:#ef4444; }
+            #modalLoja.loja-padronizada .modal-header > .btn-modal-fechar {
+                width:2.25rem; height:2.25rem; min-width:2.25rem; padding:0;
+                margin-left:auto; border-radius:50%; display:inline-flex;
+                align-items:center; justify-content:center; font-size:0; line-height:1;
+            }
+            #modalLoja.loja-padronizada .modal-header > .btn-modal-fechar::before {
+                content:"\\00D7"; font-size:1.45rem; font-weight:500;
+            }
+            #modalLoja.loja-padronizada .modal-tabs {
+                display:flex; background:var(--gray-100); border-radius:3rem;
+                margin:0 .5rem .5rem; padding:.2rem;
+            }
+            #modalLoja.loja-padronizada .modal-tab {
+                flex:1; min-height:2rem; padding:.4rem; border:none; background:none;
+                color:var(--gray-700); font-weight:700; border-radius:2rem;
+                cursor:pointer; transition:var(--transition); font-size:.8rem;
+            }
+            #modalLoja.loja-padronizada .modal-tab.active {
+                background:#fff; color:var(--primary); box-shadow:0 1px 3px rgba(0,0,0,.1);
+            }
+            #modalLoja.loja-padronizada .modal-body {
+                padding:.75rem; overflow-y:auto; flex:1; min-height:0;
+            }
+            #modalLoja.loja-padronizada #statusLojaMsgLoja {
+                border-radius:.75rem!important; padding:.75rem!important;
+                margin-bottom:.75rem!important; text-align:center!important;
+                font-weight:600!important;
+            }
+            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-aberta {
+                background:#f0fdf4!important; border-color:#86efac!important; color:#166534!important;
+            }
+            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-pausada {
+                background:#fffbeb!important; border-color:#fcd34d!important; color:#92400e!important;
+            }
+            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-fechada {
+                background:#fef2f2!important; border-color:#fca5a5!important; color:#991b1b!important;
+            }
+            #modalLoja.loja-padronizada .modal-status-label {
+                display:block; margin-bottom:.12rem; font-size:.65rem;
+                text-transform:uppercase; font-weight:800;
+            }
+            #modalLoja.loja-padronizada .modal-status-text { display:block; font-weight:650; }
+            .popup-confirmacao .popup-confirmacao-close {
+                position:static; background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.55); color:#fff;
+            }
+            .popup-confirmacao .popup-confirmacao-close:hover { background:rgba(255,255,255,.3); color:#fff; }
+            #modalLoja.loja-padronizada .categoria-group { margin-bottom:1rem; }
+            #modalLoja.loja-padronizada .categoria-titulo-modal {
+                font-size:1rem; font-weight:700; color:var(--primary);
+                margin:.3rem 0 .5rem; border-left:3px solid var(--primary);
+                padding-left:.5rem; cursor:pointer; user-select:none;
+            }
+            #modalLoja.loja-padronizada .produtos-grid {
+                display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:.5rem;
+            }
+            #modalLoja.loja-padronizada .produto-card {
+                background:#fff; border:1px solid var(--gray-200);
+                border-radius:.75rem; padding:.4rem; text-align:center;
+                display:flex; flex-direction:column; height:100%;
+            }
+            #modalLoja.loja-padronizada .produto-card img {
+                width:100%; aspect-ratio:1; object-fit:cover;
+                border-radius:.5rem; cursor:pointer;
+            }
+            #modalLoja.loja-padronizada .card-content-produto {
+                flex:1; display:flex; flex-direction:column; min-width:0;
+            }
+            #modalLoja.loja-padronizada .produto-nome {
+                font-weight:600; font-size:.75rem; margin:.2rem 0;
+                overflow-wrap:anywhere;
+            }
+            #modalLoja.loja-padronizada .produto-preco {
+                color:var(--primary); font-weight:700; font-size:.8rem;
+            }
+            #modalLoja.loja-padronizada .btn-escolher,
+            #modalLoja.loja-padronizada .btn-adicionar-simples {
+                background:var(--primary); color:#fff; border:none; border-radius:2rem;
+                padding:.3rem; font-size:.7rem; font-weight:600; cursor:pointer;
+                margin-top:auto; width:100%; min-height:2rem;
+            }
+            #modalLoja.loja-padronizada .btn-escolher:disabled,
+            #modalLoja.loja-padronizada .btn-adicionar-simples:disabled {
+                background:#94a3b8; cursor:not-allowed;
+            }
+            #modalLoja.loja-padronizada .carrinho-layout {
+                display:flex; flex-wrap:wrap; gap:1rem; align-items:stretch;
+            }
+            #modalLoja.loja-padronizada .carrinho-col-esquerda {
+                flex:2; min-width:200px; background:#fff; border-radius:1rem;
+                padding:.5rem; border:1px solid var(--gray-200);
+            }
+            #modalLoja.loja-padronizada .carrinho-col-direita {
+                flex:1; min-width:180px; background:var(--gray-100);
+                border-radius:1rem; padding:.75rem; align-self:stretch;
+            }
+            #modalLoja.loja-padronizada .cliente-info {
+                background:#fff; border-radius:1rem; padding:.5rem;
+                border:1px solid var(--gray-200); margin-top:.5rem;
+            }
+            #modalLoja.loja-padronizada .total-loja { font-size:1rem; font-weight:700; color:var(--primary); }
+            #modalLoja.loja-padronizada .btn-pedido-cta {
+                background:var(--primary); color:#fff; border:none; padding:.75rem;
+                border-radius:2rem; font-weight:600; width:100%; cursor:pointer;
+                font-size:.9rem; transition:var(--transition);
+            }
+            #modalLoja.loja-padronizada .btn-pedido-cta:hover { background:var(--primary-dark); }
+            #modalLoja.loja-padronizada .btn-pedido-cta:disabled {
+                background:#94a3b8; cursor:not-allowed;
+            }
+            #modalLoja.loja-padronizada .cart-tab-badge {
+                display:inline-flex; align-items:center; justify-content:center;
+                background:#ef4444; color:#fff; font-size:.6rem; font-weight:700;
+                border-radius:9999px; min-width:1rem; height:1rem; padding:0 .3rem;
+                margin-left:.3rem; vertical-align:middle;
+            }
+            html.modo-app-inicial, body.modo-app {
+                --reserva-barra-app:max(130px,env(safe-area-inset-bottom,0px));
+            }
+            html.modo-app-inicial #modalLoja.loja-padronizada > .modal-conteudo.fullscreen,
+            body.modo-app #modalLoja.loja-padronizada > .modal-conteudo.fullscreen {
+                height:calc(100dvh - var(--reserva-barra-app));
+                max-height:calc(100dvh - var(--reserva-barra-app));
+                margin:0;
+            }
+            html.modo-app-inicial #modalLoja.loja-padronizada .modal-body,
+            body.modo-app #modalLoja.loja-padronizada .modal-body {
+                padding-bottom:max(.75rem,var(--reserva-barra-app))!important;
+            }
+            html.modo-app-inicial #modalLoja.loja-padronizada .modal-config-footer,
+            body.modo-app #modalLoja.loja-padronizada .modal-config-footer {
+                padding-bottom:max(1rem,var(--reserva-barra-app),env(safe-area-inset-bottom))!important;
+            }
+            .modal-imagem-full.loja-padronizada .container-imagem {
+                box-sizing:border-box;
+                padding-bottom:max(1rem,var(--reserva-barra-app,0px),env(safe-area-inset-bottom))!important;
+            }
+            .modal-imagem-full.loja-padronizada .lado-direito {
+                display:grid!important;
+                grid-template-columns:minmax(2rem,auto) minmax(3rem,5rem) minmax(2rem,auto) minmax(150px,1fr)!important;
+                align-content:start!important; align-items:center!important;
+                justify-content:stretch!important; gap:.75rem!important;
+                overflow-y:auto!important;
+                padding-bottom:max(1rem,var(--reserva-barra-app,0px),env(safe-area-inset-bottom))!important;
+            }
+            .modal-imagem-full.loja-padronizada .lado-direito > .produto-nome,
+            .modal-imagem-full.loja-padronizada .lado-direito > .tamanho-botoes-modal,
+            .modal-imagem-full.loja-padronizada .lado-direito > .preco,
+            .modal-imagem-full.loja-padronizada .lado-direito > .descricao {
+                grid-column:1/-1;
+            }
+            .modal-imagem-full.loja-padronizada .lado-direito > .produto-quantidade-simples {
+                grid-column:1/4; justify-content:flex-start!important; margin:0!important;
+            }
+            .modal-imagem-full.loja-padronizada .lado-direito > #addImagem {
+                grid-column:4; width:100%!important; margin:0!important;
+            }
+            @media (max-width:768px) {
+                #modalLoja.loja-padronizada .modal-header { padding:.65rem .75rem; }
+                #modalLoja.loja-padronizada .modal-estabelecimento-logo { width:38px; height:38px; min-width:38px; flex-basis:38px; }
+                #modalLoja.loja-padronizada .modal-estabelecimento-meta h3 { font-size:.9rem; }
+                #modalLoja.loja-padronizada .modal-estabelecimento-status { font-size:.65rem; }
+                #modalLoja.loja-padronizada .modal-tabs { margin:0 .25rem .35rem; }
+                #modalLoja.loja-padronizada .modal-tab { min-height:2rem; padding:.3rem; font-size:.7rem; }
+                #modalLoja.loja-padronizada .modal-body { padding:.6rem; }
+                #modalLoja.loja-padronizada .produtos-grid { grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:.4rem; }
+                #modalLoja.loja-padronizada .carrinho-layout { gap:.6rem; }
+                #modalLoja.loja-padronizada .carrinho-col-esquerda,
+                #modalLoja.loja-padronizada .carrinho-col-direita { min-width:100%; }
+                #modalLoja.loja-padronizada .modal-header > .btn-modal-fechar { width:2rem; height:2rem; min-width:2rem; }
+            }
+            @media (max-width:700px) {
+                .modal-imagem-full.loja-padronizada .container-imagem {
+                    flex-direction:column!important; align-items:stretch!important;
+                }
+                .modal-imagem-full.loja-padronizada .lado-esquerdo {
+                    height:46vh!important; min-height:180px; flex:0 0 46vh!important; padding:.5rem!important;
+                }
+                .modal-imagem-full.loja-padronizada .lado-direito {
+                    display:flex!important; flex-direction:column!important; min-width:0;
+                    width:100%; height:auto; flex:1 1 auto; gap:.5rem; padding:.75rem!important;
+                }
+                .modal-imagem-full.loja-padronizada .lado-direito > .produto-quantidade-simples {
+                    width:100%; justify-content:center!important; grid-column:auto;
+                }
+                .modal-imagem-full.loja-padronizada .lado-direito > #addImagem {
+                    width:100%!important; margin-top:.25rem!important; grid-column:auto;
+                }
+            }
+            @media (pointer:coarse) {
+                #modalLoja.loja-padronizada .modal-tab,
+                #modalLoja.loja-padronizada .btn-escolher,
+                #modalLoja.loja-padronizada .btn-adicionar-simples,
+                #modalLoja.loja-padronizada .btn-pedido-cta,
+                #modalLoja.loja-padronizada .btn-modal-fechar { min-height:44px; }
+                #modalLoja.loja-padronizada .modal-header > .btn-modal-fechar { min-height:44px; min-width:44px; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    instalarEstiloVisualLoja();
+
 // MÓDULO LOJA – COMPLETO (CORRIGIDO)
 // ============================================================
 
@@ -128,7 +383,7 @@ window.abrirModalLoja = function(idx) {
         overlay.setAttribute('aria-modal', 'true');
         overlay.setAttribute('aria-label', opcoes.titulo);
         overlay.innerHTML = '<div class="popup-confirmacao-card">' +
-            '<div class="popup-confirmacao-header"><h3>' + opcoes.titulo + '</h3><button class="btn-favorito" style="color:white;" onclick="this.closest(\'.popup-confirmacao\').remove()" aria-label="Fechar">&times;</button></div>' +
+            '<div class="popup-confirmacao-header"><h3>' + opcoes.titulo + '</h3><button type="button" class="modal-close-btn popup-confirmacao-close" onclick="this.closest(\'.popup-confirmacao\').remove()" aria-label="Fechar">×</button></div>' +
             '<div class="popup-confirmacao-body"><p>Seu pedido foi enviado com sucesso!</p>' +
             '<div class="popup-confirmacao-codigo"><p class="label">Código</p><p class="valor">#' + opcoes.codigo + '</p>' +
             '<button class="btn-adicionar-filtro" style="background:white;color:var(--primary);border:1px solid var(--primary);padding:0.5rem 1rem;margin-top:0.5rem;" onclick="navigator.clipboard.writeText(\'' + opcoes.codigo + '\').then(()=>alert(\'Código copiado!\'))">📋 Copiar código</button></div>' +
@@ -157,7 +412,7 @@ window.abrirModalLoja = function(idx) {
 
         var currentIndex = 0;
         var modal = document.createElement('div');
-        modal.className = 'modal-imagem-full';
+        modal.className = 'modal-imagem-full loja-padronizada';
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
         modal.setAttribute('aria-label', 'Imagem de ' + produto.nome);
@@ -182,7 +437,7 @@ window.abrirModalLoja = function(idx) {
             var estoqueNumerico = estoqueDaImagem !== undefined && estoqueDaImagem !== null && estoqueDaImagem !== '' ? parseInt(estoqueDaImagem) : NaN;
             var estoqueImagemHtml = !isNaN(estoqueNumerico) ? '<div class="estoque-imagem" style="font-size:.8rem;color:#cbd5e1;">Estoque disponível: ' + estoqueNumerico + '</div>' : '';
             var html = '<div class="container-imagem" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; width:100%; height:100%; background:#000; position:relative;">' +
-                '<div class="fechar" onclick="this.closest(\'.modal-imagem-full\').remove()" aria-label="Fechar imagem" style="position:absolute; top:1rem; right:1rem; color:white; font-size:2rem; cursor:pointer; background:rgba(0,0,0,0.5); width:2rem; height:2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10;">×</div>' +
+                '<button type="button" class="modal-close-btn fechar" onclick="this.closest(\'.modal-imagem-full\').remove()" aria-label="Fechar imagem" style="position:absolute; top:1rem; right:1rem; color:white; font-size:1.45rem; cursor:pointer; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,.35); width:2.25rem; height:2.25rem; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10;">×</button>' +
                 '<div class="lado-esquerdo" style="flex:2; min-width:200px; text-align:center; padding:1rem; display:flex; flex-direction:column; justify-content:center; height:100%; position:relative;">' +
                 (imagens.length > 1 ? '<button type="button" id="imagemAnterior" class="imagem-navegacao imagem-navegacao-anterior" aria-label="Imagem anterior" title="Imagem anterior (seta para a esquerda)">‹</button><button type="button" id="imagemSeguinte" class="imagem-navegacao imagem-navegacao-seguinte" aria-label="Próxima imagem" title="Próxima imagem (seta para a direita)">›</button>' : '') +
                 '<img src="' + imagens[currentIndex] + '" class="imagem-principal" alt="' + produto.nome + '" style="max-width:100%; max-height:70vh; object-fit:contain; margin:auto;">' +
@@ -1299,7 +1554,7 @@ function abrirModalVariacoes(produto) {
 
             // Construir HTML do modal
             var logoHtml = logoEstab ? '<img src="' + Core.sanitize(logoEstab) + '" alt="Logo de ' + Core.sanitize(nomeEstab) + '" loading="eager" referrerpolicy="no-referrer">' : '<span aria-hidden="true">🛍️</span>';
-            var modalHtml = '<div class="modal-overlay" id="modalLoja" style="display:flex;" role="dialog" aria-modal="true" aria-labelledby="modalLojaTitulo">' +
+            var modalHtml = '<div class="modal-overlay loja-padronizada" id="modalLoja" style="display:flex;" role="dialog" aria-modal="true" aria-labelledby="modalLojaTitulo">' +
                 '<div class="modal-conteudo fullscreen">' +
                 '<div class="modal-header"><div class="modal-estabelecimento-brand"><div class="modal-estabelecimento-logo">' + logoHtml + '</div><div class="modal-estabelecimento-meta"><h3 id="modalLojaTitulo">' + Core.sanitize(nomeEstab) + '</h3><span id="statusLojaBadgeLoja" class="modal-estabelecimento-status status-aberta">Aceitando pedidos</span></div></div>' +
                 '<button class="btn-modal-fechar" onclick="fecharModalLoja()" aria-label="Fechar loja">✕</button></div>' +
