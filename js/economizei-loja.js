@@ -1782,9 +1782,11 @@ function abrirModalVariacoes(produto) {
                 .onSnapshot(function(snapFretes) {
                     var fretes = [];
                     snapFretes.forEach(function(doc) {
+                        var dadosFrete = doc.data();
+                        if (dadosFrete.ativo === 'nao') return;
                         fretes.push({
-                            localidade: doc.data().localidade,
-                            taxa: parseFloat(doc.data().taxa) || 0
+                            localidade: dadosFrete.localidade,
+                            taxa: parseFloat(dadosFrete.taxa) || 0
                         });
                     });
                     fretesCache = fretes;
