@@ -285,6 +285,12 @@
             }
 
             /* Identificação do módulo no card público */
+            .badge-modulo-slot {
+                height:1.9rem; min-height:1.9rem; flex:0 0 1.9rem;
+                display:flex; align-items:center; justify-content:center;
+                margin:0 0 .1rem; overflow:visible;
+            }
+            .badge-modulo-slot .badge-modulo-card { margin:0; }
             .badge-modulo-card {
                 position:relative; display:inline-flex; align-items:center; justify-content:center;
                 gap:.35rem; margin:.15rem auto .35rem; max-width:100%;
@@ -412,8 +418,18 @@
             document.querySelectorAll('.card').forEach(function(card) {
                 var content = card.querySelector('.card-content');
                 if (!content) return;
+                var slot = content.querySelector('.badge-modulo-slot');
+                if (!slot) {
+                    slot = document.createElement('div');
+                    slot.className = 'badge-modulo-slot';
+                    slot.setAttribute('aria-hidden', 'true');
+                    var tituloInicial = content.querySelector('.card-title');
+                    if (tituloInicial) content.insertBefore(slot, tituloInicial);
+                    else content.appendChild(slot);
+                }
                 var modulo = obterModulo(card);
-                var existente = content.querySelector('.badge-modulo-card');
+                var existente = slot.querySelector('.badge-modulo-card') || content.querySelector('.badge-modulo-card');
+                if (existente && existente.parentNode !== slot) slot.appendChild(existente);
                 if (!modulo) {
                     if (existente) existente.remove();
                     return;
@@ -431,9 +447,7 @@
                 botao.setAttribute('aria-label', meta.label + '. Clique para saber mais.');
                 botao.setAttribute('aria-expanded', 'false');
                 botao.innerHTML = '<i class="fas ' + meta.icone + '" aria-hidden="true"></i><span>' + meta.label + '</span>';
-                var titulo = content.querySelector('.card-title');
-                if (titulo) content.insertBefore(botao, titulo);
-                else content.appendChild(botao);
+                slot.appendChild(botao);
                 vincularBotao(botao, modulo);
             });
         }
