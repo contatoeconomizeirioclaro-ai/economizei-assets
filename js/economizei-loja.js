@@ -328,12 +328,6 @@
             agendamentos: { label: 'Módulo Agendamentos', icone: 'fa-calendar-check', descricao: 'Este cadastro permite realizar agendamentos online.' },
             hospedagem: { label: 'Módulo Hospedagem', icone: 'fa-bed', descricao: 'Este cadastro permite fazer reservas de hospedagem online.' }
         };
-        var prefixos = {
-            pedidos: ['PRO','RES','LAN','PAD','ACA','BAR','TRL','PAS','CHU','SUP','ACO','HOR','GAS','MAT','FAR','ACD','POS','OFI','MEC','FES','DOC','ALG','BRI','INT','VAR','PSH','AGR','PRA','DEL'],
-            loja: ['LOJA','ROU','SAP','MOV','DEC','FLO','ART','ACE','LIN','FIT','BRE','COS'],
-            transporte: ['TAX','MOT','FRE','REB','VAN','TRANSP_'],
-            orcamentos: ['PRO','MAT','SER','ARQ','TER','ALU']
-        };
         var tooltipAberto = null;
 
         function normalizar(valor) {
@@ -352,12 +346,7 @@
             };
             if (aliases[estilo]) return aliases[estilo];
 
-            var id = String(card.dataset.idUnico || '').toUpperCase().trim();
-            if (!id) return '';
-            var encontrados = Object.keys(prefixos).filter(function(modulo) {
-                return prefixos[modulo].some(function(prefixo) { return id.indexOf(prefixo) === 0; });
-            });
-            return encontrados.length === 1 ? encontrados[0] : '';
+            return '';
         }
 
         function fecharTooltip() {
@@ -1633,7 +1622,7 @@ function abrirModalVariacoes(produto) {
         var val = document.getElementById('formaPagamentoLoja')?.value;
         var wrapper = document.getElementById('trocoParaWrapperLoja');
         var trocoInput = document.getElementById('trocoParaLoja');
-        var checkbox = document.getElementById('semTrocoCheckboxLoja');
+        var checkbox = document.getElementById('semTrocoCheckbox');
         if (checkbox && !checkbox.dataset.listenerAdded) {
             checkbox.dataset.listenerAdded = 'true';
             checkbox.addEventListener('change', toggleTrocoLoja);
@@ -1707,7 +1696,7 @@ function abrirModalVariacoes(produto) {
         }
         if (selectFrete) selectFrete.removeAttribute('aria-invalid');
         var formaPagamento = document.getElementById('formaPagamentoLoja').value;
-        var semTrocoCheckbox = document.getElementById('semTrocoCheckboxLoja');
+        var semTrocoCheckbox = document.getElementById('semTrocoCheckbox');
         var trocoInput = document.getElementById('trocoParaLoja');
         var semTroco = !!(semTrocoCheckbox && semTrocoCheckbox.checked);
         var trocoValor = trocoInput ? trocoInput.value.trim() : '';
@@ -2088,7 +2077,7 @@ function abrirModalVariacoes(produto) {
                 '<strong>Pagamento</strong>' +
                 '<select id="formaPagamentoLoja" class="input-pedido" onchange="toggleTrocoLoja()" aria-label="Forma de pagamento">' +
                 '<option value="Dinheiro">Dinheiro</option><option value="Cartão na entrega">Cartão na entrega</option><option value="Pix">Pix</option></select>' +
-                '<div id="trocoParaWrapperLoja" style="display:block;"><input type="number" id="trocoParaLoja" class="input-pedido" placeholder="Troco para quanto?" aria-label="Troco para quanto"><label class="sem-troco-label"><input type="checkbox" id="semTrocoCheckboxLoja"> Não preciso de troco</label></div>' +
+                '<div id="trocoParaWrapperLoja" style="display:block;"><input type="number" id="trocoParaLoja" class="input-pedido" placeholder="Troco para quanto?" aria-label="Troco para quanto"><label style="display:flex; align-items:center; gap:0.4rem; font-size:0.75rem; color:var(--gray-700); margin:-0.3rem 0 0.5rem 0.2rem;"><input type="checkbox" id="semTrocoCheckbox" style="width:auto;"> Não preciso de troco</label></div>' +
                 '<div class="cliente-info">' +
                 '<div class="form-row">' +
                 '<input type="text" id="clienteNomeLoja" class="input-pedido" placeholder="Seu nome*" value="' + (Core.getUserDisplayName() || '') + '" aria-label="Seu nome" required>' +
