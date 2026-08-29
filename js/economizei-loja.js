@@ -113,6 +113,14 @@
             #modalLoja.loja-padronizada #statusLojaMsgLoja.status-pausada .modal-status-label::before { background:#f59e0b; }
             #modalLoja.loja-padronizada #statusLojaMsgLoja.status-fechada .modal-status-label::before { background:#ef4444; }
             #modalLoja.loja-padronizada .modal-status-text { display:inline; font-size:.8rem; line-height:1.35; font-weight:650; }
+            .modal-close-btn {
+                background:var(--gray-100,#f1f5f9); border:1px solid var(--gray-200,#e2e8f0);
+                width:2rem; height:2rem; min-width:2rem; border-radius:50%;
+                display:flex; align-items:center; justify-content:center;
+                font-size:1.1rem; line-height:1; cursor:pointer; color:var(--gray-600,#475569);
+                transition:background .2s,color .2s; flex-shrink:0; padding:0;
+            }
+            .modal-close-btn:hover { background:var(--gray-200,#e2e8f0); color:var(--gray-800,#1e293b); }
             .popup-confirmacao .popup-confirmacao-close {
                 position:static; background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.55); color:#fff;
             }
@@ -1804,9 +1812,9 @@ function abrirModalVariacoes(produto) {
                 mostrarPopupConfirmacaoLoja({
                     titulo: '✅ Pedido Confirmado!',
                     codigo: codigoCurto,
-                    botoes: '<button class="btn-adicionar-filtro" onclick="fecharModalLoja(); document.getElementById(\'consultaRastreio\').value=\'' + codigoCurto + '\'; this.closest(\'.popup-confirmacao\').remove();">🔍 Acompanhar</button>' +
+                    botoes: '<button class="btn-adicionar-filtro" onclick="document.getElementById(\'consultaRastreio\').value=\'' + codigoCurto + '\'; var abaAcompanhar=document.querySelector(\'#modalLoja .modal-tab[data-tab=acompanhar]\'); if(abaAcompanhar) abaAcompanhar.click(); this.closest(\'.popup-confirmacao\').remove();">🔍 Acompanhar</button>' +
                         '<button class="btn-adicionar-filtro" style="background:#2c3e50;" onclick="gerarComprovanteLoja(' + JSON.stringify(pedido).replace(/"/g, '&quot;') + ', \'' + codigoCurto + '\'); this.closest(\'.popup-confirmacao\').remove();">🖨️ Comprovante</button>',
-                    onClose: 'fecharModalLoja()'
+                    onClose: 'var abaProdutos=document.querySelector(\'#modalLoja .modal-tab[data-tab=produtos]\'); if(abaProdutos) abaProdutos.click();'
                 });
                 carrinho = [];
                 cupomAtual = null;
@@ -1837,9 +1845,9 @@ function abrirModalVariacoes(produto) {
                 var statusMap = {
                     'pendente': { label: 'Aguardando Loja', icon: '⏳', color: '#f59e0b' },
                     'confirmado': { label: 'Pedido Confirmado', icon: '✅', color: '#10b981' },
-                    'em_preparo': { label: 'Sendo Preparado', icon: '👨‍🍳', color: '#6366f1' },
-                    'saiu_entrega': { label: 'Saiu para Entrega', icon: '🛵', color: '#3b82f6' },
-                    'concluido': { label: 'Entregue', icon: '🏁', color: '#10b981' },
+                    'em_preparo': { label: 'Em Preparação', icon: '📦', color: '#6366f1' },
+                    'saiu_entrega': { label: 'Saiu para Entrega', icon: '🚚', color: '#3b82f6' },
+                    'concluido': { label: 'Entregue', icon: '✅', color: '#10b981' },
                     'cancelado': { label: 'Cancelado', icon: '❌', color: '#ef4444' }
                 };
                 var s = statusMap[p.status] || statusMap.pendente;
