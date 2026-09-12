@@ -1,0 +1,116 @@
+/* 1. RESET E CONFIGURAÇÕES GERAIS */
+.parceiros-carrossel-full * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.parceiros-carrossel-full {
+  background: #ffffff;
+  padding: 20px 0 25px;
+  border-top: 3px solid #e2aa22;
+  width: 100%;
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+}
+
+.carousel-header h3 {
+  color: #1a3463;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* 2. ESTRUTURA E ÁREA VISÍVEL */
+.carousel-outer {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.carousel-container {
+  overflow: hidden;
+  /* ADICIONADO: Padding no topo para o hover não cortar o card */
+  padding-top: 10px; 
+  padding-bottom: 10px;
+}
+
+.carousel-track {
+  display: flex;
+}
+
+/* 3. SLIDES E CARDS */
+.carousel-slide {
+  flex: 0 0 200px;
+  padding: 0 10px;
+  text-align: center;
+}
+
+.partner-card {
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(226, 170, 34, 0.2);
+  transition: all 0.3s ease; /* Transição essencial para o hover */
+  overflow: hidden;
+}
+
+.partner-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.partner-name {
+  display: block;
+  margin-top: 8px;
+  font-weight: 600;
+  color: #1a3463;
+  font-size: 12px;
+  transition: color 0.3s ease;
+}
+
+/* 4. AJUSTE DO HOVER - LEVITAÇÃO SEM CORTES */
+.carousel-slide:hover .partner-card {
+  transform: translateY(-8px); /* Sobe o card */
+  box-shadow: 0 8px 18px rgba(226, 170, 34, 0.4); /* Sombra mais profunda */
+}
+
+.carousel-slide:hover .partner-name {
+  color: #e2aa22;
+}
+
+/* 5. BOTÕES (SETAS) */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(26, 52, 99, 0.85);
+  border: none;
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+}
+
+.carousel-btn:hover {
+  background: #e2aa22;
+  color: #1a3463;
+}
+
+.prev { left: 0; }
+.next { right: 0; }
+
+/* 6. RESPONSIVIDADE */
+@media (max-width: 768px) {
+  .carousel-slide { flex: 0 0 160px; }
+}

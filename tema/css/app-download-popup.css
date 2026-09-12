@@ -1,0 +1,244 @@
+#popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    z-index: 999999;
+    padding: 24px 12px;
+    box-sizing: border-box;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    /* Permite rolar quando o popup não cabe inteiro na tela, em vez de
+       simplesmente cortar o topo/rodapé (bug relatado em telas menores) */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #popup-overlay.active {
+    display: flex;
+    justify-content: center;
+    /* "align-items: safe center" centraliza normalmente, mas se o
+       conteúdo for mais alto que a tela, cai para o alinhamento pelo
+       topo em vez de cortar — align-items:flex-start é o fallback para
+       navegadores que ainda não suportam a palavra-chave "safe". */
+    align-items: flex-start;
+    align-items: safe center;
+    opacity: 1;
+  }
+
+  #popup {
+    position: relative;
+    background: #ffffff;
+    max-width: 540px;
+    width: 100%;
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: stretch;
+    overflow: visible;
+    animation: popupSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  @keyframes popupSlideUp {
+    from { opacity: 0; transform: translateY(40px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  #popup .mockup-wrapper {
+    flex: 0 0 160px;
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  #popup .mockup-wrapper img {
+    width: 180px;
+    height: auto;
+    position: absolute;
+    bottom: -25px;
+    left: -45px;
+    filter: drop-shadow(0 20px 30px rgba(0,0,0,0.3));
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  #popup:hover .mockup-wrapper img {
+    transform: translateY(-8px) rotate(-3deg) scale(1.02);
+  }
+
+  #popup .content-container {
+    flex: 1;
+    padding: 45px 35px 45px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 240px;
+  }
+
+  #popup .info-wrapper {
+    position: relative;
+    z-index: 5;
+  }
+
+  #popup .info-wrapper h2 {
+    color: #111827;
+    font-size: 1.6rem;
+    margin: 0 0 12px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  #popup .info-wrapper p {
+    font-size: 1rem;
+    color: #4b5563;
+    line-height: 1.6;
+    margin: 0 0 24px;
+  }
+
+  #popup .info-wrapper p strong {
+    color: #1a3463;
+    font-weight: 700;
+  }
+
+  .actions-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .playstore-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .playstore-badge-link {
+    display: inline-block;
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+
+  .playstore-badge-link:hover {
+    transform: scale(1.05);
+    filter: brightness(1.05);
+  }
+
+  .playstore-badge {
+    height: 54px;
+    width: auto;
+    display: block;
+  }
+
+  .download-hint {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    margin-left: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .download-hint svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: #6b7280;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .link-cadastro {
+    font-size: 0.85rem;
+    color: #6b7280;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .link-cadastro:hover {
+    color: #1a3463;
+  }
+
+  .link-cadastro .arrow-icon {
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+
+  .link-cadastro:hover .arrow-icon {
+    transform: translateX(4px);
+  }
+
+  .popup-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #f3f4f6;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 20;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .popup-close:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    transform: rotate(90deg);
+  }
+
+  @media (max-width: 580px) {
+    #popup {
+      flex-direction: column;
+      max-width: 340px;
+    }
+    #popup .mockup-wrapper {
+      flex: 0 0 100px;
+      width: 100%;
+    }
+    #popup .mockup-wrapper img {
+      width: 160px;
+      position: relative;
+      left: 0;
+      bottom: 0;
+      margin-top: -80px;
+      filter: drop-shadow(0 15px 20px rgba(0,0,0,0.2));
+    }
+    #popup .content-container {
+      padding: 20px 24px 35px;
+      text-align: center;
+      min-height: auto;
+    }
+    #popup .info-wrapper h2 {
+      font-size: 1.4rem;
+    }
+    .actions-wrapper {
+      align-items: center;
+    }
+    .playstore-wrapper {
+      align-items: center;
+    }
+    .playstore-badge {
+      height: 50px;
+    }
+    .download-hint {
+      font-size: 0.7rem;
+    }
+  }

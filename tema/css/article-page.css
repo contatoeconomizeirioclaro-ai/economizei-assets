@@ -1,0 +1,357 @@
+/*=================================================
+   REFORMA TOTAL DA PÁGINA DE ARTIGO
+   ===================================================== */
+
+/* ----- CONTAINER PRINCIPAL ----- */
+.item-post .post-item-inner {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* ----- CONTEÚDO CENTRALIZADO COM LARGURA CONFORTÁVEL ----- */
+.item-post .post-body {
+  max-width: 860px;
+  margin: 30px auto;
+  padding: 0 20px;
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #1e293b;
+}
+
+/* ----- METADADOS (AUTOR/DATA) ----- */
+.item-post .post-meta {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 20px 15px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* ----- IMAGENS ----- */
+.post-body img:not(.card-img):not(.partner-logo):not(.foto-perfil) {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 16px !important;
+  margin: 1.5rem auto !important;
+  display: block !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+}
+
+/* ----- TÍTULOS E SUBTÍTULOS ----- */
+.post-body h1, .post-body h2, .post-body h3, .post-body h4, .post-body h5, .post-body h6 {
+  color: #1a3463;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.post-body h1 { font-size: 2rem; }
+.post-body h2 { font-size: 1.8rem; border-left: 4px solid #e2aa22; padding-left: 1rem; }
+.post-body h3 { font-size: 1.5rem; }
+.post-body h4 { font-size: 1.25rem; }
+.post-body h5 { font-size: 1.1rem; }
+.post-body h6 { font-size: 1rem; }
+
+/* ----- PARÁGRAFOS ----- */
+.post-body p {
+  margin-bottom: 1.25rem;
+}
+
+/* ----- LISTAS ----- */
+.post-body ul, .post-body ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+.post-body li {
+  margin-bottom: 0.5rem;
+}
+
+/* ----- CITAÇÕES ----- */
+.post-body blockquote {
+  background: #f1f5f9;
+  border-left: 4px solid #e2aa22;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 16px;
+  font-style: normal;
+  color: #334155;
+  font-size: 1rem;
+}
+
+/* ----- TABELAS ----- */
+.post-body table {
+  width: 100%;
+  margin: 1.5rem 0;
+  border-collapse: collapse;
+  overflow-x: auto;
+  display: block;
+}
+.post-body th, .post-body td {
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem;
+  text-align: left;
+}
+.post-body th {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+/* ----- CÓDIGO ----- */
+.post-body pre, .post-body code {
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 0.2rem 0.4rem;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+.post-body pre {
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+/* ----- VÍDEOS RESPONSIVOS ----- */
+.post-body .responsive-video-wrap,
+.post-body iframe[src*="youtube"],
+.post-body iframe[src*="vimeo"] {
+  max-width: 100% !important;
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  margin: 1.5rem auto !important;
+  display: block !important;
+  border-radius: 16px !important;
+}
+
+/* ========== BOTÕES DE COMPARTILHAMENTO (fonte única) ========== */
+.post-share {
+  max-width: 860px;
+  margin: 2rem auto;
+  padding: 0;
+  background: transparent;
+  border: none;
+  overflow: visible;
+}
+.share-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.share-links li {
+  margin: 0;
+  padding: 0;
+}
+.share-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: #f1f5f9;
+  color: #1e293b;
+  line-height: 1.2;
+  white-space: nowrap;
+  border: none;
+}
+.share-links a i {
+  font-size: 16px;
+  margin: 0;
+}
+.share-links .facebook a { background: #1877f2; color: white; }
+.share-links .x-twitter a { background: #000; color: white; }
+.share-links .pinterest a { background: #bd081c; color: white; }
+.share-links .linkedin a { background: #0077b5; color: white; }
+.share-links .whatsapp a { background: #25d366; color: white; }
+.share-links .email a { background: #6c757d; color: white; }
+.share-links a:hover {
+  filter: brightness(0.9);
+  transform: translateY(-2px);
+}
+@media (max-width: 560px) {
+  .share-links a span {
+    display: none;
+  }
+  .share-links a {
+    padding: 8px 14px;
+  }
+}
+
+/* ----- NAVEGAÇÃO ENTRE POSTS (ANTERIOR/PRÓXIMO) MODERNA ----- */
+.post-nav {
+  max-width: 860px;
+  margin: 2rem auto;
+  padding: 1.5rem 0;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+}
+.post-nav li {
+  display: inline-block;
+  width: auto;
+}
+.post-nav .post-prev, .post-nav .post-next {
+  float: none;
+  padding: 0;
+}
+.post-nav a {
+  background-color: #1a3463;
+  padding: 10px 20px;
+  border-radius: 40px;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+}
+.post-nav a:hover {
+  background-color: #e2aa22;
+  color: #1a3463;
+  transform: translateX(-4px);
+}
+.post-nav .post-next a:hover {
+  transform: translateX(4px);
+}
+.post-nav span {
+  display: inline;
+  font-size: 0.85rem;
+  color: inherit;
+}
+
+/* ----- REFERÊNCIAS (ESTILO BONITO) ----- */
+/* Se você usar classes como .referencias, .fontes, .bibliografia */
+/* Estiliza divs que contêm listas de referências */
+.post-body div[style*="margin: 30px 0 20px;"]:has(h3),
+.post-body div[style*="margin-top: 30px;"]:has(h3) {
+  background: #f8fafc !important;
+  border-left: 4px solid #e2aa22 !important;
+  padding: 1rem 1.5rem !important;
+  margin: 2rem 0 !important;
+  border-radius: 16px !important;
+  font-size: 0.9rem !important;
+  color: #334155 !important;
+}
+
+.post-body div[style*="margin: 30px 0 20px;"] h3,
+.post-body div[style*="margin-top: 30px;"] h3 {
+  color: #1a3463 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.post-body div[style*="margin: 30px 0 20px;"] p,
+.post-body div[style*="margin-top: 30px;"] p {
+  margin-bottom: 0.5rem !important;
+}
+
+.post-body div[style*="margin: 30px 0 20px;"] a,
+.post-body div[style*="margin-top: 30px;"] a {
+  color: #1a3463;
+  text-decoration: none;
+  border-bottom: 1px dotted #cbd5e1;
+}
+.post-body div[style*="margin: 30px 0 20px;"] a:hover {
+  color: #e2aa22;
+}
+
+/* ----- SOBRE O AUTOR (ÚNICO, SEM DUPLICAÇÃO) ----- */
+.about-author {
+  max-width: 860px;
+  margin: 2rem auto;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.about-author .avatar-container {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0;
+}
+.about-author .author-name {
+  font-size: 1.1rem;
+  margin-bottom: 5px;
+}
+.about-author .author-description {
+  font-size: 0.85rem;
+  color: #5a6e8a;
+}
+/* Remove qualquer outro box de autor que venha do artigo injetado */
+.about-page .about-author,
+.about-page > div:last-child:has(strong) {
+  display: none !important;
+}
+
+/* ----- COMENTÁRIOS ----- */
+.blog-post-comments {
+  display: block;   /* ou simplesmente apague a linha display: none */
+  overflow: hidden;
+  background-color: #fff;
+  margin: 0 0 35px;
+  border: 1px solid #ebebf3;
+  border-radius: 3px;
+}
+
+/* ----- ARTIGOS INJETADOS (ABOUT-PAGE) - HERDAM ESTILO E ESCONDEM NAVEGAÇÃO DUPLICADA ----- */
+.about-page {
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+}
+.about-page * {
+  font-family: inherit !important;
+  color: inherit !important;
+  line-height: inherit !important;
+}
+.about-page .nav-btn-prev,
+.about-page .nav-btn-next {
+  display: none;
+}
+.about-page div[style*="justify-content: space-between"] {
+  display: none !important;
+}
+.about-page .video-wrapper iframe {
+  border-radius: 16px;
+}
+
+/* ----- RESPONSIVIDADE (MELHORA LEITURA NO MOBILE) ----- */
+@media (max-width: 680px) {
+  .item-post .post-body {
+    padding: 0 20px;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+  .item-post .post-body p {
+    margin-bottom: 1.25rem;
+  }
+  .about-author {
+    flex-direction: column;
+    text-align: center;
+  }
+  .post-nav a {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+  }
+}

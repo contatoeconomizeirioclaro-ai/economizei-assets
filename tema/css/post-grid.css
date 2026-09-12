@@ -1,0 +1,188 @@
+/* ========== ESTILOS DA GRADE ========== */
+.grid-posts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 28px auto 34px;
+  width: 100%;
+  max-width: 100%;
+  align-items: stretch;
+}
+
+.index-post {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: all 0.4s ease;
+  border: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
+}
+
+.index-post:not(.post-patrocinado) {
+  border-color: #1a3463;
+}
+
+.index-post.post-patrocinado {
+  border-color: #e2aa22;
+  background-color: #fffdf2;
+}
+
+.index-post:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+}
+
+.index-post .post-image-wrap .post-image-link {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 170px;
+  padding-top: 0;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+.index-post .post-image-link img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+.index-post:hover .post-image-link img {
+  transform: scale(1.08);
+}
+
+.index-post .index-post-inside-wrap {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.index-post .post-info-wrap {
+  padding: 12px 14px 14px;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+.index-post .index-post-footer {
+  margin: auto 0 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.index-post .post-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #e2aa22;
+  margin-bottom: 4px;
+  letter-spacing: 0.35px;
+}
+
+.index-post .post-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  color: #1a3463;
+  line-height: 1.28;
+  display: block;
+  overflow: visible;
+}
+.index-post .post-title a {
+  color: inherit;
+  text-decoration: none;
+}
+.index-post .post-title a:hover {
+  color: #e2aa22;
+}
+
+.index-post .post-meta {
+  font-size: 11px;
+  color: #666;
+  font-weight: 500;
+  margin-top: 0;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.index-post .post-snippet,
+.index-post .read-more {
+  display: none;
+}
+
+.index-post .read-more {
+  display: none;
+}
+.index-post .read-more:hover {
+  background: #e2aa22;
+  color: #1a3463;
+  transform: translateX(3px);
+}
+.index-post .read-more::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s;
+}
+.index-post .read-more:hover::before {
+  transform: rotate(45deg) translate(2px, -2px);
+}
+
+.index-post.post-patrocinado::before {
+  content: "PATROCINADO";
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #e2aa22;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 20px;
+  z-index: 2;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  box-shadow: 0 3px 8px rgba(226,170,34,0.3);
+  pointer-events: none;
+}
+
+
+@media (max-width: 980px) {
+  .grid-posts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .grid-posts {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin: 24px auto 30px;
+  }
+  .index-post .post-image-wrap .post-image-link {
+    height: 190px;
+  }
+  .index-post .post-info-wrap {
+    padding: 12px 14px 14px;
+  }
+  .index-post .post-title {
+    font-size: 16px;
+  }
+  .index-post .post-meta {
+    font-size: 11px;
+  }
+}

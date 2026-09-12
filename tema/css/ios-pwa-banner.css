@@ -1,0 +1,177 @@
+/* Cartão no mesmo padrão visual do resto do tema: branco, borda dourada
+     no topo (igual sidebar/rodapé), texto navy — em vez do bloco navy
+     flutuante e desalinhado que existia antes. */
+  #ios-pwa-banner {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 12px;
+    right: 12px;
+    background: #ffffff;
+    color: #1a3463;
+    border-radius: 18px;
+    border: 1px solid #ebebf3;
+    box-shadow: 0 10px 30px rgba(26, 52, 99, 0.22);
+    z-index: 100000;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    max-width: 400px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+
+  #ios-pwa-banner::before {
+    content: "";
+    display: block;
+    height: 4px;
+    width: 100%;
+    background: linear-gradient(90deg, #1a3463, #e2aa22, #1a3463);
+  }
+
+  #ios-pwa-banner .banner-content {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 18px 18px;
+  }
+
+  #ios-pwa-banner .banner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  #ios-pwa-banner .banner-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #1a3463;
+  }
+
+  #ios-pwa-banner .banner-title i {
+    color: #e2aa22;
+    font-size: 18px;
+  }
+
+  #ios-pwa-banner .close-btn {
+    background: #f3f4f6;
+    border: none;
+    color: #9ca3af;
+    font-size: 18px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+  }
+
+  #ios-pwa-banner .close-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+  }
+
+  #ios-pwa-banner .banner-text {
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+    color: #4b5563;
+  }
+
+  #ios-pwa-banner .banner-text strong {
+    color: #1a3463;
+  }
+
+  #ios-pwa-banner .instruction-steps {
+    background: #f8fafc;
+    border: 1px solid #eef1f6;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+
+  #ios-pwa-banner .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 13.5px;
+    color: #1a3463;
+  }
+
+  #ios-pwa-banner .step:last-child {
+    margin-bottom: 0;
+  }
+
+  #ios-pwa-banner .step-number {
+    background: #e2aa22;
+    color: #1a3463;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  #ios-pwa-banner .step-text {
+    flex: 1;
+    line-height: 1.45;
+  }
+
+  #ios-pwa-banner .share-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #eef1f6;
+    color: #1a3463;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12.5px;
+  }
+
+  #ios-pwa-banner .share-icon svg {
+    width: 14px;
+    height: 14px;
+    fill: #1a3463;
+    vertical-align: middle;
+    margin: 0 2px;
+  }
+
+  #ios-pwa-banner .secondary-btn {
+    background: #1a3463;
+    border: none;
+    color: #ffffff;
+    padding: 11px 16px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    width: 100%;
+  }
+
+  #ios-pwa-banner .secondary-btn:hover {
+    background: #e2aa22;
+    color: #1a3463;
+  }
+
+  @media (min-width: 768px) {
+    #ios-pwa-banner {
+      bottom: 30px;
+      left: 30px;
+      right: auto;
+      width: 380px;
+    }
+  }

@@ -1,0 +1,197 @@
+/* ESTILOS DA BARRA INFERIOR APP OTIMIZADA */
+:root {
+  --nav-bg: #ffffff;
+  --nav-primary: #1a3463;
+  --nav-secondary: #1a3463;
+  --nav-accent: #e2aa22;
+  --nav-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  --nav-radius: 18px;
+  --nav-height: 70px;
+}
+
+#app-bottom-nav {
+  display: none;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 1024px) {
+  html.app-view:not(.app-webview) #app-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: max(26px, env(safe-area-inset-bottom));
+    left: max(16px, env(safe-area-inset-left));
+    right: max(16px, env(safe-area-inset-right));
+    height: var(--nav-height);
+    background: var(--nav-bg);
+    border-radius: var(--nav-radius);
+    align-items: center;
+    justify-content: space-between;
+    z-index: 99999;
+    box-shadow: var(--nav-shadow);
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  html.reduced-motion.app-view:not(.app-webview) #app-bottom-nav {
+    transition: none;
+  }
+  
+  html.app-view:not(.app-webview) #app-bottom-nav.nav-hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+  }
+}
+
+#app-bottom-nav .nav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex: 1;
+  height: 100%;
+  text-align: center;
+  text-decoration: none;
+  color: var(--nav-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s ease;
+}
+
+#app-bottom-nav .nav-btn:focus-visible {
+  outline: 3px solid var(--nav-accent);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+#app-bottom-nav svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: var(--nav-primary);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.3s ease;
+}
+
+#app-bottom-nav .nav-label {
+  margin-top: 4px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+#app-bottom-nav .nav-main {
+  flex: 0;
+  position: relative;
+}
+
+#app-bottom-nav .nav-main .nav-icon {
+  width: 56px;
+  height: 56px;
+  background: var(--nav-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -28px;
+  box-shadow: 0 6px 18px rgba(26, 52, 99, 0.45),
+              0 0 0 0 rgba(26, 52, 99, 0.4);
+  transition: box-shadow 0.3s ease,
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes pulseEffect {
+  0% { box-shadow: 0 6px 18px rgba(26, 52, 99, 0.45); }
+  50% { box-shadow: 0 6px 25px rgba(26, 52, 99, 0.6); }
+  100% { box-shadow: 0 6px 18px rgba(26, 52, 99, 0.45); }
+}
+
+#app-bottom-nav .nav-main svg {
+  stroke: #ffffff;
+  width: 26px;
+  height: 26px;
+}
+
+#app-bottom-nav .nav-btn:active {
+  transform: scale(0.92);
+}
+
+#app-bottom-nav .nav-btn:active .nav-icon {
+  transform: scale(0.95);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #app-bottom-nav .nav-btn:hover {
+    opacity: 0.9;
+  }
+  
+  #app-bottom-nav .nav-btn:hover .nav-icon {
+    box-shadow: 0 8px 22px rgba(26, 52, 99, 0.5);
+  }
+}
+
+html.app-view body {
+  padding-bottom: 0;
+}
+
+@supports(padding: max(0px)) {
+  html.app-view body {
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+html.app-view body::after {
+  content: "";
+  display: block;
+  height: 180px;
+}
+
+@media (prefers-color-scheme: dark) {
+  html.app-view #app-bottom-nav {
+    background: #1a1a1a;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  
+  #app-bottom-nav .nav-btn {
+    color: #e0e0e0;
+  }
+  
+  #app-bottom-nav svg {
+    stroke: #e0e0e0;
+  }
+  
+  #app-bottom-nav .nav-main .nav-icon {
+    background: var(--nav-secondary);
+    box-shadow: 0 6px 18px rgba(26, 52, 99, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app-bottom-nav,
+  #app-bottom-nav .nav-btn,
+  #app-bottom-nav .nav-icon {
+    transition: none;
+    animation: none;
+  }
+}
+
+@media (prefers-contrast: high) {
+  #app-bottom-nav {
+    border: 2px solid #000;
+  }
+  
+  #app-bottom-nav .nav-main .nav-icon {
+    outline: 2px solid #000;
+    outline-offset: 1px;
+  }
+}

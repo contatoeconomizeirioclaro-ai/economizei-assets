@@ -1,0 +1,185 @@
+/* ===== VARIÁVEIS GLOBAIS (ajuste fácil) ===== */
+.app-ad-container {
+  --duracao-zoom: 15s;        /* velocidade do zoom na imagem */
+  --duracao-brilho: 2s;       /* velocidade do brilho no texto */
+  --intensidade-brilho: 0.15; /* intensidade do brilho (0 a 1) */
+  --deslocamento-float: 3px;  /* quanto o texto sobe/desce */
+  display: block !important;
+  visibility: visible !important;
+  width: 100%;
+  max-width: 320px;
+  height: 100px;
+  margin: 10px auto;
+  border: 2px solid var(--borda-cor, #e2aa22);
+  border-radius: 8px;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--borda-cor) 20%, transparent);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInAd 0.5s ease-out;
+}
+
+.app-ad-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--borda-cor) 30%, transparent);
+}
+
+/* Link base */
+.app-ad {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  color: white;
+  font-family: Arial, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ===== ANÚNCIO COM IMAGEM ===== */
+.app-ad-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* Zoom contínuo e suave */
+  animation: slowZoom var(--duracao-zoom) infinite alternate ease-in-out;
+  transform-origin: center center;
+  transition: transform 0.4s ease;
+}
+
+/* Efeito extra no hover: acelera o zoom */
+.app-ad:hover .app-ad-image {
+  animation-duration: calc(var(--duracao-zoom) / 2);
+}
+
+/* ===== ANÚNCIO GRADIENTE ===== */
+.app-ad-gradient {
+  background: var(--gradiente, linear-gradient(135deg, #1a3463, #0f2a4a));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  /* Pequena animação no gradiente (muda ângulo) */
+  background-size: 200% 200%;
+  animation: gradientShift 8s infinite alternate;
+}
+
+.app-ad-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+/* Título com brilho pulsante e flutuação */
+.app-ad-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  animation: textPulse var(--duracao-brilho) infinite alternate,
+             floatText 3s infinite alternate ease-in-out;
+}
+
+.app-ad-subtitle {
+  font-size: 12px;
+  margin-bottom: 8px;
+  opacity: 0.9;
+  animation: floatText 3s infinite alternate-reverse ease-in-out;
+}
+
+/* Botão com brilho próprio */
+.app-ad-button {
+  font-size: 10px;
+  background: rgba(255,255,255,0.2);
+  padding: 3px 8px;
+  border-radius: 12px;
+  opacity: 0.8;
+  transition: background 0.2s, transform 0.2s;
+  animation: buttonGlow 2s infinite alternate;
+}
+
+.app-ad:hover .app-ad-button {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.05);
+}
+
+/* Efeito shine (mantido, mas agora mais sutil) */
+.app-ad-shine {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0) 100%
+  );
+  transform: rotate(30deg);
+  animation: shine 4s infinite;
+  pointer-events: none;
+}
+
+/* ===== ANIMAÇÕES ===== */
+@keyframes fadeInAd {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slowZoom {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) rotate(30deg); }
+  100% { transform: translateX(100%) rotate(30deg); }
+}
+
+/* Brilho no texto (sombra clara) */
+@keyframes textPulse {
+  0% { text-shadow: 0 1px 3px rgba(255,255,255,0.3); }
+  100% { text-shadow: 0 0 8px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.3); }
+}
+
+/* Flutuação vertical */
+@keyframes floatText {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(calc(-1 * var(--deslocamento-float))); }
+}
+
+/* Brilho no botão (muda opacidade do fundo) */
+@keyframes buttonGlow {
+  0% { background: rgba(255,255,255,0.15); }
+  100% { background: rgba(255,255,255,0.3); }
+}
+
+/* Respeito a movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  .app-ad-image,
+  .app-ad-gradient,
+  .app-ad-title,
+  .app-ad-subtitle,
+  .app-ad-button,
+  .app-ad-shine {
+    animation: none !important;
+    transition: none !important;
+  }
+  .app-ad-container:hover {
+    transform: none;
+  }
+}

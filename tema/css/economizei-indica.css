@@ -1,0 +1,66 @@
+/* NOTA: $(indica.bg) do Theme Designer do Blogger foi fixado aqui
+   como #ffffff (era o valor atual). Editar a cor de fundo deste
+   widget agora exige editar este arquivo, nao mais o Theme Designer. */
+#sidebar1 #Image50 .widget-content {
+  position: relative;
+  border: 2.5px solid #e2aa22;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(226, 170, 34, 0.25);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  padding: 14px 14px 34px;
+  text-align: center;
+}
+#sidebar1 #Image50 .widget-content:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(226, 170, 34, 0.4);
+}
+#sidebar1 #Image50 .widget-content::before {
+  content: "\2605  ECONOMIZEI! INDICA";
+  display: inline-block;
+  background: rgba(226, 170, 34, 0.12);
+  color: #e2aa22;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+#sidebar1 #Image50 img {
+  max-width: 100%;
+  height: auto;
+  max-height: 160px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+#sidebar1 #Image50 .widget-content:hover img {
+  transform: translateY(-4px) scale(1.03);
+}
+#sidebar1 #Image50 .caption {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a3463;
+  line-height: 1.4;
+}
+#sidebar1 #Image50 .widget-content::after {
+  content: "COMPRAR AGORA \203A";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #1a3463;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 8px 0;
+  transition: background 0.25s ease;
+}
+#sidebar1 #Image50 .widget-content:hover::after {
+  background: #e2aa22;
+  color: #1a3463;
+}
