@@ -64,3 +64,10 @@
   background: #e2aa22;
   color: #1a3463;
 }
+#sidebar1 #Image50 .affiliate-disclosure {
+  display: block;
+  margin-top: 8px;
+  font-size: 10px;
+  line-height: 1.3;
+  color: #999999;
+}
