@@ -875,7 +875,7 @@ Economizei.Cards = (function () {
           return;
         }
         if (b.tipo === 'qrcode') {
-          botoes.push('<button class="btn-acao btn-qrcode" onclick="Economizei.Cards.abrirQRCode(event, \'' + nome + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + nome + '">📱 QR Code</button>');
+          botoes.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + nome + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + nome + '">📱 QR Code</button>');
           return;
         }
         if (b.tipo === 'link') {
