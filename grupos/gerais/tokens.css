@@ -25,18 +25,32 @@
 }
 
 /* ===== BLOCO DE TEXTO DE UTILIDADE (topo das páginas) ===== */
-.texto-utilidade {
+.pagina-wrap .texto-utilidade {
+    display: block;
+    width: 100%;
+    min-height: 54px;
     font-size: 0.85rem;
     color: var(--gray-600);
     background: var(--gray-100);
-    padding: 0.6rem 0.9rem;
+    padding: 10px 14px;
     border-radius: var(--radius-sm);
-    margin: 6px 0 10px 0;
+    margin: 0 0 14px 0;
     border-left: 3px solid var(--primary);
-    line-height: 1.4;
+    line-height: 1.45;
+    clear: both;
+}
+.pagina-wrap .busca-container {
+    display: block;
+    width: 100%;
+    margin-top: 0;
+    clear: both;
 }
 @media (max-width: 768px) {
-    .texto-utilidade { font-size: 0.8rem; padding: 6px 10px; }
+    .pagina-wrap .texto-utilidade {
+        min-height: 0;
+        font-size: 0.8rem;
+        padding: 8px 10px;
+    }
 }
 
 /* ===== SEÇÃO "SOBRE ESTA PÁGINA" (rodapé das páginas) ===== */
