@@ -1216,18 +1216,28 @@ Economizei.Init = (function () {
     });
     buscaInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { e.preventDefault(); this.blur(); } });
 
-    document.getElementById('btnAdicionarFiltro').addEventListener('click', function () { Economizei.Cards.abrirModalTiposFiltro(); });
-    document.getElementById('btnLimparFiltros').addEventListener('click', function () { Economizei.Cards.limparTodosFiltros(); });
-    document.getElementById('btnPertoMim').addEventListener('click', function () { Economizei.Cards.togglePertoDeMim(); });
-    document.getElementById('btnFecharModal').addEventListener('click', function () { document.getElementById('modalAdicionarFiltro').style.display = 'none'; Economizei.UI.restoreFocus(); });
-    document.getElementById('btnFecharModalOpcoes').addEventListener('click', function () { document.getElementById('modalOpcoesFiltro').style.display = 'none'; Economizei.UI.restoreFocus(); });
-    document.getElementById('btnFecharModalWhatsapp').addEventListener('click', function () { document.getElementById('modalWhatsapp').style.display = 'none'; Economizei.UI.restoreFocus(); });
+    // Botões opcionais: cada página de grupo decide, no seu próprio HTML,
+    // se inclui ou não estes elementos (ex. uma página sem geolocalização
+    // simplesmente não coloca o #btnPertoMim). Por isso cada listener só é
+    // ligado se o elemento existir — sem isso, a página quebraria em
+    // qualquer grupo que omitisse um desses botões.
+    function onClick(id, handler) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('click', handler);
+    }
+
+    onClick('btnAdicionarFiltro', function () { Economizei.Cards.abrirModalTiposFiltro(); });
+    onClick('btnLimparFiltros', function () { Economizei.Cards.limparTodosFiltros(); });
+    onClick('btnPertoMim', function () { Economizei.Cards.togglePertoDeMim(); });
+    onClick('btnFecharModal', function () { document.getElementById('modalAdicionarFiltro').style.display = 'none'; Economizei.UI.restoreFocus(); });
+    onClick('btnFecharModalOpcoes', function () { document.getElementById('modalOpcoesFiltro').style.display = 'none'; Economizei.UI.restoreFocus(); });
+    onClick('btnFecharModalWhatsapp', function () { document.getElementById('modalWhatsapp').style.display = 'none'; Economizei.UI.restoreFocus(); });
     document.querySelectorAll('.modal-overlay').forEach(function (m) {
       m.addEventListener('click', function (e) {
         if (e.target === this) { this.style.display = 'none'; Economizei.UI.restoreFocus(); }
       });
     });
-    document.getElementById('btnMelhoresAvaliados').addEventListener('click', function () {
+    onClick('btnMelhoresAvaliados', function () {
       Economizei.Cards.ordenarPorMedia = !Economizei.Cards.ordenarPorMedia;
       Economizei.Cards.aplicarFiltrosEOrdenacao();
     });
