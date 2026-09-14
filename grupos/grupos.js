@@ -157,18 +157,13 @@ Economizei.Utils = (function () {
     var str = String(valor).trim().toLowerCase();
     return str === '' || str === 'não' || str === 'nao';
   }
-  function gerarURLQRCode(nome, urlPersonalizada) {
-    if (urlPersonalizada && String(urlPersonalizada).trim()) {
-      return String(urlPersonalizada).trim();
-    }
-    var base = CFG.urlBaseQR || '';
-    var separador = base.indexOf('?') !== -1 ? '&' : '?';
-    return base + separador + 'qr=' + Core.gerarSlug(nome);
+  function gerarURLQRCode(nome) {
+    return 'https://www.economizeirioclaro.com.br/p/onde-comer_13.html?qr=' + Core.gerarSlug(nome);
   }
-  function gerarImagemQRCode(nome, tamanho, urlPersonalizada) {
+  function gerarImagemQRCode(nome, tamanho) {
     tamanho = tamanho || 200;
     return 'https://api.qrserver.com/v1/create-qr-code/?size=' + tamanho + 'x' + tamanho +
-      '&data=' + encodeURIComponent(gerarURLQRCode(nome, urlPersonalizada));
+      '&data=' + encodeURIComponent(gerarURLQRCode(nome));
   }
   return {
     parseCSV:parseCSV, splitValores:splitValores, valorAtendeFiltro:valorAtendeFiltro,
@@ -797,9 +792,8 @@ Economizei.Cards = (function () {
       var estrelasHTML = Array.from({ length:5 }, function (_, i) {
         return '<span aria-hidden="true">' + (i < Math.round(stats.media) ? '★' : '☆') + '</span>';
       }).join('');
-     var qrCodeURL = Utils.gerarImagemQRCode(nome);
-var urlQRCode = Utils.gerarURLQRCode(nome);
-
+      var qrCodeURL = Utils.gerarImagemQRCode(nome);
+      var urlQRCode = Utils.gerarURLQRCode(nome);
 
       var distanciaHTML = '';
       if (pertoMimAtivo && usuarioPosicao) {
