@@ -797,8 +797,9 @@ Economizei.Cards = (function () {
       var estrelasHTML = Array.from({ length:5 }, function (_, i) {
         return '<span aria-hidden="true">' + (i < Math.round(stats.media) ? '★' : '☆') + '</span>';
       }).join('');
-      var urlQRCode = c[C.URL_QR_CODE] || Utils.gerarURLQRCode(nome);
-      var qrCodeURL = Utils.gerarImagemQRCode(nome, 200, urlQRCode);
+     var qrCodeURL = Utils.gerarImagemQRCode(nome);
+var urlQRCode = Utils.gerarURLQRCode(nome);
+
 
       var distanciaHTML = '';
       if (pertoMimAtivo && usuarioPosicao) {
