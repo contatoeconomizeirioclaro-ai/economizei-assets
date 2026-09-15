@@ -104,6 +104,32 @@ Economizei.Core = (function () {
       }, { merge:true });
     } catch (e) { console.error(e); }
   }
+  function salvarPosicaoEAntesRecarregar() {
+    sessionStorage.setItem('scrollPos', window.scrollY);
+    var exp = document.querySelector('.card-expanded-container.active');
+    if (exp) sessionStorage.setItem('expandedIndex', exp.dataset.index);
+    else sessionStorage.removeItem('expandedIndex');
+    location.reload();
+  }
+  function restaurarPosicao() {
+    var sp = sessionStorage.getItem('scrollPos');
+    var ei = sessionStorage.getItem('expandedIndex');
+    if (sp) { window.scrollTo(0, parseInt(sp)); sessionStorage.removeItem('scrollPos'); }
+    if (ei !== null) {
+      setTimeout(function () {
+        var exp = document.querySelector('.card-expanded-container[data-index="' + ei + '"]');
+        if (exp) {
+          var card = exp.previousElementSibling;
+          if (card) {
+            var btn = card.querySelector('.card-toggle');
+            if (btn) btn.textContent = 'Ocultar detalhes';
+            exp.classList.add('active');
+          }
+        }
+        sessionStorage.removeItem('expandedIndex');
+      }, 100);
+    }
+  }
 
   return {
     db:db, auth:auth, provider:provider, authReady:authReady,
@@ -113,7 +139,9 @@ Economizei.Core = (function () {
     showLoginOverlay:showLoginOverlay, hideLoginOverlay:hideLoginOverlay,
     getEstatisticasAvaliacoes:getEstatisticasAvaliacoes,
     getAvaliacoesUsuario:getAvaliacoesUsuario,
-    salvarAvaliacaoFirebase:salvarAvaliacaoFirebase
+    salvarAvaliacaoFirebase:salvarAvaliacaoFirebase,
+    salvarPosicaoEAntesRecarregar:salvarPosicaoEAntesRecarregar,
+    restaurarPosicao:restaurarPosicao
   };
 })();
 
@@ -157,11 +185,6 @@ Economizei.Utils = (function () {
     var str = String(valor).trim().toLowerCase();
     return str === '' || str === 'não' || str === 'nao';
   }
-  /* CORRIGIDO: antes tinha a URL do Onde Comer fixa (onde-comer_13.html)
-     e todo QR Code de qualquer página de grupo linkava de volta pra lá.
-     Agora usa CFG.urlBaseQR, que cada GRUPO_CONFIG já declara.
-     Mantém o fallback pro Onde Comer só pra não quebrar nenhuma página
-     antiga que ainda não tenha essa chave configurada. */
   function gerarURLQRCode(nome) {
     var base = CFG.urlBaseQR || 'https://www.economizeirioclaro.com.br/p/onde-comer_13.html';
     return base + '?qr=' + Core.gerarSlug(nome);
@@ -322,6 +345,7 @@ Economizei.UI = (function () {
     var wData = JSON.parse(card.dataset.whatsapp || '[]');
     if (!wData.length) return;
     var modal = document.getElementById('modalWhatsapp');
+    if (!modal) return;
     document.getElementById('modalWhatsappTitulo').textContent = 'WhatsApp - ' + card.dataset.nome;
     var lista = document.getElementById('listaWhatsapp'); lista.innerHTML = '';
     wData.forEach(function (w) {
@@ -331,6 +355,28 @@ Economizei.UI = (function () {
       a.className = 'item-whatsapp';
       a.textContent = w.nome ? w.nome : Core.formatarTelefone(w.numero);
       a.setAttribute('aria-label', 'WhatsApp ' + (w.nome ? w.nome : Core.formatarTelefone(w.numero)));
+      lista.appendChild(a);
+    });
+    modal.style.display = 'flex';
+    trapFocus(modal);
+  }
+
+  function abrirModalReservas(index) {
+    var card = Economizei.Cards.getCardByIndex(index);
+    if (!card) return;
+    var rData = JSON.parse(card.dataset.reservas || '[]');
+    if (!rData.length) return;
+    var modal = document.getElementById('modalReservas');
+    if (!modal) return;
+    document.getElementById('modalReservasTitulo').textContent = 'Opções de Reserva - ' + card.dataset.nome;
+    var lista = document.getElementById('listaReservas'); lista.innerHTML = '';
+    rData.forEach(function (r) {
+      var a = document.createElement('a');
+      a.href = r.url;
+      a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.className = 'item-reserva';
+      a.textContent = r.nome;
+      a.setAttribute('aria-label', 'Reserva via ' + r.nome);
       lista.appendChild(a);
     });
     modal.style.display = 'flex';
@@ -347,7 +393,11 @@ Economizei.UI = (function () {
     lastFocusedElement = null;
   }
 
-  return { mostrarToast:mostrarToast, abrirModalWhatsapp:abrirModalWhatsapp, trapFocus:trapFocus, restoreFocus:restoreFocus };
+  return {
+    mostrarToast:mostrarToast, abrirModalWhatsapp:abrirModalWhatsapp,
+    abrirModalReservas:abrirModalReservas,
+    trapFocus:trapFocus, restoreFocus:restoreFocus
+  };
 })();
 
 /* ============================================================
@@ -824,6 +874,20 @@ Economizei.Cards = (function () {
         });
       }
 
+      var reservasData = [];
+      if (C.RESERVA !== undefined && c[C.RESERVA]) {
+        c[C.RESERVA].split(',').map(function (s) { return s.trim(); }).forEach(function (item) {
+          if (item.indexOf('|') !== -1) {
+            var sp = item.split('|').map(function (s) { return s.trim(); });
+            reservasData.push({ nome: sp[0], url: sp[1] });
+          } else {
+            var nn = item;
+            try { var u = new URL(item); nn = u.hostname.replace(/^www\./, ''); } catch (e) {}
+            reservasData.push({ nome: nn, url: item });
+          }
+        });
+      }
+
       var card = document.createElement('div');
       card.className = 'card' + (isFav ? ' card-favorito' : '');
       card.setAttribute('role','button'); card.setAttribute('tabindex','0');
@@ -834,6 +898,7 @@ Economizei.Cards = (function () {
       card.dataset.latitude = latitude; card.dataset.longitude = longitude;
       card.dataset.index = idx; card.dataset.verificado = verificado ? 'true' : 'false';
       card.dataset.whatsapp = JSON.stringify(whatsappData);
+      if (reservasData.length) card.dataset.reservas = JSON.stringify(reservasData);
 
       var separadorHtml = (categoria && subcategoria) ? '<span class="card-categoria-separador">|</span>' : '';
 
@@ -882,6 +947,12 @@ Economizei.Cards = (function () {
         }
         if (b.tipo === 'qrcode') {
           botoes.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + nome + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + nome + '">📱 QR Code</button>');
+          return;
+        }
+        if (b.tipo === 'reserva') {
+          if (reservasData.length > 0) {
+            botoes.push('<button class="btn-acao btn-reserva" data-index="' + idx + '" onclick="Economizei.UI.abrirModalReservas(' + idx + ')" aria-label="Opções de reserva para ' + nome + '">Reservas</button>');
+          }
           return;
         }
         if (b.tipo === 'link') {
@@ -948,12 +1019,12 @@ Economizei.Cards = (function () {
   }
 
   function handleCardClick(e) {
-    if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .badge-tooltip, .link-entrar, .link-sair')) return;
+    if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .badge-tooltip, .link-entrar, .link-sair')) return;
     toggleCardExpand(this);
   }
   function handleCardKeydown(e) {
     if (e.key === 'Enter' || e.key === ' ') {
-      if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .badge-tooltip, .link-entrar, .link-sair')) return;
+      if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .badge-tooltip, .link-entrar, .link-sair')) return;
       e.preventDefault(); toggleCardExpand(this);
     }
   }
@@ -1102,7 +1173,8 @@ Economizei.Cards = (function () {
       document.querySelectorAll('.avaliacao-topo').forEach(function (topo) { var idx = topo.dataset.index; topo.innerHTML = gerarAuthHTML(idx, null); });
       document.querySelectorAll('.avaliacao-estrelas').forEach(function (container) {
         container.querySelectorAll('.estrela-btn').forEach(function (s) { s.classList.remove('ativa'); s.setAttribute('aria-checked','false'); });
-        var msg = container.parentElement.querySelector('.avaliacao-mensagem'); if (msg) msg.textContent = ''; }); ativarInteracoesCards();
+        var msg = container.parentElement.querySelector('.avaliacao-mensagem'); if (msg) msg.textContent = ''; });
+      ativarInteracoesCards();
       UI.mostrarToast('Você saiu da sua conta.');
     }).catch(function (err) { UI.mostrarToast('Erro ao sair: ' + err.message); });
   }
@@ -1231,6 +1303,7 @@ Economizei.Init = (function () {
     onClick('btnFecharModal', function () { document.getElementById('modalAdicionarFiltro').style.display = 'none'; Economizei.UI.restoreFocus(); });
     onClick('btnFecharModalOpcoes', function () { document.getElementById('modalOpcoesFiltro').style.display = 'none'; Economizei.UI.restoreFocus(); });
     onClick('btnFecharModalWhatsapp', function () { document.getElementById('modalWhatsapp').style.display = 'none'; Economizei.UI.restoreFocus(); });
+    onClick('btnFecharModalReservas', function () { document.getElementById('modalReservas').style.display = 'none'; Economizei.UI.restoreFocus(); });
     document.querySelectorAll('.modal-overlay').forEach(function (m) {
       m.addEventListener('click', function (e) {
         if (e.target === this) { this.style.display = 'none'; Economizei.UI.restoreFocus(); }
