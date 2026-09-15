@@ -1,31 +1,20 @@
-/* ============================================================
-   MÓDULO LOJA — Registro + lógica + HTML do modal
-   Depende de: economizei-core.js, comum/modulos.js (opcional),
-               modais.css, componentes.css, _base.css, loja.css
-   Carregar DEPOIS do core.
-   ============================================================ */
 (function () {
   'use strict';
   if (!window.Economizei) window.Economizei = {};
   if (!Economizei.Cards) { console.error('[loja] Core não carregado.'); return; }
 
+  var EU = EconomizeiUtils;
   var Core = Economizei.Core;
   var UI = Economizei.UI;
   var Cards = Economizei.Cards;
   var COLUNAS = Economizei.Horario.COLUNAS;
 
-  // ============================================================
-  // REGISTRO NO CORE (o botão aparece automaticamente nos cards)
-  // ============================================================
   Cards.registrarModulo('loja', {
     label: '🛍️ Ver produtos',
     ariaLabel: 'Ver produtos da loja',
     onClick: function (idx) { return 'Economizei.Loja.abrirModal(' + idx + ')'; }
   });
 
-  // ============================================================
-  // IDENTIFICAÇÃO DO MÓDULO NOS CARDS (badge visual)
-  // ============================================================
   (function instalarBadgeModulos() {
     if (window.__economizeiBadgeModulos) return;
     window.__economizeiBadgeModulos = true;
@@ -87,8 +76,7 @@
       document.body.appendChild(tt);
       botao.classList.add('tooltip-aberto');
       botao.setAttribute('aria-expanded', 'true');
-      tt._ref = { botao: botao, elemento: tt };
-      tooltipAberto = tt._ref;
+      tooltipAberto = { botao: botao, elemento: tt };
       botao.setAttribute('aria-describedby', tt.id);
       posicionarTooltip();
       requestAnimationFrame(function () {
@@ -149,9 +137,6 @@
     renderizarSelos();
   })();
 
-  // ============================================================
-  // LÓGICA DO MODAL DA LOJA
-  // ============================================================
   function abrirModal(idx) {
     var est = Cards.dadosProcessados[idx];
     if (!est) { UI.mostrarToast('Estabelecimento não encontrado.'); return; }
@@ -172,7 +157,6 @@
     var unsubscribeFretes = null;
     var unsubscribeStatusLoja = null;
 
-    // ---------- HELPERS ----------
     function normalizarImagens(imgs) {
       var lista = Array.isArray(imgs) ? imgs : (typeof imgs === 'string' ? imgs.split(',') : []);
       return lista.map(function (s) { return String(s || '').trim(); }).filter(function (s, i, a) { return s !== '' && a.indexOf(s) === i; });
@@ -180,7 +164,6 @@
     function estoqueSemLimite(v) { return v === undefined || v === null || String(v).trim() === ''; }
     function obterEstoqueNumerico(v) { if (estoqueSemLimite(v)) return null; var n = parseInt(v, 10); return Number.isFinite(n) ? n : null; }
     function textoEstoque(v) { var n = obterEstoqueNumerico(v); return n === null ? 'Ilimitado' : String(n); }
-    function estoqueDisponivel(v, q) { var n = obterEstoqueNumerico(v); return n === null || q <= n; }
     function obterLogoDoCadastro(data) {
       var c = [data && data.logoUrl, data && data.logo, data && data.imagemLogo, data && data.imagem];
       for (var i = 0; i < c.length; i++) if (typeof c[i] === 'string' && /^https?:\/\//i.test(c[i].trim())) return c[i].trim();
@@ -223,8 +206,7 @@
       var vals = [];
       ['variacaoId', 'sku', 'id'].forEach(function (c) { if (v[c] !== undefined && v[c] !== null && String(v[c]) !== '') vals.push(String(v[c])); });
       var a = assinaturaAtributos(v.atributos); if (a) vals.push(a);
-      var ids = [];
-      vals.forEach(function (x) { if (ids.indexOf(x) === -1) ids.push(x); });
+      var ids = []; vals.forEach(function (x) { if (ids.indexOf(x) === -1) ids.push(x); });
       return ids;
     }
     function obterIdVariacao(v) { var i = obterIdsVariacao(v); return i.length ? i[0] : null; }
@@ -382,7 +364,6 @@
       return Math.min(total, Math.max(0, desc));
     }
 
-    // ---------- CARRINHO ----------
     function atualizarCarrinho() {
       var cont = document.getElementById('carrinhoLista');
       if (!cont) return;
@@ -401,7 +382,7 @@
         return '<div class="item-carrinho">' +
           '<img src="' + (it.imagem || 'https://via.placeholder.com/40') + '" class="item-carrinho-imagem" onerror="this.style.display=\'none\'">' +
           '<div style="flex:1"><strong>' + Core.sanitize(it.nome) + '</strong><br>' + ph + '</div>' +
-          '<input type="number" min="1" value="' + it.quantidade + '" class="qtd-item" data-id="' + it.id + '" data-variacao="' + (it.variacaoId || '') + '" onchange="Economizei.Loja.alterarQuantidade(\'' + Core.jsEscape(it.id) + '\', this.value, \'' + (it.variacaoId || '') + '\')">' +
+          '<input type="number" min="1" value="' + it.quantidade + '" class="qtd-item" onchange="Economizei.Loja.alterarQuantidade(\'' + Core.jsEscape(it.id) + '\', this.value, \'' + (it.variacaoId || '') + '\')">' +
           '<button class="btn-pequeno" onclick="Economizei.Loja.removerDoCarrinho(\'' + Core.jsEscape(it.id) + '\', \'' + (it.variacaoId || '') + '\')">✕</button>' +
           '</div>';
       }).join('');
@@ -529,7 +510,7 @@
       var semTroco = !!(cb && cb.checked);
       var tv = ti ? ti.value.trim() : '';
       if (forma === 'Dinheiro' && !semTroco && !tv) { UI.mostrarToast('Informe o valor para troco ou marque "Não preciso de troco".', 'erro'); return; }
-      salvarDadosClienteLocal(nome, tn, end);
+      EU.salvarDadosClienteLocal(nome, tn, end);
 
       var r = resumoPromocoes();
       var sub = r.subtotalPromocional;
@@ -558,10 +539,13 @@
       if (!currentLojistaId) { UI.mostrarToast('Erro: lojista não identificado.', 'erro'); return; }
       salvarPedidoComCupom(pedido).then(function () {
         gerarComprovante(pedido, cod);
-        mostrarPopupConfirmacao({
-          titulo: '✅ Pedido Confirmado!', codigo: cod,
-          botoes: '<button class="btn-adicionar-filtro" onclick="document.getElementById(\'consultaRastreio\').value=\'' + cod + '\'; document.querySelector(\'#modalLoja .modal-tab[data-tab=acompanhar]\').click(); this.closest(\'.popup-confirmacao\').remove();">🔍 Acompanhar</button>' +
-                  '<button class="btn-adicionar-filtro" style="background:#2c3e50;" onclick="Economizei.Loja.verComprovante(\'' + cod + '\'); this.closest(\'.popup-confirmacao\').remove();">🖨️ Comprovante</button>',
+        EU.mostrarPopupConfirmacao({
+          titulo: '✅ Pedido Confirmado!',
+          mensagem: 'Seu pedido foi enviado com sucesso!',
+          codigo: cod,
+          botoes:
+            '<button class="btn-adicionar-filtro" onclick="document.getElementById(\'consultaRastreio\').value=\'' + cod + '\'; document.querySelector(\'#modalLoja .modal-tab[data-tab=acompanhar]\').click(); this.closest(\'.popup-confirmacao\').remove();">🔍 Acompanhar</button>' +
+            '<button class="btn-adicionar-filtro" style="background:#2c3e50;" onclick="Economizei.Loja.verComprovante(\'' + cod + '\'); this.closest(\'.popup-confirmacao\').remove();">🖨️ Comprovante</button>',
           onClose: 'document.querySelector(\'#modalLoja .modal-tab[data-tab=produtos]\').click();'
         });
         carrinho = []; cupomAtual = null; cupomDesconto = 0;
@@ -641,7 +625,6 @@
       if (btn) { btn.disabled = bloq; btn.style.opacity = bloq ? '.5' : '1'; btn.style.pointerEvents = bloq ? 'none' : 'auto'; }
     }
 
-    // ---------- COMPROVANTE / POPUP ----------
     function gerarComprovante(pedido, cod) {
       function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
       function txt(v, f) { var s = String(v === undefined || v === null ? '' : v).trim(); return Core.sanitize(s || f || ''); }
@@ -667,20 +650,9 @@
       var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Comprovante #' + txt(cod, '') + '</title><style>' +
         '*{box-sizing:border-box}html{background:#eef2f7}body{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;margin:0;padding:clamp(.75rem,3vw,2rem);background:#eef2f7;color:#172033;min-width:0}.comprovante{width:100%;max-width:760px;margin:0 auto;background:#fff;border:1px solid #dbe3ee;border-radius:clamp(.75rem,2vw,1.25rem);padding:clamp(1rem,4vw,2rem);box-shadow:0 8px 28px rgba(15,23,42,.1);overflow:hidden}.comprovante-cabecalho{border-bottom:2px solid #e6edf5;padding-bottom:1rem;margin-bottom:1rem}.comprovante-cabecalho h1{margin:0 0 .65rem;color:#0a66c2;font-size:clamp(1.25rem,4vw,1.75rem);line-height:1.2}.comprovante-cabecalho p{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin:0;color:#526174;font-size:clamp(.78rem,2.5vw,.9rem)}.comprovante-cabecalho p strong{color:#172033}.info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;background:#f7f9fc;border:1px solid #e5ebf3;border-radius:.85rem;padding:clamp(.8rem,3vw,1.1rem);margin-bottom:1.25rem}.info div{min-width:0}.info strong,.detalhes-finais strong{display:block;color:#526174;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:.2rem}.info span,.detalhes-finais span{display:block;overflow-wrap:anywhere;font-size:clamp(.82rem,2.5vw,.95rem);line-height:1.4}.itens{margin:0 0 1.25rem}.itens h2{font-size:1rem;margin:0 0 .5rem;color:#172033}.itens ul{list-style:none;padding:0;margin:0;border-top:1px solid #e5ebf3}.itens li{display:grid;grid-template-columns:2.5rem minmax(0,1fr) auto;align-items:start;gap:.5rem;padding:.7rem 0;border-bottom:1px solid #edf1f5;font-size:clamp(.82rem,2.6vw,.95rem)}.item-quantidade{color:#526174;font-weight:700}.item-nome{overflow-wrap:anywhere}.itens li strong{white-space:nowrap;color:#172033}.vazio{color:#64748b;font-size:.9rem}.resumo{border-top:1px solid #dbe3ee;padding-top:.75rem;margin-left:auto;width:min(100%,360px)}.resumo>div{display:flex;justify-content:space-between;gap:1rem;padding:.28rem 0;font-size:clamp(.82rem,2.5vw,.95rem)}.resumo .desconto{color:#15803d}.resumo .total{margin-top:.45rem;padding-top:.65rem;border-top:2px solid #dbe3ee;color:#0a66c2;font-size:clamp(1rem,3.5vw,1.25rem)}.detalhes-finais{display:grid;gap:.75rem;margin-top:1.25rem;padding-top:1rem;border-top:1px solid #e5ebf3}.detalhes-finais p{margin:0}.obrigado{text-align:center;margin:1.5rem 0 0;color:#64748b;font-size:.82rem}@media(max-width:560px){body{padding:.5rem}.comprovante{border-radius:.75rem;padding:1rem}.info{grid-template-columns:1fr;gap:.65rem}.comprovante-cabecalho p{display:block}.comprovante-cabecalho p span{display:block;margin-top:.25rem}.itens li{grid-template-columns:2.25rem minmax(0,1fr);gap:.4rem}.itens li strong{grid-column:2;text-align:right;margin-top:.15rem}.resumo{width:100%}}@media print{html,body{background:#fff}.comprovante{max-width:none;border:0;box-shadow:none;border-radius:0;padding:0}}' +
         '</style></head><body><main class="comprovante">' + dados + '<p class="obrigado">Obrigado pela preferência!</p></main></body></html>';
-      var w = window.open('', '_blank');
-      if (!w) { UI.mostrarToast('Permita a abertura do comprovante.'); return; }
-      w.document.open(); w.document.write(html); w.document.close();
-    }
-    function mostrarPopupConfirmacao(o) {
-      var ov = document.createElement('div');
-      ov.className = 'popup-confirmacao';
-      ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', o.titulo);
-      ov.innerHTML = '<div class="popup-confirmacao-card"><div class="popup-confirmacao-header"><h3>' + o.titulo + '</h3><button type="button" class="modal-close-btn popup-confirmacao-close" onclick="this.closest(\'.popup-confirmacao\').remove()" aria-label="Fechar">×</button></div><div class="popup-confirmacao-body"><p>Seu pedido foi enviado com sucesso!</p><div class="popup-confirmacao-codigo"><p class="label">Código</p><p class="valor">#' + o.codigo + '</p><button class="btn-adicionar-filtro" style="background:#fff;color:var(--primary);border:1px solid var(--primary);padding:.5rem 1rem;margin-top:.5rem;" onclick="navigator.clipboard.writeText(\'' + o.codigo + '\').then(function(){ Economizei.UI.mostrarToast(\'Código copiado!\'); })">📋 Copiar</button></div><div class="popup-confirmacao-botoes">' + o.botoes + '</div></div><div class="popup-confirmacao-footer"><button class="btn-modal-fechar" onclick="this.closest(\'.popup-confirmacao\').remove(); ' + (o.onClose || '') + '">Fechar</button></div></div>';
-      document.body.appendChild(ov);
-      UI.trapFocus(ov);
+      EU.abrirJanelaHTML(html);
     }
 
-    // ---------- RENDERIZAÇÃO ----------
     function renderizarProdutos(produtos) {
       if (!produtos || !produtos.length) return '<p style="text-align:center;padding:2rem;">Nenhum produto disponível.</p>';
       var cats = {};
@@ -732,7 +704,6 @@
         '<div class="card-content-produto"><div class="produto-nome">' + Core.sanitize(p.nome) + '</div><div class="produto-preco">' + (of && !of.apenasAlgumas && of.promocao.tipo !== 'quantidade' ? '<s style="color:#94a3b8;font-size:.72rem;margin-right:.25rem;">' + precoTxt + '</s> R$ ' + of.precoPromocional.toFixed(2) : precoTxt) + '</div>' + promH + estH + '</div>' + btn + '</div>';
     }
 
-    // ---------- IMAGEM FULL + VARIAÇÕES ----------
     function abrirImagemFull(p) {
       var gal = obterGaleria(p);
       var imgs = gal.map(function (x) { return x.url; });
@@ -788,6 +759,7 @@
       document.body.appendChild(m);
       UI.trapFocus(m);
     }
+
     function abrirModalVariacoes(p) {
       var attrs = p.atributos || [];
       var vs = p.variacoes || [];
@@ -885,7 +857,6 @@
       atualizarVar();
     }
 
-    // ---------- ABRIR O MODAL ----------
     var antigo = document.getElementById('modalLoja');
     if (antigo) antigo.remove();
     var logoHtml = logoEstab ? '<img src="' + Core.sanitize(logoEstab) + '" alt="Logo" loading="eager" referrerpolicy="no-referrer">' : '<span aria-hidden="true">🛍️</span>';
@@ -945,7 +916,6 @@
     document.body.insertAdjacentHTML('beforeend', html);
     UI.trapFocus(document.getElementById('modalLoja'));
 
-    // Carrega dados do lojista
     Core.db.collection('lojistas').where('estabelecimentoId', '==', estId).limit(1).get().then(function (snap) {
       if (snap.empty) { UI.mostrarToast('Estabelecimento não configurado para loja.', 'erro'); return; }
       var ld = snap.docs[0];
@@ -964,10 +934,8 @@
           if (dd.disponivel === 'nao') return;
           var imgs = normalizarImagens(dd.imagens);
           var vs = Array.isArray(dd.variacoes) ? dd.variacoes.map(function (v) {
-            var c = {};
-            for (var k in v) c[k] = v[k];
-            var iv = obterImagensVariacao(v);
-            c.imagens = iv; c.imagem = c.imagem || iv[0] || '';
+            var c = {}; for (var k in v) c[k] = v[k];
+            var iv = obterImagensVariacao(v); c.imagens = iv; c.imagem = c.imagem || iv[0] || '';
             return c;
           }) : [];
           var ip = dd.imagem || imgs[0] || null;
@@ -995,18 +963,13 @@
       });
     });
     toggleTroco();
-    var saved = carregarDadosClienteLocal();
+    var saved = EU.carregarDadosClienteLocal();
     if (saved) {
       if (saved.nome) document.getElementById('clienteNomeLoja').value = saved.nome;
       if (saved.telefone) document.getElementById('clienteTelLoja').value = saved.telefone;
       if (saved.endereco) document.getElementById('enderecoLoja').value = saved.endereco;
     }
-    var telI = document.getElementById('clienteTelLoja');
-    if (telI) telI.addEventListener('input', function () {
-      var v = this.value.replace(/\D/g, ''); if (v.length > 11) v = v.slice(0, 11);
-      var f = ''; if (v.length) { f = '(' + v.slice(0, 2); if (v.length > 2) f += ') ' + v.slice(2, 7); if (v.length > 7) f += '-' + v.slice(7, 11); }
-      this.value = f;
-    });
+    EU.aplicarMascaraTelefone(document.getElementById('clienteTelLoja'));
     document.querySelectorAll('#modalLoja .modal-tab').forEach(function (t) {
       t.onclick = function () {
         document.querySelectorAll('#modalLoja .modal-tab').forEach(function (x) { x.classList.remove('active'); });
@@ -1027,8 +990,7 @@
       if (ab) adicionarAoCarrinho(ab.dataset.prodId);
     });
 
-    // Expor funções globais
-    Economizei.Loja = {
+    window.Economizei.Loja = {
       abrirModal: abrirModal,
       fechar: function () {
         if (unsubscribeCardapio) { unsubscribeCardapio(); unsubscribeCardapio = null; }
@@ -1055,4 +1017,4 @@
 
   window.Economizei.Loja = { abrirModal: abrirModal };
 
-})(window);
+})();
