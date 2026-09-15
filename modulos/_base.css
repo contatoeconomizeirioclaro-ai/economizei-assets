@@ -1,9 +1,9 @@
-:root {
-  --reserva-barra-app: env(safe-area-inset-bottom, 0px);
-}
 html.modo-app-inicial,
 body.modo-app {
-  --reserva-barra-app: max(130px, env(safe-area-inset-bottom, 0px));
+  --reserva-barra-app: max(130px, env(safe-area-inset-bottom, 0px)) !important;
+}
+:root {
+  --reserva-barra-app: env(safe-area-inset-bottom, 0px);
 }
 
 .modal-conteudo.modal-modulo {
