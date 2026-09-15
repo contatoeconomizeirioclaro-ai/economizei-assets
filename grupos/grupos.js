@@ -469,7 +469,7 @@ Economizei.Cards = (function () {
         '<div class="qr-code-info">' +
           '<div class="qr-code-icone" aria-hidden="true">📱</div>' +
           '<div class="qr-code-texto">' +
-            '<span class="qr-code-titulo">Você escaneou um QR Code</span>' +
+            '<span class="qr-code-titulo">Você está acessando:</span>' +
             '<span class="qr-code-nome">' + Core.sanitize(nome) + '</span>' +
           '</div>' +
         '</div>' +
@@ -655,7 +655,7 @@ Economizei.Cards = (function () {
       item.className = 'item-tipo-filtro'; item.textContent = tipo.nome;
       item.setAttribute('role','option'); item.setAttribute('tabindex','0');
       item.onclick = function () {
-        document.getElementById('modalAdicionarFiltro').style.display = 'none';
+        UI.restoreFocus();
         abrirModalOpcoesFiltro(tipo.id);
       };
       item.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); } });
@@ -1231,7 +1231,6 @@ Economizei.Cards = (function () {
     estabelecimentoViaQR = est;
     var cat = est[C.CATEGORIA];
     categoriaGlobal = cat;
-    criarIndicadorCategoria(cat);
     criarIndicadorQRCode(est[C.NOME], cat);
     document.getElementById('busca').value = est[C.NOME];
     var idx = dadosProcessados.findIndex(function (e) { return e[C.NOME] === est[C.NOME]; });
