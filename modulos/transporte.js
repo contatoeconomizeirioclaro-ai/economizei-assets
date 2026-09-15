@@ -1,22 +1,14 @@
-/* ============================================================
-   MÓDULO TRANSPORTE — Registro + lógica + HTML do modal
-   Depende de: economizei-core.js, modais.css, componentes.css,
-               _base.css, transporte.css
-   Carregar DEPOIS do core.
-   ============================================================ */
 (function () {
   'use strict';
   if (!window.Economizei) window.Economizei = {};
   if (!Economizei.Cards) { console.error('[transporte] Core não carregado.'); return; }
 
+  var EU = EconomizeiUtils;
   var Core = Economizei.Core;
   var UI = Economizei.UI;
   var Cards = Economizei.Cards;
   var COLUNAS = Economizei.Horario.COLUNAS;
 
-  // ============================================================
-  // REGISTRO NO CORE
-  // ============================================================
   Cards.registrarModulo('transporte', {
     label: '🚕 Solicitar corrida',
     ariaLabel: 'Solicitar corrida ou frete',
@@ -31,18 +23,12 @@
 
     var nomeEstab = est[COLUNAS.NOME];
     var estId = est[COLUNAS.ID_UNICO];
-    var fretes = [];
     var currentLojistaId = null;
     var mapboxMap = null;
-    var directionsRenderer = null;
-    var directionsService = null;
     var currentMapboxOrigin = null;
     var currentMapboxDest = null;
     var currentUser = Core.getCurrentUser();
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
     function getEnderecoCurto(endereco) {
       if (!endereco) return 'Não informado';
       var partes = endereco.split(',');
@@ -75,49 +61,12 @@
         'h2{color:#0a66c2;text-align:center;font-size:1.3rem;}.info{background:#f8fafc;padding:1rem;border-radius:0.5rem;margin:1rem 0;font-size:0.9rem;}.info p{margin:0.3rem 0;}' +
         '.total{font-weight:bold;font-size:1.2rem;text-align:right;margin-top:1rem;}.obrigado{text-align:center;margin-top:1.5rem;color:#64748b;font-size:0.85rem;}' +
         '@media (max-width:480px){.comprovante{padding:1rem;}h2{font-size:1.1rem;}.info{font-size:0.8rem;}}</style></head><body><div class="comprovante">' + dados + '<p class="obrigado">Obrigado pela preferência!</p></div></body></html>';
-      var win = window.open();
-      win.document.write(conteudo);
-      win.document.close();
+      EU.abrirJanelaHTML(conteudo);
     }
 
-    function mostrarPopupConfirmacaoTransporte(opcoes) {
-      var overlay = document.createElement('div');
-      overlay.className = 'popup-confirmacao';
-      overlay.setAttribute('role', 'dialog');
-      overlay.setAttribute('aria-modal', 'true');
-      overlay.setAttribute('aria-label', opcoes.titulo);
-      overlay.innerHTML =
-        '<div class="popup-confirmacao-card">' +
-          '<div class="popup-confirmacao-header">' +
-            '<h3>' + opcoes.titulo + '</h3>' +
-            '<button type="button" class="modal-close-btn popup-confirmacao-close" onclick="this.closest(\'.popup-confirmacao\').remove()" aria-label="Fechar">×</button>' +
-          '</div>' +
-          '<div class="popup-confirmacao-body">' +
-            '<p>Sua corrida foi solicitada com sucesso!</p>' +
-            '<div class="popup-confirmacao-codigo">' +
-              '<p class="label">Código</p>' +
-              '<p class="valor">#' + Core.sanitize(opcoes.codigo) + '</p>' +
-              '<button class="btn-adicionar-filtro" style="background:white;color:var(--primary);border:1px solid var(--primary);padding:0.5rem 1rem;margin-top:0.5rem;" onclick="navigator.clipboard.writeText(\'' + Core.jsEscape(opcoes.codigo) + '\').then(function(){ Economizei.UI.mostrarToast(\'Código copiado!\'); })">📋 Copiar código</button>' +
-            '</div>' +
-            '<div class="popup-confirmacao-botoes">' + opcoes.botoes + '</div>' +
-          '</div>' +
-          '<div class="popup-confirmacao-footer">' +
-            '<button class="btn-modal-fechar" onclick="this.closest(\'.popup-confirmacao\').remove(); ' + (opcoes.onClose || '') + '">Fechar</button>' +
-          '</div>' +
-        '</div>';
-      document.body.appendChild(overlay);
-      UI.trapFocus(overlay);
-    }
-
-    // ============================================================
-    // BUSCAR TARIFAS E DADOS DO LOJISTA
-    // ============================================================
     Core.db.collection('lojistas').where('estabelecimentoId', '==', estId).limit(1).get()
       .then(function (snap) {
-        if (snap.empty) {
-          UI.mostrarToast('Estabelecimento não configurado para transporte.', 'erro');
-          return;
-        }
+        if (snap.empty) { UI.mostrarToast('Estabelecimento não configurado para transporte.', 'erro'); return; }
         var lojistaDoc = snap.docs[0];
         currentLojistaId = lojistaDoc.id;
         var lojistaData = lojistaDoc.data();
@@ -139,9 +88,6 @@
         var statusMessage = result.statusMessage;
         var tarifas = result.tarifas;
 
-        // ============================================================
-        // CONSTRUIR MODAL
-        // ============================================================
         var modalHtml =
           '<div class="modal-overlay" id="modalTransporte" style="display:flex;">' +
             '<div class="modal-conteudo fullscreen">' +
@@ -155,7 +101,6 @@
                 (currentUser ? '<button class="modal-tab" data-tab="historico">📋 Histórico</button>' : '') +
               '</div>' +
               '<div class="modal-body">' +
-                // ABA SOLICITAR
                 '<div id="tabSolicitar" class="modal-tab-content active">' +
                   '<div id="statusLojaMsgTransporte" style="display:none; background:#fef3c7; border:1px solid #f59e0b; border-radius:0.75rem; padding:0.75rem; margin-bottom:0.75rem; text-align:center; font-weight:600; color:#92400e;" role="alert"></div>' +
                   '<div class="search-fields-wrapper">' +
@@ -199,7 +144,6 @@
                   '<textarea id="obsTransporte" class="input-pedido" placeholder="Observações"></textarea>' +
                   '<button class="btn-pedido-cta" id="btnSolicitarCorrida" style="width:100%;">Solicitar corrida</button>' +
                 '</div>' +
-                // ABA ACOMPANHAR
                 '<div id="tabAcompanhar" class="modal-tab-content">' +
                   '<input type="text" id="consultaCodigoTransporte" class="input-pedido" placeholder="Código da corrida" aria-label="Código da corrida">' +
                   '<div style="display:flex; gap:0.5rem;">' +
@@ -208,7 +152,6 @@
                   '</div>' +
                   '<div id="resultadoAcompanhamentoTransporte" style="margin-top:1rem;"></div>' +
                 '</div>' +
-                // ABA HISTÓRICO
                 (currentUser ? '<div id="tabHistorico" class="modal-tab-content"><div id="listaHistoricoTransporte"></div></div>' : '') +
               '</div>' +
             '</div>' +
@@ -216,9 +159,6 @@
 
         document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-        // ============================================================
-        // VERIFICAR STATUS DA LOJA
-        // ============================================================
         var btnSolicitar = document.getElementById('btnSolicitarCorrida');
         var msgStatus = document.getElementById('statusLojaMsgTransporte');
         if (statusLoja === 'fechada' || statusLoja === 'pausada') {
@@ -231,9 +171,6 @@
             : '🟡 Serviço pausado: ' + Core.sanitize(statusMessage || 'Indisponível no momento.');
         }
 
-        // ============================================================
-        // MAPA E GEOCODERS (se token estiver disponível)
-        // ============================================================
         if (!MAPBOX_TOKEN || !window.mapboxgl || !window.MapboxGeocoder) {
           var manualFallback = document.getElementById('camposManuais');
           var geocoderFallback = document.getElementById('geocoderContainer');
@@ -263,51 +200,32 @@
           var destinoContainer = document.getElementById('destinoGeocoder');
 
           var geocoderOrigem = new MapboxGeocoder({
-            accessToken: MAPBOX_TOKEN,
-            language: 'pt-BR',
-            country: 'br',
-            bbox: BRASIL_BBOX,
-            proximity: RIO_CLARO_PROXIMITY,
-            marker: false,
+            accessToken: MAPBOX_TOKEN, language: 'pt-BR', country: 'br',
+            bbox: BRASIL_BBOX, proximity: RIO_CLARO_PROXIMITY, marker: false,
             placeholder: 'Endereço de origem'
           });
           geocoderOrigem.addTo(origemContainer);
           geocoderOrigem.on('result', function (e) {
             if (e.result && e.result.center) {
-              currentMapboxOrigin = {
-                lat: e.result.center[1],
-                lng: e.result.center[0],
-                address: e.result.place_name
-              };
+              currentMapboxOrigin = { lat: e.result.center[1], lng: e.result.center[0], address: e.result.place_name };
               if (currentMapboxOrigin && currentMapboxDest) calcularRotaTransporte();
             }
           });
 
           var geocoderDestino = new MapboxGeocoder({
-            accessToken: MAPBOX_TOKEN,
-            language: 'pt-BR',
-            country: 'br',
-            bbox: BRASIL_BBOX,
-            proximity: RIO_CLARO_PROXIMITY,
-            marker: false,
+            accessToken: MAPBOX_TOKEN, language: 'pt-BR', country: 'br',
+            bbox: BRASIL_BBOX, proximity: RIO_CLARO_PROXIMITY, marker: false,
             placeholder: 'Endereço de destino'
           });
           geocoderDestino.addTo(destinoContainer);
           geocoderDestino.on('result', function (e) {
             if (e.result && e.result.center) {
-              currentMapboxDest = {
-                lat: e.result.center[1],
-                lng: e.result.center[0],
-                address: e.result.place_name
-              };
+              currentMapboxDest = { lat: e.result.center[1], lng: e.result.center[0], address: e.result.place_name };
               if (currentMapboxOrigin && currentMapboxDest) calcularRotaTransporte();
             }
           });
         }
 
-        // ============================================================
-        // CALCULAR ROTA (MAPBOX DIRECTIONS)
-        // ============================================================
         var rotaCamadaId = 'rota-direcao-' + Date.now();
 
         function calcularRotaTransporte() {
@@ -315,12 +233,10 @@
           var info = document.getElementById('infoRotaContainer');
           info.style.display = 'block';
           info.innerHTML = '🔄 Calculando rota...';
-
           var url = 'https://api.mapbox.com/directions/v5/mapbox/driving/' +
             currentMapboxOrigin.lng + ',' + currentMapboxOrigin.lat + ';' +
             currentMapboxDest.lng + ',' + currentMapboxDest.lat +
             '?access_token=' + MAPBOX_TOKEN + '&geometries=geojson&overview=full&steps=true';
-
           fetch(url)
             .then(function (response) { return response.json(); })
             .then(function (data) {
@@ -333,17 +249,11 @@
               var distancia = (leg.distance / 1000).toFixed(1) + ' km';
               var duracao = Math.round(leg.duration / 60) + ' min';
               info.innerHTML = '<strong>Distância:</strong> ' + distancia + ' | <strong>Tempo:</strong> ' + duracao;
-
-              if (mapboxMap.getLayer(rotaCamadaId)) {
-                mapboxMap.removeLayer(rotaCamadaId);
-                mapboxMap.removeSource(rotaCamadaId);
-              }
+              if (mapboxMap.getLayer(rotaCamadaId)) { mapboxMap.removeLayer(rotaCamadaId); mapboxMap.removeSource(rotaCamadaId); }
               var geojson = { type: 'Feature', geometry: route.geometry, properties: {} };
               mapboxMap.addSource(rotaCamadaId, { type: 'geojson', data: geojson });
               mapboxMap.addLayer({
-                id: rotaCamadaId,
-                type: 'line',
-                source: rotaCamadaId,
+                id: rotaCamadaId, type: 'line', source: rotaCamadaId,
                 layout: { 'line-join': 'round', 'line-cap': 'round' },
                 paint: { 'line-color': '#0a66c2', 'line-width': 5 }
               });
@@ -351,47 +261,20 @@
               route.geometry.coordinates.forEach(function (coord) { bounds.extend(coord); });
               mapboxMap.fitBounds(bounds, { padding: 40 });
             })
-            .catch(function (err) {
-              info.innerHTML = '❌ Erro ao calcular rota: ' + err.message;
-              console.error(err);
-            });
+            .catch(function (err) { info.innerHTML = '❌ Erro ao calcular rota: ' + err.message; console.error(err); });
         }
 
-        // ============================================================
-        // LIMPAR CAMPOS
-        // ============================================================
         window.limparCampoTransporte = function (tipo) {
-          if (tipo === 'origemMapa') {
-            var inp = document.querySelector('#origemGeocoder input');
-            if (inp) inp.value = '';
-            currentMapboxOrigin = null;
-          } else if (tipo === 'destinoMapa') {
-            var inp2 = document.querySelector('#destinoGeocoder input');
-            if (inp2) inp2.value = '';
-            currentMapboxDest = null;
-          } else if (tipo === 'origemManual') {
-            var inp3 = document.getElementById('origemManual');
-            if (inp3) inp3.value = '';
-          } else if (tipo === 'destinoManual') {
-            var inp4 = document.getElementById('destinoManual');
-            if (inp4) inp4.value = '';
-          }
-          var info = document.getElementById('infoRotaContainer');
-          if (info) info.style.display = 'none';
-          if (mapboxMap && mapboxMap.getLayer(rotaCamadaId)) {
-            mapboxMap.removeLayer(rotaCamadaId);
-            mapboxMap.removeSource(rotaCamadaId);
-          }
+          if (tipo === 'origemMapa') { var inp = document.querySelector('#origemGeocoder input'); if (inp) inp.value = ''; currentMapboxOrigin = null; }
+          else if (tipo === 'destinoMapa') { var inp2 = document.querySelector('#destinoGeocoder input'); if (inp2) inp2.value = ''; currentMapboxDest = null; }
+          else if (tipo === 'origemManual') { var inp3 = document.getElementById('origemManual'); if (inp3) inp3.value = ''; }
+          else if (tipo === 'destinoManual') { var inp4 = document.getElementById('destinoManual'); if (inp4) inp4.value = ''; }
+          var info = document.getElementById('infoRotaContainer'); if (info) info.style.display = 'none';
+          if (mapboxMap && mapboxMap.getLayer(rotaCamadaId)) { mapboxMap.removeLayer(rotaCamadaId); mapboxMap.removeSource(rotaCamadaId); }
         };
 
-        // ============================================================
-        // USAR LOCALIZAÇÃO ATUAL
-        // ============================================================
         window.usarLocalizacaoAtualTransporte = function () {
-          if (!MAPBOX_TOKEN) {
-            UI.mostrarToast('A localização automática está indisponível. Informe a origem manualmente.', 'erro');
-            return;
-          }
+          if (!MAPBOX_TOKEN) { UI.mostrarToast('A localização automática está indisponível. Informe a origem manualmente.', 'erro'); return; }
           if (!navigator.geolocation) { UI.mostrarToast('Geolocalização não suportada.', 'erro'); return; }
           navigator.geolocation.getCurrentPosition(function (pos) {
             var lat = pos.coords.latitude;
@@ -413,32 +296,22 @@
                   UI.mostrarToast('Localização inserida!', 'sucesso');
                 }
               });
-          }, function (err) {
-            UI.mostrarToast('Erro ao obter localização: ' + err.message, 'erro');
-          }, { enableHighAccuracy: true, timeout: 10000 });
+          }, function (err) { UI.mostrarToast('Erro ao obter localização: ' + err.message, 'erro'); }, { enableHighAccuracy: true, timeout: 10000 });
         };
 
-        // ============================================================
-        // TOGGLE ENDEREÇO MANUAL
-        // ============================================================
         window.toggleEnderecoManualTransporte = function () {
           var manual = document.getElementById('camposManuais');
           var geocoder = document.getElementById('geocoderContainer');
           var btn = document.getElementById('btnEnderecoManual');
           if (manual.style.display === 'none' || manual.style.display === '') {
-            manual.style.display = 'block';
-            geocoder.style.display = 'none';
+            manual.style.display = 'block'; geocoder.style.display = 'none';
             btn.textContent = '← Voltar para busca no mapa';
           } else {
-            manual.style.display = 'none';
-            geocoder.style.display = 'block';
+            manual.style.display = 'none'; geocoder.style.display = 'block';
             btn.textContent = 'Não encontrei meu endereço';
           }
         };
 
-        // ============================================================
-        // CONSULTAR CORRIDA
-        // ============================================================
         window.consultarCorridaTransporte = function () {
           var cod = document.getElementById('consultaCodigoTransporte').value.trim().toUpperCase();
           var resDiv = document.getElementById('resultadoAcompanhamentoTransporte');
@@ -465,9 +338,6 @@
             });
         };
 
-        // ============================================================
-        // HISTÓRICO
-        // ============================================================
         function carregarHistoricoTransporte(estIdLocal) {
           if (!Core.getCurrentUser()) return;
           var container = document.getElementById('listaHistoricoTransporte');
@@ -508,37 +378,25 @@
             });
         }
 
-        // ============================================================
-        // FECHAR MODAL
-        // ============================================================
         window.fecharModalTransporte = function () {
           var modal = document.getElementById('modalTransporte');
           if (modal) modal.remove();
           if (mapboxMap) { mapboxMap.remove(); mapboxMap = null; }
-          if (directionsRenderer) { directionsRenderer.setMap(null); directionsRenderer = null; }
-          directionsService = null;
           UI.restoreFocus();
         };
 
-        // ============================================================
-        // ABAS
-        // ============================================================
         document.querySelectorAll('#modalTransporte .modal-tab').forEach(function (tab) {
           tab.onclick = function () {
             document.querySelectorAll('#modalTransporte .modal-tab').forEach(function (t) { t.classList.remove('active'); });
             tab.classList.add('active');
             document.querySelectorAll('#modalTransporte .modal-tab-content').forEach(function (c) { c.classList.remove('active'); });
-            var tabId = tab.dataset.tab;
-            var contentId = 'tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1);
+            var contentId = 'tab' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1);
             var el = document.getElementById(contentId);
             if (el) el.classList.add('active');
-            if (tabId === 'historico' && Core.getCurrentUser()) carregarHistoricoTransporte(estId);
+            if (tab.dataset.tab === 'historico' && Core.getCurrentUser()) carregarHistoricoTransporte(estId);
           };
         });
 
-        // ============================================================
-        // BOTÃO SOLICITAR CORRIDA
-        // ============================================================
         document.getElementById('btnSolicitarCorrida').onclick = function () {
           if (statusLoja !== 'aberta') { UI.mostrarToast('Serviço indisponível no momento.', 'erro'); return; }
           var nome = document.getElementById('clienteNomeTransporte').value.trim();
@@ -567,41 +425,32 @@
             latDestino = currentMapboxDest.lat;
             lngDestino = currentMapboxDest.lng;
           }
-          salvarDadosClienteLocal(nome, telNumerico, origem + ' → ' + destino);
+          EU.salvarDadosClienteLocal(nome, telNumerico, origem + ' → ' + destino);
 
           var codigoCurto = Math.random().toString(36).substring(2, 8).toUpperCase();
           var pedido = {
-            estabelecimentoId: estId,
-            estabelecimentoNome: nomeEstab,
+            estabelecimentoId: estId, estabelecimentoNome: nomeEstab,
             clienteId: Core.getCurrentUser() ? Core.getCurrentUser().uid : null,
-            clienteNome: nome,
-            clienteTelefone: telNumerico,
-            origem: origem,
-            destino: destino,
-            origem_lat: latOrigem,
-            origem_lng: lngOrigem,
-            destino_lat: latDestino,
-            destino_lng: lngDestino,
-            taxaEntrega: taxaEntrega,
-            total: total,
-            status: 'pendente',
-            codigoCurto: codigoCurto,
+            clienteNome: nome, clienteTelefone: telNumerico,
+            origem: origem, destino: destino,
+            origem_lat: latOrigem, origem_lng: lngOrigem,
+            destino_lat: latDestino, destino_lng: lngDestino,
+            taxaEntrega: taxaEntrega, total: total,
+            status: 'pendente', codigoCurto: codigoCurto,
             observacao: document.getElementById('obsTransporte').value,
             criadoEm: firebase.firestore.FieldValue.serverTimestamp()
           };
           Core.db.collection('pedidos').add(pedido)
             .then(function () {
-              mostrarPopupConfirmacaoTransporte({
+              EU.mostrarPopupConfirmacao({
                 titulo: '✅ Corrida solicitada!',
+                mensagem: 'Sua corrida foi solicitada com sucesso!',
                 codigo: codigoCurto,
                 botoes:
-                  '<button class="btn-adicionar-filtro" onclick="fecharModalTransporte(); setTimeout(function(){ var m=document.getElementById(\'modalTransporte\'); }, 100);">🔍 Acompanhar</button>' +
-                  '<button class="btn-adicionar-filtro" style="background:#2c3e50;" onclick="this.closest(\'.popup-confirmacao\').remove();">🖨️ Comprovante</button>',
+                  '<button class="btn-adicionar-filtro" onclick="fecharModalTransporte();">🔍 Acompanhar</button>' +
+                  '<button class="btn-adicionar-filtro" style="background:#2c3e50;" data-transporte-comprovante="1">🖨️ Comprovante</button>',
                 onClose: 'fecharModalTransporte()'
               });
-              // Guarda os dados do último pedido para o botão "Comprovante" reabrir
-              window.__ultimoPedidoTransporte = { pedido: pedido, codigo: codigoCurto };
-              // Substitui o handler do botão Comprovante pelo definitivo (com dados reais)
               setTimeout(function () {
                 var botoesPop = document.querySelectorAll('.popup-confirmacao-botoes button');
                 if (botoesPop.length >= 2) {
@@ -616,34 +465,14 @@
             .catch(function (err) { UI.mostrarToast('Erro ao enviar: ' + err.message, 'erro'); });
         };
 
-        // ============================================================
-        // PRÉ-PREENCHER DADOS DO CLIENTE
-        // ============================================================
-        var saved = carregarDadosClienteLocal();
+        var saved = EU.carregarDadosClienteLocal();
         if (saved) {
           if (saved.nome && document.getElementById('clienteNomeTransporte')) document.getElementById('clienteNomeTransporte').value = saved.nome;
           if (saved.telefone && document.getElementById('clienteTelTransporte')) document.getElementById('clienteTelTransporte').value = saved.telefone;
         }
 
-        // Máscara de telefone
-        var telInput = document.getElementById('clienteTelTransporte');
-        if (telInput) {
-          telInput.addEventListener('input', function () {
-            var value = this.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.slice(0, 11);
-            var formatted = '';
-            if (value.length > 0) {
-              formatted = '(' + value.slice(0, 2);
-              if (value.length > 2) formatted += ') ' + value.slice(2, 7);
-              if (value.length > 7) formatted += '-' + value.slice(7, 11);
-            }
-            this.value = formatted;
-          });
-        }
+        EU.aplicarMascaraTelefone(document.getElementById('clienteTelTransporte'));
 
-        // ============================================================
-        // FOCAR MODAL + ESC
-        // ============================================================
         UI.trapFocus(document.getElementById('modalTransporte'));
 
         document.addEventListener('keydown', function escHandler(e) {
@@ -661,7 +490,6 @@
       });
   };
 
-  // Expõe em Economizei.Transporte também (para consistência com Economizei.Loja / Pedido)
   window.Economizei.Transporte = { abrirModal: window.abrirModalTransporte };
 
 })();
