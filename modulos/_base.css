@@ -32,6 +32,18 @@ body.modo-app .modal-conteudo.fullscreen {
   max-height: calc(100dvh - var(--reserva-barra-app));
 }
 
+/* Modais altos que não são fullscreen edge-to-edge (customização,
+   variações, extras pontuais) — só precisam do teto de altura,
+   sem virar tela cheia (mantêm cantos arredondados e margens). */
+html.modo-app-inicial .modal-conteudo.modal-customizacao-full,
+body.modo-app .modal-conteudo.modal-customizacao-full,
+html.modo-app-inicial .modal-conteudo.modal-variacao-full,
+body.modo-app .modal-conteudo.modal-variacao-full,
+html.modo-app-inicial .modal-conteudo.modal-extras-pontual,
+body.modo-app .modal-conteudo.modal-extras-pontual {
+  max-height: calc(100dvh - var(--reserva-barra-app)) !important;
+}
+
 html.modo-app-inicial .modal-conteudo.modal-modulo,
 body.modo-app .modal-conteudo.modal-modulo {
   max-height: calc(100dvh - var(--reserva-barra-app));
