@@ -1390,9 +1390,15 @@ Economizei.Pedido = (function () {
       '<div class="modal-overlay" id="modalPedidoRest" role="dialog" aria-modal="true" aria-labelledby="modalPedidoTitulo">' +
         '<div class="modal-conteudo fullscreen">' +
           '<div class="modal-header">' +
-            '<h3 id="modalPedidoTitulo">🍽️ ' + nomeEstabSeguro + '</h3>' +
-            '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar pedido">×</button>' +
-          '</div>' +
+  '<div class="modal-estabelecimento-brand">' +
+    '<div class="modal-estabelecimento-logo" id="modalPedidoLogo"><span aria-hidden="true">🍽️</span></div>' +
+    '<div class="modal-estabelecimento-meta">' +
+      '<h3 id="modalPedidoTitulo">' + nomeEstabSeguro + '</h3>' +
+      '<span id="modalPedidoStatus" class="modal-estabelecimento-status status-aberta">Aceitando pedidos</span>' +
+    '</div>' +
+  '</div>' +
+  '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar pedido">×</button>' +
+'</div>'  +
           '<div class="modal-tabs">' +
             '<button class="modal-tab active" data-tab="produtos" aria-label="Produtos">📦 Produtos</button>' +
             '<button class="modal-tab" data-tab="carrinho" aria-label="Carrinho">🛒 Carrinho <span class="cart-tab-badge" id="cartBadge" aria-hidden="true">0</span></button>' +
