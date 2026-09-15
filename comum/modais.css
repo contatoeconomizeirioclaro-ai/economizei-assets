@@ -44,7 +44,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* Sobrescreve o padding: 1.1rem do tokens.css e o overflow-y: auto */
+  min-height: 0;
   padding: 0;
   border: 1px solid rgba(15, 23, 42, 0.06);
   box-shadow:
@@ -84,7 +84,6 @@
   color: var(--gray-800, #1e293b);
 }
 
-/* Ícone como primeiro filho do h3 vira um quadrado colorido */
 .modal-header h3 > i:first-child,
 .modal-header h3 > span[aria-hidden="true"]:first-child {
   width: 36px;
@@ -105,11 +104,22 @@
 .modal-body {
   padding: 1rem 1.1rem;
   overflow-y: auto;
-  flex: 1;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  flex: 1 1 auto;
+  min-height: 0;
   color: var(--gray-700, #334155);
   font-size: 0.9rem;
   line-height: 1.55;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
+.modal-body::-webkit-scrollbar { width: 8px; }
+.modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.modal-body::-webkit-scrollbar-track { background: transparent; }
 .modal-body > p:first-child { margin-top: 0; }
 .modal-body > p:last-child  { margin-bottom: 0; }
 .modal-body p { margin: 0 0 0.65rem; }
@@ -313,29 +323,19 @@
   min-width: 120px;
 }
 
-/* ===== FAMÍLIA: MULTIS =====
-   Item:
-     <a class="item-opcao item-{tipo}" href="…">
-       <span class="item-icone" aria-hidden="true">…</span>
-       <span class="item-texto">
-         <span class="item-label">Nome</span>
-         <span class="item-sublabel">detalhe</span>
-       </span>
-       <span class="item-seta" aria-hidden="true">→</span>
-     </a>
-   ---------------------------------------------------------- */
+/* ===== FAMÍLIA: MULTIS ===== */
 .modal-conteudo.modal-multis .modal-body {
-  padding: 0.65rem;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .modal-conteudo.modal-multis .item-opcao {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0.7rem 0.85rem;
+  padding: 0.85rem 1rem;
   border: 1px solid var(--gray-200, #e2e8f0);
   border-radius: 14px;
   background: #fff;
@@ -347,7 +347,7 @@
   text-align: left;
   width: 100%;
   box-sizing: border-box;
-  min-height: 58px;
+  min-height: 64px;
 }
 .modal-conteudo.modal-multis .item-opcao:hover {
   border-color: #cbd5e1;
@@ -501,8 +501,7 @@
   }
 }
 
-/* Mobile: mantém centralizado, só encolhe um pouco pra não encostar na
-   barra nativa do app (que fica sobre o WebView). */
+/* Mobile: mantém centralizado, encolhe pra não encostar na barra nativa */
 @media (max-width: 520px) {
   .modal-overlay { padding: 12px; }
   .modal-conteudo { max-height: 78vh; }
@@ -512,4 +511,9 @@
   .modal-footer .btn-modal-primario {
     flex: 1 1 auto;
   }
+}
+
+/* Modo app: o app injeta .app-ativo no body quando detecta WebView nativa */
+body.app-ativo .modal-conteudo {
+  max-height: 74vh;
 }
