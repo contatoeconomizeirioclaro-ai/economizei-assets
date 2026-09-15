@@ -106,3 +106,25 @@ body.modo-app .modal-overlay > .modal-conteudo.fullscreen > .modal-body {
   box-sizing: border-box;
   padding-bottom: max(1rem, var(--reserva-barra-app, 0px), env(safe-area-inset-bottom)) !important;
 }
+
+.modal-overlay > .modal-conteudo.fullscreen {
+  margin-bottom: 0 !important;
+}
+html.modo-app-inicial .modal-overlay#modalPedidoRest,
+body.modo-app .modal-overlay#modalPedidoRest {
+  align-items: flex-start !important;
+}
+.modal-overlay#modalPedidoRest > .modal-conteudo.fullscreen {
+  height: 100% !important;
+  max-height: 100% !important;
+}
+html.modo-app-inicial .modal-overlay#modalPedidoRest > .modal-conteudo.fullscreen,
+body.modo-app .modal-overlay#modalPedidoRest > .modal-conteudo.fullscreen {
+  height: calc(100dvh - var(--reserva-barra-app)) !important;
+  max-height: calc(100dvh - var(--reserva-barra-app)) !important;
+  margin: 0 !important;
+}
+.modal-extras-pontual .modal-config-footer,
+.modal-customizacao-full .modal-config-footer {
+  padding-bottom: max(1rem, var(--reserva-barra-app, 0px), env(safe-area-inset-bottom)) !important;
+}
