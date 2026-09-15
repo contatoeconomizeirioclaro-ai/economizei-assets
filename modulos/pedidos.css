@@ -1,9 +1,3 @@
-/* ============================================================
-   MÓDULO PEDIDOS — CSS específico
-   Depende de: tokens.css, modais.css, componentes.css, _base.css
-   ============================================================ */
-
-/* Checkbox "sem troco" customizado */
 #semTrocoCheckbox {
   appearance: none !important; -webkit-appearance: none !important;
   width: 1.05rem !important; height: 1.05rem !important;
@@ -17,7 +11,6 @@
 #semTrocoCheckbox:checked::after { content: "✓"; color: #fff; font-size: .72rem; font-weight: 800; line-height: 1; }
 #semTrocoCheckbox:focus-visible { outline: 3px solid rgba(10, 102, 194, .28); outline-offset: 2px; }
 
-/* Efeitos de toque */
 .btn-tamanho-modal:active,
 .extra-qtd button:active,
 .qtd-btn-simples:active,
@@ -25,7 +18,6 @@
 .btn-tamanho-modal.ativo,
 .btn-selecionar-sabor.selecionado { box-shadow: 0 0 0 3px rgba(10, 102, 194, .16); }
 
-/* Layout grande para customização/extras */
 .modal-extras-pontual,
 .modal-customizacao-full {
   width: min(94vw, 900px) !important; max-width: 900px !important;
@@ -83,7 +75,6 @@
   box-shadow: 0 0 0 3px rgba(10, 102, 194, .16);
 }
 
-/* Cards de extra/sabor */
 .modal-extra-card {
   display: flex; align-items: center; gap: .75rem;
   padding: .75rem;
@@ -121,7 +112,6 @@
   font-size: .75rem; font-weight: 800; color: #334155;
 }
 
-/* Resumo lateral */
 .modal-order-summary {
   position: sticky; top: 0;
   border: 1px solid #dbeafe; border-radius: 1rem;
@@ -145,7 +135,6 @@
 .modal-config-footer .btn-pedido-cta { width: auto !important; min-width: 240px !important; display: inline-flex !important; align-items: center; justify-content: center; gap: .5rem; }
 .modal-button-arrow { font-size: 1.1rem; }
 
-/* Customização completa */
 .modal-customizacao-full .custom-summary-image {
   width: 100%; height: 130px; object-fit: cover;
   border-radius: .75rem; margin-bottom: .85rem; background: #e2e8f0;
@@ -178,7 +167,6 @@
 .modal-customizacao-full .modal-limit-label { margin-top: .65rem; color: #64748b; font-size: .7rem; }
 .modal-customizacao-full .modal-limit-label strong { color: #334155; }
 
-/* Imagem em tela cheia */
 .modal-imagem-full { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; align-items: center; justify-content: center; width: 100vw; height: 100vh; margin: 0; padding: 0; }
 .modal-imagem-full .container-imagem { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; width: 100%; height: 100%; background: #000; position: relative; }
 .modal-imagem-full .lado-esquerdo { flex: 2; min-width: 150px; text-align: center; padding: .5rem; display: flex; flex-direction: column; justify-content: center; height: 100%; }
@@ -219,7 +207,6 @@
   .imagem-navegacao-seguinte { right: .4rem; }
 }
 
-/* Quantidade simples dentro do produto */
 .produto-quantidade-simples { display: flex; align-items: center; justify-content: center; gap: .3rem; margin: .3rem 0; }
 .produto-quantidade-simples button {
   background: var(--gray-100); border: 1px solid var(--gray-200);
@@ -232,7 +219,6 @@
   font-size: .7rem; padding: .2rem;
 }
 
-/* Scanner de QR Code */
 #qr-reader { width: 100%; height: 300px; min-height: 300px; background: #000; border-radius: 8px; overflow: hidden; display: block; position: relative; }
 #qr-reader video { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; position: absolute; top: 0; left: 0; }
 #qr-reader canvas { display: none !important; }
@@ -241,13 +227,11 @@
 #modalScanner .modal-conteudo { max-width: 500px; }
 #modalScanner .modal-body { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: .5rem; }
 
-/* Sabor/extra — imagens redondas */
 .sabor-imagem, .extra-imagem {
   width: 36px; height: 36px; min-width: 36px; border-radius: 50%;
   object-fit: cover; margin-right: 8px; flex-shrink: 0;
 }
 
-/* Ajustes mobile */
 @media (max-width: 768px) {
   .modal-tab { font-size: .7rem; padding: .3rem; }
   .item-carrinho { padding: .3rem 0; gap: .3rem; }
@@ -279,8 +263,6 @@
   .modal-imagem-full .lado-direito > .produto-quantidade-simples { width: 100%; justify-content: center !important; }
   .modal-imagem-full .lado-direito > #addImagem { width: 100% !important; margin-top: .25rem !important; }
 }
-
-/* Modo app — barra inferior */
 html.modo-app-inicial .modal-overlay#modalPedidoRest,
 body.modo-app .modal-overlay#modalPedidoRest { align-items: flex-start !important; }
 html.modo-app-inicial .modal-overlay#modalPedidoRest > .modal-conteudo.fullscreen,
@@ -295,8 +277,6 @@ body.modo-app .modal-overlay#modalPedidoRest > .modal-conteudo > .modal-body {
 }
 .popup-confirmacao { padding-bottom: max(1rem, var(--reserva-barra-app), env(safe-area-inset-bottom)) !important; }
 .popup-confirmacao-footer { padding-bottom: max(1rem, var(--reserva-barra-app), env(safe-area-inset-bottom)) !important; }
-
-/* Botão fechar do header em formato circular */
 .popup-confirmacao-header .popup-confirmacao-close {
   position: static; background: rgba(255, 255, 255, .18);
   border-color: rgba(255, 255, 255, .55); color: #fff;
