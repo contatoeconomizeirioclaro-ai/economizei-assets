@@ -1,7 +1,7 @@
 /* ============================================================
    MÓDULO TRANSPORTE — CSS específico
    Depende de: tokens.css, modais.css, componentes.css, _base.css
-   Padronizado com pedidos.css — v2 refinada
+   v3 — blocos, banner de status, geocoder reforçado
    ============================================================ */
 
 /* ===== HEADER (padrão pedidos/loja) ===== */
@@ -50,37 +50,68 @@
 #modalTransporte .modal-body {
   padding: 1rem;
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1 1 auto;
   min-height: 0;
   background: var(--gray-100, #f1f5f9);
+  -webkit-overflow-scrolling: touch;
 }
 #modalTransporte .modal-tab-content { padding: 0; }
 
-/* ===== BLOCOS (cards dentro do body) ===== */
+/* ===== BANNER DE STATUS (padrão loja/pedidos) ===== */
+#modalTransporte #statusLojaMsgTransporte {
+  display: flex; align-items: center; justify-content: center; gap: .35rem;
+  min-height: 2.8rem;
+  box-sizing: border-box;
+  border-radius: .85rem;
+  padding: .65rem .85rem;
+  margin-bottom: .85rem;
+  text-align: center;
+  font-size: .8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  border: 1px solid var(--gray-200);
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+#modalTransporte #statusLojaMsgTransporte.status-aberta {
+  background: #f0fdf4; border-color: #86efac; color: #166534;
+}
+#modalTransporte #statusLojaMsgTransporte.status-pausada {
+  background: #fffbeb; border-color: #fcd34d; color: #92400e;
+}
+#modalTransporte #statusLojaMsgTransporte.status-fechada {
+  background: #fef2f2; border-color: #fca5a5; color: #991b1b;
+}
+
+/* ===== BLOCOS ===== */
 #modalTransporte .tp-bloco {
   background: #fff;
   border: 1px solid var(--gray-200);
   border-radius: 1rem;
   padding: 1rem;
-  margin-bottom: .85rem;
+  margin-bottom: .75rem;
   box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  position: relative;
 }
-#modalTransporte .tp-bloco:last-of-type { margin-bottom: 0; }
+#modalTransporte .tp-bloco:last-of-type { margin-bottom: .75rem; }
 #modalTransporte .tp-bloco-titulo {
   display: flex; align-items: center; gap: .4rem;
-  font-size: .72rem; font-weight: 800;
-  text-transform: uppercase; letter-spacing: .04em;
+  font-size: .7rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .05em;
   color: var(--gray-500);
   margin-bottom: .65rem;
 }
-#modalTransporte .tp-bloco-titulo i { color: var(--primary); font-size: .8rem; }
+#modalTransporte .tp-bloco-titulo i { color: var(--primary); font-size: .85rem; }
 
 /* ===== BUSCA DE ENDEREÇOS ===== */
 .search-fields-wrapper {
-  display: flex; flex-direction: column; gap: .65rem;
+  display: flex; flex-direction: column; gap: .55rem;
+  position: relative;
+  z-index: 20;
 }
 .search-field-group {
-  display: flex; gap: .5rem; align-items: center;
+  display: flex; gap: .55rem; align-items: center;
   position: relative;
 }
 .search-field-container {
@@ -89,7 +120,7 @@
 }
 .search-field-container::before {
   content: "";
-  position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+  position: absolute; left: .9rem; top: 50%; transform: translateY(-50%);
   width: 10px; height: 10px;
   border-radius: 50%;
   background: var(--primary);
@@ -97,35 +128,37 @@
   z-index: 6;
   pointer-events: none;
 }
-.search-field-group:nth-child(2) .search-field-container::before {
+.search-field-group.tp-destino .search-field-container::before {
   background: #ef4444;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, .15);
   border-radius: 2px;
 }
 
-/* Geocoder — input padronizado */
+/* Geocoder */
 #origemGeocoder .mapboxgl-ctrl-geocoder,
 #destinoGeocoder .mapboxgl-ctrl-geocoder {
   width: 100%; position: relative; z-index: 5;
   background: transparent; border: none; box-shadow: none;
-  min-width: 0;
+  min-width: 0; font-family: inherit;
 }
 #origemGeocoder .mapboxgl-ctrl-geocoder input[type="text"],
 #destinoGeocoder .mapboxgl-ctrl-geocoder input[type="text"] {
   border-radius: 2rem !important;
-  padding: .7rem .9rem .7rem 2.1rem !important;
+  padding: .7rem 2.4rem .7rem 2.1rem !important;
   font-size: .85rem !important;
   height: 2.75rem !important;
+  line-height: 1.2 !important;
   border: 1px solid var(--gray-200) !important;
   background: #fff !important;
-  transition: all .2s ease !important;
+  transition: border-color .15s ease, box-shadow .15s ease !important;
   margin: 0 !important;
   color: var(--gray-800) !important;
   width: 100% !important;
+  font-family: inherit !important;
 }
 #origemGeocoder .mapboxgl-ctrl-geocoder input[type="text"]::placeholder,
 #destinoGeocoder .mapboxgl-ctrl-geocoder input[type="text"]::placeholder {
-  color: var(--gray-500);
+  color: var(--gray-500) !important;
 }
 #origemGeocoder .mapboxgl-ctrl-geocoder input[type="text"]:focus,
 #destinoGeocoder .mapboxgl-ctrl-geocoder input[type="text"]:focus {
@@ -137,6 +170,28 @@
 .mapboxgl-ctrl-geocoder { overflow: visible !important; }
 .mapboxgl-ctrl-geocoder--button { display: none !important; }
 
+/* Dropdown do geocoder — precisa ficar acima do mapa */
+.mapboxgl-ctrl-geocoder--suggestions,
+.mapboxgl-ctrl-geocoder .suggestions {
+  z-index: 30 !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 8px 24px -6px rgba(15, 23, 42, .2) !important;
+  border: 1px solid var(--gray-200) !important;
+  margin-top: .35rem !important;
+  overflow: hidden;
+}
+.mapboxgl-ctrl-geocoder--suggestion {
+  padding: .65rem .85rem !important;
+  font-size: .82rem !important;
+}
+.mapboxgl-ctrl-geocoder--suggestion:hover,
+.mapboxgl-ctrl-geocoder--suggestion.active {
+  background: var(--primary-light) !important;
+}
+.mapboxgl-ctrl-geocoder--suggestion-title { color: var(--gray-800) !important; }
+.mapboxgl-ctrl-geocoder--suggestion-address { color: var(--gray-500) !important; }
+
+/* Botão localização atual */
 .btn-location-modern {
   display: flex; align-items: center; justify-content: center;
   width: 2.75rem; min-width: 2.75rem; height: 2.75rem;
@@ -152,10 +207,11 @@
 }
 .btn-location-modern:active { transform: translateY(0) scale(.96); }
 
+/* Botão limpar campo */
 .clear-btn {
   position: absolute; right: .55rem; top: 50%;
   transform: translateY(-50%);
-  width: 1.4rem; height: 1.4rem;
+  width: 1.5rem; height: 1.5rem;
   display: flex; align-items: center; justify-content: center;
   background: var(--gray-100); border: none;
   border-radius: 50%; font-size: .85rem;
@@ -169,7 +225,8 @@
   width: 100%; padding: .7rem .9rem .7rem 2.1rem;
   border: 1px solid var(--gray-200); border-radius: 2rem;
   font-size: .85rem; background: #fff;
-  transition: all .2s ease; font-family: inherit;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  font-family: inherit;
   height: 2.75rem;
   color: var(--gray-800);
 }
@@ -179,19 +236,21 @@
   box-shadow: 0 0 0 3px rgba(10, 102, 194, .1);
 }
 
-/* ===== BOTÃO "Não encontrei meu endereço" ===== */
+/* Botão "Não encontrei meu endereço" */
 #modalTransporte #btnEnderecoManual {
-  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
   width: 100%;
   background: transparent !important;
   color: var(--primary) !important;
   border: 1px dashed #bfdbfe !important;
   border-radius: 2rem;
-  padding: .6rem 1rem;
+  padding: .55rem 1rem;
   font-size: .78rem; font-weight: 700;
   cursor: pointer;
-  margin-bottom: .85rem;
-  transition: all .15s ease;
+  margin-top: .65rem;
+  transition: background .15s ease, border-color .15s ease;
+  box-shadow: none !important;
+  min-height: 2.2rem;
 }
 #modalTransporte #btnEnderecoManual:hover {
   background: var(--primary-light) !important;
@@ -200,20 +259,18 @@
 }
 
 /* ===== MAPA ===== */
+#modalTransporte .tp-bloco-mapa { padding: .5rem; }
 #mapboxMap {
-  height: 190px;
+  height: 200px;
   width: 100%;
-  margin-bottom: .85rem;
-  border-radius: 1rem;
+  border-radius: .85rem;
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--gray-200);
   background: var(--gray-100);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
 #mapboxMap .mapboxgl-canvas { outline: none; }
 #mapboxMap .mapboxgl-ctrl-logo,
-#mapboxMap .mapboxgl-ctrl-attrib { display: none !important; }
+#mapboxMap .mapboxgl-ctrl-attrib,
 #mapboxMap .mapboxgl-ctrl-cooperative-gestures,
 .mapboxgl-ctrl-cooperative-gestures { display: none !important; }
 #mapboxMap .mapboxgl-ctrl-group {
@@ -221,11 +278,14 @@
   box-shadow: 0 1px 4px rgba(15, 23, 42, .15) !important;
   overflow: hidden;
 }
+@media (max-width: 640px) {
+  #mapboxMap { height: 170px; }
+}
 
 .mapa-indisponivel {
   min-height: 150px; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: .35rem;
-  padding: 1rem; border: 1px dashed #cbd5e1; border-radius: 1rem;
+  padding: 1rem; border: 1px dashed #cbd5e1; border-radius: .85rem;
   background: #f8fafc; color: #475569;
   text-align: center; font-size: .8rem;
 }
@@ -237,21 +297,21 @@
   gap: .55rem;
   background: var(--primary-light, #eef4ff);
   border: 1px solid #bfdbfe;
-  padding: .65rem .85rem;
+  padding: .6rem .85rem;
   border-radius: 2rem;
-  margin-bottom: .85rem;
+  margin-top: .65rem;
   font-size: .78rem;
   color: var(--primary-dark);
   font-weight: 600;
 }
 .info-viagem strong { color: var(--primary); }
-.info-viagem:empty { display: none; }
+#modalTransporte .tp-bloco-mapa .info-viagem { margin-bottom: 0; }
 
-/* ===== FORMULÁRIO ===== */
+/* ===== TARIFA ===== */
 #modalTransporte #selectTarifa {
-  margin-bottom: .65rem;
+  width: 100%;
   height: 2.75rem;
-  padding: .7rem 2.2rem .7rem 1rem;
+  padding: .7rem 2.4rem .7rem 1rem;
   border-radius: 2rem;
   border: 1px solid var(--gray-200);
   font-size: .85rem;
@@ -263,6 +323,7 @@
   color: var(--gray-800);
   cursor: pointer;
   transition: border-color .15s ease, box-shadow .15s ease;
+  font-family: inherit;
 }
 #modalTransporte #selectTarifa:focus {
   outline: none;
@@ -270,6 +331,7 @@
   box-shadow: 0 0 0 3px rgba(10, 102, 194, .1);
 }
 
+/* ===== FORMULÁRIO (nome/tel) ===== */
 #modalTransporte .form-row {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: .55rem; margin-bottom: .55rem;
@@ -290,13 +352,14 @@
   transition: border-color .15s ease, box-shadow .15s ease;
   width: 100%;
   font-family: inherit;
+  background: #fff;
 }
 #modalTransporte #obsTransporte {
   height: auto;
-  min-height: 3.5rem;
+  min-height: 3.25rem;
   resize: vertical;
   padding: .7rem 1rem;
-  margin-bottom: .85rem;
+  margin-bottom: 0;
 }
 #modalTransporte #clienteNomeTransporte:focus,
 #modalTransporte #clienteTelTransporte:focus,
@@ -311,13 +374,13 @@
   color: var(--gray-500);
 }
 
-/* ===== BOTÃO CTA ===== */
+/* ===== CTA ===== */
 #modalTransporte #btnSolicitarCorrida {
   width: 100%;
-  margin-top: .25rem;
   height: 3rem;
   font-size: .9rem;
   box-shadow: 0 2px 8px rgba(10, 102, 194, .25);
+  margin-top: .25rem;
 }
 #modalTransporte #btnSolicitarCorrida:hover {
   box-shadow: 0 4px 12px rgba(10, 102, 194, .3);
@@ -332,11 +395,20 @@
   font-size: .85rem;
   margin-bottom: .55rem;
   width: 100%;
+  background: #fff;
 }
 #modalTransporte #tabAcompanhar .btn-consultar-pedido,
 #modalTransporte #tabAcompanhar .btn-limpar-historico {
   height: 2.75rem;
   border-radius: 2rem;
+}
+#modalTransporte #tabAcompanhar,
+#modalTransporte #tabHistorico {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
 
 /* ===== APP MODE ===== */
