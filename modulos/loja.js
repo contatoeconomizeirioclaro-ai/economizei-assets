@@ -18,6 +18,23 @@
   var Cards = Economizei.Cards;
   var COLUNAS = Economizei.Horario.COLUNAS;
 
+  function _abrirModalLocal(el) {
+    if (!el) return null;
+    var ctrl = EU.criarModalAcessivel();
+    ctrl.abrir(el, function () { if (el.parentNode) el.remove(); });
+    el.__ctrl = ctrl;
+    el.addEventListener('click', function (e) {
+      if (e.target === el) { e.preventDefault(); e.stopPropagation(); ctrl.fechar(); return; }
+      var btn = e.target.closest('.modal-close-btn, .btn-modal-fechar, [data-fechar-modal]');
+      if (btn) { e.preventDefault(); e.stopPropagation(); ctrl.fechar(); }
+    }, true);
+    return ctrl;
+  }
+  function _fecharModalLocal(el) {
+    if (el && el.__ctrl) el.__ctrl.fechar();
+    else if (el) el.remove();
+  }
+
   Cards.registrarModulo('loja', {
     label: '🛍️ Ver produtos',
     ariaLabel: 'Ver produtos da loja',
@@ -732,7 +749,7 @@
         var en = obterEstoqueNumerico(eImg);
         var estH = en === null ? '<div style="font-size:.8rem;color:#cbd5e1;">Estoque: Ilimitado</div>' : '<div style="font-size:.8rem;color:#cbd5e1;">Estoque: ' + en + '</div>';
         m.innerHTML = '<div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:center;width:100%;height:100%;background:#000;position:relative;">' +
-          '<button type="button" class="modal-close-btn fechar" onclick="this.closest(\'.modal-imagem-full\').remove()" aria-label="Fechar" style="position:absolute;top:1rem;right:1rem;color:#fff;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.35);width:2.25rem;height:2.25rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10;">×</button>' +
+          '<button type="button" class="modal-close-btn fechar" data-fechar-modal aria-label="Fechar" style="position:absolute;top:1rem;right:1rem;color:#fff;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.35);width:2.25rem;height:2.25rem;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10;">×</button>' +
           '<div style="flex:2;min-width:200px;text-align:center;padding:1rem;display:flex;flex-direction:column;justify-content:center;height:100%;position:relative;">' +
           (imgs.length > 1 ? '<button type="button" id="imgAnt" class="imagem-navegacao" style="position:absolute;top:50%;left:.75rem;transform:translateY(-50%);width:42px;height:58px;border-radius:999px;background:rgba(15,23,42,.72);color:#fff;font-size:42px;border:1px solid rgba(255,255,255,.35);cursor:pointer;">‹</button><button type="button" id="imgSeg" class="imagem-navegacao" style="position:absolute;top:50%;right:.75rem;transform:translateY(-50%);width:42px;height:58px;border-radius:999px;background:rgba(15,23,42,.72);color:#fff;font-size:42px;border:1px solid rgba(255,255,255,.35);cursor:pointer;">›</button>' : '') +
           '<img src="' + imgs[cur] + '" alt="' + Core.sanitize(p.nome) + '" style="max-width:100%;max-height:70vh;object-fit:contain;margin:auto;">' +
@@ -755,18 +772,18 @@
         pq.addEventListener('click', function () { qi.stepUp(); });
         m.querySelector('#addImg').addEventListener('click', function () {
           var q = parseInt(qi.value) || 1;
-          if (p.tipo === 'variavel' && p.variacoes && p.variacoes.length) { m.remove(); abrirModalVariacoes(p); return; }
+          if (p.tipo === 'variavel' && p.variacoes && p.variacoes.length) { _fecharModalLocal(m); abrirModalVariacoes(p); return; }
           var en = obterEstoqueNumerico(p.estoque);
           if (en !== null && q > en) { UI.mostrarToast('Estoque insuficiente. Disponível: ' + en); return; }
           var ex = carrinho.find(function (i) { return i.id === p.id && !i.variacaoId; });
           if (ex) ex.quantidade += q;
           else carrinho.push({ id: p.id, nome: p.nome, preco: pBase, quantidade: q, imagem: p.imagem || null, variacaoId: null, estoque: p.estoque });
-          atualizarCarrinho(); UI.mostrarToast('Produto adicionado ao carrinho'); m.remove();
+          atualizarCarrinho(); UI.mostrarToast('Produto adicionado ao carrinho'); _fecharModalLocal(m);
         });
       }
       atualizar();
       document.body.appendChild(m);
-      UI.trapFocus(m);
+      _abrirModalLocal(m);
     }
 
     function abrirModalVariacoes(p) {
@@ -779,11 +796,11 @@
       var sel = {};
       for (var a in prim.atributos) sel[a] = prim.atributos[a];
       var m = document.createElement('div');
-      m.className = 'modal-overlay'; m.style.display = 'flex';
+      m.className = 'modal-overlay';
       m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-label', 'Escolher variação de ' + p.nome);
       var imgPrim = obterImagensVariacao(prim)[0] || obterImagemPrincipal(p) || 'https://via.placeholder.com/300';
       m.innerHTML = '<div class="modal-conteudo modal-variacao-full">' +
-        '<div class="modal-header"><div><span style="display:block;color:#64748b;font-size:.65rem;font-weight:800;letter-spacing:.08em;">ESCOLHA UMA OPÇÃO</span><h3>' + Core.sanitize(p.nome) + '</h3></div><button type="button" class="btn-modal-fechar" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Fechar">✕</button></div>' +
+        '<div class="modal-header"><div><span style="display:block;color:#64748b;font-size:.65rem;font-weight:800;letter-spacing:.08em;">ESCOLHA UMA OPÇÃO</span><h3>' + Core.sanitize(p.nome) + '</h3></div><button type="button" class="modal-close-btn" data-fechar-modal aria-label="Fechar">×</button></div>' +
         '<div class="modal-config-body">' +
         '<main class="modal-config-main"><div class="modal-step"><div class="modal-step-number">1</div><div class="modal-step-content"><div class="modal-step-heading"><div><h4>Escolha a variação</h4><p>Selecione uma opção em cada grupo.</p></div><span class="modal-required">Obrigatório</span></div><div id="attrC" class="modal-options-list"></div></div></div></main>' +
         '<aside class="modal-order-summary"><h4>Resumo</h4><img id="vImg" class="variation-summary-image" src="' + imgPrim + '" alt="' + Core.sanitize(p.nome) + '"><p class="variation-summary-description">' + Core.sanitize(p.descricao || 'Sem descrição') + '</p><div id="vInfo"><strong>Preço unitário:</strong> ' + formatarValor(prim.preco) + '<br><span>Quantidade: 1</span><br><span>Estoque: ' + textoEstoque(prim.estoque) + '</span></div><div class="variation-quantity"><button type="button" id="vMenos" aria-label="Diminuir">−</button><input type="number" id="vQtd" value="1" min="1" aria-label="Quantidade"><button type="button" id="vMais" aria-label="Aumentar">+</button></div></aside>' +
@@ -791,7 +808,7 @@
         '<div class="modal-config-footer"><div class="modal-total"><span>Total da escolha</span><strong id="vTotal">R$ ' + (parseFloat(prim.preco) || 0).toFixed(2) + '</strong></div><button class="btn-pedido-cta" id="addVar">Adicionar ao carrinho</button></div>' +
         '</div>';
       document.body.appendChild(m);
-      UI.trapFocus(m);
+      _abrirModalLocal(m);
       var aC = document.getElementById('attrC'), vI = document.getElementById('vImg'), vN = document.getElementById('vInfo'), qi = document.getElementById('vQtd'), bA = document.getElementById('addVar');
       bA.disabled = false;
       var varSel = prim;
@@ -861,7 +878,7 @@
         var ex = carrinho.find(function (i) { return i.id === p.id && i.variacaoId === vId; });
         if (ex) ex.quantidade += q;
         else carrinho.push({ id: p.id, nome: nomeComp, preco: parseFloat(varSel.preco) || 0, quantidade: q, imagem: varSel.imagem || p.imagem || null, variacaoId: vId, atributos: JSON.parse(JSON.stringify(sel)), estoque: varSel.estoque });
-        atualizarCarrinho(); UI.mostrarToast('Produto adicionado'); m.remove();
+        atualizarCarrinho(); UI.mostrarToast('Produto adicionado'); _fecharModalLocal(m);
       });
       atualizarVar();
     }
@@ -869,10 +886,10 @@
     var antigo = document.getElementById('modalLoja');
     if (antigo) antigo.remove();
     var logoHtml = logoEstab ? '<img src="' + Core.sanitize(logoEstab) + '" alt="Logo" loading="eager" referrerpolicy="no-referrer">' : '<span aria-hidden="true">🛍️</span>';
-    var html = '<div class="modal-overlay loja-padronizada" id="modalLoja" style="display:flex;" role="dialog" aria-modal="true" aria-labelledby="modalLojaTitulo">' +
+    var html = '<div class="modal-overlay loja-padronizada" id="modalLoja" role="dialog" aria-modal="true" aria-labelledby="modalLojaTitulo">' +
       '<div class="modal-conteudo fullscreen">' +
       '<div class="modal-header"><div class="modal-estabelecimento-brand"><div class="modal-estabelecimento-logo">' + logoHtml + '</div><div class="modal-estabelecimento-meta"><h3 id="modalLojaTitulo">' + Core.sanitize(nomeEstab) + '</h3><span id="statusLojaBadgeLoja" class="modal-estabelecimento-status status-aberta">Aceitando pedidos</span></div></div>' +
-      '<button class="btn-modal-fechar" onclick="Economizei.Loja.fechar()" aria-label="Fechar loja">✕</button></div>' +
+      '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar loja">×</button></div>' +
       '<div class="modal-tabs">' +
       '<button class="modal-tab active" data-tab="produtos">📦 Produtos</button>' +
       '<button class="modal-tab" data-tab="carrinho">🛒 Carrinho <span class="cart-tab-badge" id="cartBadgeLoja" style="display:none;">0</span></button>' +
@@ -923,7 +940,8 @@
       (Core.getCurrentUser() ? '<div id="tabHistorico" class="modal-tab-content"><div id="listaHistoricoLoja"></div></div>' : '') +
       '</div></div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
-    UI.trapFocus(document.getElementById('modalLoja'));
+    var modalLojaEl = document.getElementById('modalLoja');
+    _abrirModalLocal(modalLojaEl);
 
     Core.db.collection('lojistas').where('estabelecimentoId', '==', estId).limit(1).get().then(function (snap) {
       if (snap.empty) { UI.mostrarToast('Estabelecimento não configurado para loja.', 'erro'); return; }
@@ -1005,8 +1023,8 @@
         if (unsubscribeCardapio) { unsubscribeCardapio(); unsubscribeCardapio = null; }
         if (unsubscribeFretes) { unsubscribeFretes(); unsubscribeFretes = null; }
         if (unsubscribeStatusLoja) { unsubscribeStatusLoja(); unsubscribeStatusLoja = null; }
-        var m = document.getElementById('modalLoja'); if (m) m.remove();
-        UI.restoreFocus();
+        var m = document.getElementById('modalLoja');
+        _fecharModalLocal(m);
       },
       abrirImagemFull: abrirImagemFull,
       alterarQuantidade: alterarQuantidade,
