@@ -297,7 +297,6 @@ body.modo-app .modal-overlay#modalPedidoRest > .modal-conteudo > .modal-body {
 .popup-confirmacao-footer { padding-bottom: max(1rem, var(--reserva-barra-app), env(safe-area-inset-bottom)) !important; }
 
 /* Botão fechar do header em formato circular */
-.modal-header .btn-modal-fechar::before { content: "\00D7" !important; }
 .popup-confirmacao-header .popup-confirmacao-close {
   position: static; background: rgba(255, 255, 255, .18);
   border-color: rgba(255, 255, 255, .55); color: #fff;
