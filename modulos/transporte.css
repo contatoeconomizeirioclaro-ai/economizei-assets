@@ -1,7 +1,7 @@
 /* ============================================================
    MÓDULO TRANSPORTE — CSS específico
    Depende de: tokens.css, modais.css, componentes.css, _base.css
-   v4 — refinamento visual
+   v5 — fix dropdown, status sempre visível
    ============================================================ */
 
 /* ===== HEADER (padrão pedidos/loja) ===== */
@@ -107,7 +107,6 @@
 .search-fields-wrapper {
   display: flex; flex-direction: column; gap: .45rem;
   position: relative;
-  z-index: 20;
 }
 .search-field-group {
   display: flex; gap: .45rem; align-items: center;
@@ -133,12 +132,16 @@
   border-radius: 2px;
 }
 
-/* Geocoder */
+/* Geocoder — sem brigar com o plugin */
 #origemGeocoder .mapboxgl-ctrl-geocoder,
 #destinoGeocoder .mapboxgl-ctrl-geocoder {
-  width: 100%; position: relative; z-index: 5;
-  background: transparent; border: none; box-shadow: none;
-  min-width: 0; font-family: inherit;
+  width: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  min-width: 0;
+  font-family: inherit;
+  max-width: 100%;
 }
 #origemGeocoder .mapboxgl-ctrl-geocoder input[type="text"],
 #destinoGeocoder .mapboxgl-ctrl-geocoder input[type="text"] {
@@ -166,18 +169,16 @@
   outline: none !important;
 }
 .mapboxgl-ctrl-geocoder--icon { display: none !important; }
-.mapboxgl-ctrl-geocoder { overflow: visible !important; }
 .mapboxgl-ctrl-geocoder--button { display: none !important; }
 
-/* Dropdown do geocoder */
+/* Dropdown — deixa o plugin posicionar, só estiliza */
 .mapboxgl-ctrl-geocoder--suggestions,
 .mapboxgl-ctrl-geocoder .suggestions {
-  z-index: 30 !important;
   border-radius: .85rem !important;
   box-shadow: 0 8px 24px -6px rgba(15, 23, 42, .2) !important;
   border: 1px solid var(--gray-200) !important;
-  margin-top: .3rem !important;
   overflow: hidden;
+  background: #fff !important;
 }
 .mapboxgl-ctrl-geocoder--suggestion {
   padding: .55rem .75rem !important;
