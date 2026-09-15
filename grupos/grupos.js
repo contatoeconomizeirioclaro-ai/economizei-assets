@@ -157,8 +157,14 @@ Economizei.Utils = (function () {
     var str = String(valor).trim().toLowerCase();
     return str === '' || str === 'não' || str === 'nao';
   }
+  /* CORRIGIDO: antes tinha a URL do Onde Comer fixa (onde-comer_13.html)
+     e todo QR Code de qualquer página de grupo linkava de volta pra lá.
+     Agora usa CFG.urlBaseQR, que cada GRUPO_CONFIG já declara.
+     Mantém o fallback pro Onde Comer só pra não quebrar nenhuma página
+     antiga que ainda não tenha essa chave configurada. */
   function gerarURLQRCode(nome) {
-    return 'https://www.economizeirioclaro.com.br/p/onde-comer_13.html?qr=' + Core.gerarSlug(nome);
+    var base = CFG.urlBaseQR || 'https://www.economizeirioclaro.com.br/p/onde-comer_13.html';
+    return base + '?qr=' + Core.gerarSlug(nome);
   }
   function gerarImagemQRCode(nome, tamanho) {
     tamanho = tamanho || 200;
@@ -1096,9 +1102,7 @@ Economizei.Cards = (function () {
       document.querySelectorAll('.avaliacao-topo').forEach(function (topo) { var idx = topo.dataset.index; topo.innerHTML = gerarAuthHTML(idx, null); });
       document.querySelectorAll('.avaliacao-estrelas').forEach(function (container) {
         container.querySelectorAll('.estrela-btn').forEach(function (s) { s.classList.remove('ativa'); s.setAttribute('aria-checked','false'); });
-        var msg = container.parentElement.querySelector('.avaliacao-mensagem'); if (msg) msg.textContent = '';
-      });
-      ativarInteracoesCards();
+        var msg = container.parentElement.querySelector('.avaliacao-mensagem'); if (msg) msg.textContent = ''; }); ativarInteracoesCards();
       UI.mostrarToast('Você saiu da sua conta.');
     }).catch(function (err) { UI.mostrarToast('Erro ao sair: ' + err.message); });
   }
@@ -1216,11 +1220,6 @@ Economizei.Init = (function () {
     });
     buscaInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { e.preventDefault(); this.blur(); } });
 
-    // Botões opcionais: cada página de grupo decide, no seu próprio HTML,
-    // se inclui ou não estes elementos (ex. uma página sem geolocalização
-    // simplesmente não coloca o #btnPertoMim). Por isso cada listener só é
-    // ligado se o elemento existir — sem isso, a página quebraria em
-    // qualquer grupo que omitisse um desses botões.
     function onClick(id, handler) {
       var el = document.getElementById(id);
       if (el) el.addEventListener('click', handler);
