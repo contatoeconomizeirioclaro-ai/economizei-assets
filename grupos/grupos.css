@@ -136,6 +136,7 @@
 .btn-facebook     { background:#1877f2; }
 .btn-instagram    { background:#e1306c; }
 .btn-qrcode       { background:#28a745; }
+.btn-reserva      { background:#9333ea; }
 .btn-promocao     { background:#ff5722; animation:neonPulseSuave 5s infinite ease-in-out; }
 .btn-promocao:hover { transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,.2),0 0 30px #ff5722; }
 @keyframes neonPulseSuave { 0%{box-shadow:0 0 5px #ff5722,0 0 10px #ff5722,0 0 15px #ff5722;} 50%{box-shadow:0 0 20px #ff5722,0 0 40px #ff5722,0 0 60px #ff5722;} 100%{box-shadow:0 0 5px #ff5722,0 0 10px #ff5722,0 0 15px #ff5722;} }
@@ -172,11 +173,13 @@
 .retry-button { margin-top:.5rem; padding:.55rem 1.1rem; border-radius:2rem; border:none; background:var(--primary); color:#fff; font-weight:600; cursor:pointer; transition:var(--transition); }
 .retry-button:hover { background:var(--primary-dark); transform:translateY(-1px); }
 
-.lista-tipos-filtro, .lista-opcoes-filtro, .lista-whatsapp { display:flex; flex-direction:column; gap:.3rem; }
-.item-whatsapp, .item-tipo-filtro, .item-opcao-filtro { padding:.5rem .8rem; border:1px solid var(--gray-200); border-radius:.75rem; background:#fff; cursor:pointer; color:var(--gray-700); font-size:.8rem; transition:var(--transition); text-align:center; text-decoration:none; display:block; }
-.item-whatsapp:hover, .item-tipo-filtro:hover, .item-opcao-filtro:hover { background:var(--primary-light); border-color:var(--primary); }
+.lista-tipos-filtro, .lista-opcoes-filtro, .lista-whatsapp, .lista-reservas { display:flex; flex-direction:column; gap:.3rem; }
+.item-whatsapp, .item-tipo-filtro, .item-opcao-filtro, .item-reserva { padding:.5rem .8rem; border:1px solid var(--gray-200); border-radius:.75rem; background:#fff; cursor:pointer; color:var(--gray-700); font-size:.8rem; transition:var(--transition); text-align:center; text-decoration:none; display:block; }
+.item-whatsapp:hover, .item-tipo-filtro:hover, .item-opcao-filtro:hover, .item-reserva:hover { background:var(--primary-light); border-color:var(--primary); }
 .item-whatsapp { background:var(--primary); color:#fff; border-color:var(--primary); }
 .item-whatsapp:hover { background:var(--primary-dark); }
+.item-reserva { background:#9333ea; color:#fff; border-color:#9333ea; }
+.item-reserva:hover { background:#7e22ce; }
 
 /* ===== ESTADOS =====
    .loading/.spinner já vêm do tokens.css. */
