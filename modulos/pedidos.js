@@ -7,6 +7,7 @@ Economizei.Pedido = (function () {
     l.href = 'https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/modulos/pedidos.css';
     document.head.appendChild(l);
   })();
+
   var EU = EconomizeiUtils;
   var Core = Economizei.Core;
   var UI = Economizei.UI;
@@ -30,6 +31,23 @@ Economizei.Pedido = (function () {
   var mesaQR = null;
   var enviandoPedido = false;
 
+  function _abrirModalLocal(el) {
+    if (!el) return null;
+    var ctrl = EU.criarModalAcessivel();
+    ctrl.abrir(el, function () { if (el.parentNode) el.remove(); });
+    el.__ctrl = ctrl;
+    el.addEventListener('click', function (e) {
+      if (e.target === el) { e.preventDefault(); e.stopPropagation(); ctrl.fechar(); return; }
+      var btn = e.target.closest('.modal-close-btn, .btn-modal-fechar, [data-fechar-modal]');
+      if (btn) { e.preventDefault(); e.stopPropagation(); ctrl.fechar(); }
+    }, true);
+    return ctrl;
+  }
+  function _fecharModalLocal(el) {
+    if (el && el.__ctrl) el.__ctrl.fechar();
+    else if (el) el.remove();
+  }
+
   Cards.registrarModulo('pedido', {
     label: '🍽️ Fazer pedido',
     ariaLabel: 'Fazer pedido',
@@ -43,7 +61,7 @@ Economizei.Pedido = (function () {
         '<div class="modal-conteudo modal-modulo">' +
           '<div class="modal-header">' +
             '<h3 id="modalScannerTitulo"><i class="fa-solid fa-qrcode" aria-hidden="true"></i> Escanear QR Code da Mesa</h3>' +
-            '<button class="modal-close-btn" id="btnFecharScanner" aria-label="Fechar scanner">×</button>' +
+            '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar scanner">×</button>' +
           '</div>' +
           '<div class="modal-body" style="flex:1; display:flex; flex-direction:column; min-height:0; padding:0.5rem;">' +
             '<div id="qr-reader" role="region" aria-label="Leitor de QR Code"></div>' +
@@ -55,12 +73,6 @@ Economizei.Pedido = (function () {
         '</div>' +
       '</div>';
     document.body.insertAdjacentHTML('beforeend', html);
-    var btnFechar = document.getElementById('btnFecharScanner');
-    if (btnFechar) btnFechar.addEventListener('click', function () {
-      pararScanner();
-      document.getElementById('modalScanner').style.display = 'none';
-      UI.restoreFocus();
-    });
     var btnRetry = document.getElementById('btnScannerRetry');
     if (btnRetry) btnRetry.addEventListener('click', function () { iniciarScanner(); });
   }
@@ -104,7 +116,8 @@ Economizei.Pedido = (function () {
               }
               pararScanner();
               var sc = document.getElementById('modalScanner');
-              if (sc) sc.style.display = 'none';
+              if (sc && sc.__ctrl) sc.__ctrl.fechar();
+              else if (sc) sc.style.display = 'none';
             } else { UI.mostrarToast('QR Code não contém número de mesa.'); }
           },
           function (error) {}
@@ -173,6 +186,10 @@ Economizei.Pedido = (function () {
     EU.abrirJanelaHTML(html);
   }
 
+  function mostrarPopupConfirmacao(opcoes) {
+    return EU.mostrarPopupConfirmacao(opcoes);
+  }
+
   function abrirProdutoPeloCard(prodId) {
     var produto = produtosCache.find(function (p) { return p.id === prodId; });
     if (!produto) { UI.mostrarToast('Produto não encontrado.'); return; }
@@ -213,7 +230,7 @@ Economizei.Pedido = (function () {
 
     function atualizarModal() {
       var html = '<div class="container-imagem" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; width:100%; height:100%; background:#000; position:relative;">' +
-        '<button type="button" class="modal-close-btn fechar" onclick="this.closest(\'.modal-imagem-full\').remove()" aria-label="Fechar imagem" style="position:absolute; top:1rem; right:1rem; color:white; font-size:2rem; cursor:pointer; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,.35); width:2rem; height:2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10;">×</button>' +
+        '<button type="button" class="modal-close-btn fechar" data-fechar-modal aria-label="Fechar imagem" style="position:absolute; top:1rem; right:1rem; color:white; font-size:2rem; cursor:pointer; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,.35); width:2rem; height:2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10;">×</button>' +
         '<div class="lado-esquerdo" style="flex:2; min-width:200px; text-align:center; padding:1rem; display:flex; flex-direction:column; justify-content:center; height:100%;">' +
           '<img src="' + imagens[currentIndex] + '" class="imagem-principal" alt="' + Core.sanitize(produto.nome) + '" style="max-width:100%; max-height:70vh; object-fit:contain; margin:auto;">' +
           (imagens.length > 1 ? '<div class="miniaturas" style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;">' + imagens.map(function (img, idx) { return '<img src="' + img + '" class="miniatura ' + (idx === currentIndex ? 'ativa' : '') + '" data-idx="' + idx + '" alt="Miniatura ' + (idx + 1) + '" style="width:50px; height:50px; object-fit:cover; border-radius:0.5rem; cursor:pointer; border:' + (idx === currentIndex ? '2px solid #0a66c2' : '2px solid transparent') + ';">'; }).join('') + '</div>' : '') +
@@ -250,7 +267,7 @@ Economizei.Pedido = (function () {
       maisBtn.addEventListener('click', function () { qtdInput.stepUp(); atualizarPrecoImagem(); });
       qtdInput.addEventListener('change', atualizarPrecoImagem);
       modal.querySelector('#addImagem').addEventListener('click', function () {
-        if (produto.personalizavel === true || produto.tipo === 'personalizavel') { modal.remove(); abrirModalCustomizacaoCompleta(produto); return; }
+        if (produto.personalizavel === true || produto.tipo === 'personalizavel') { _fecharModalLocal(modal); abrirModalCustomizacaoCompleta(produto); return; }
         var qtd = parseInt(qtdInput.value) || 1;
         if (!validarEstoqueAdicao(produto, qtd)) return;
         var nomeCompleto = tamanhoSelecionado ? produto.nome + ' (' + tamanhoSelecionado + ')' : produto.nome;
@@ -261,12 +278,12 @@ Economizei.Pedido = (function () {
         recalcularTotal();
         atualizarBadgeCarrinho();
         UI.mostrarToast('Produto adicionado ao carrinho');
-        modal.remove();
+        _fecharModalLocal(modal);
       });
     }
     atualizarModal();
     document.body.appendChild(modal);
-    UI.trapFocus(modal);
+    _abrirModalLocal(modal);
   }
 
   function abrirModalCustomizacaoCompleta(produto) {
@@ -312,7 +329,6 @@ Economizei.Pedido = (function () {
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-label', 'Personalizar ' + produto.nome);
-    modal.style.display = 'flex';
 
     function formatarBotaoTamanhoCustom(t) {
       var nome = t && t.nome ? t.nome : '';
@@ -326,7 +342,7 @@ Economizei.Pedido = (function () {
       '<div class="modal-conteudo modal-customizacao-full modal-config-padrao">' +
         '<div class="modal-header modal-header-config">' +
           '<div><span class="modal-eyebrow">PERSONALIZE SEU ITEM</span><h3>' + Core.sanitize(produto.nome) + '</h3></div>' +
-          '<button type="button" class="btn-modal-fechar" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Fechar">✕</button>' +
+          '<button type="button" class="modal-close-btn" data-fechar-modal aria-label="Fechar">×</button>' +
         '</div>' +
         '<div class="modal-body modal-config-body">' +
           '<div class="modal-config-main">' +
@@ -387,7 +403,7 @@ Economizei.Pedido = (function () {
       '</div>';
 
     document.body.appendChild(modal);
-    UI.trapFocus(modal);
+    _abrirModalLocal(modal);
 
     var saboresContainer = modal.querySelector('#saboresLista');
     var extrasContainer = modal.querySelector('#extrasLista');
@@ -631,8 +647,7 @@ Economizei.Pedido = (function () {
       recalcularTotal();
       atualizarBadgeCarrinho();
       UI.mostrarToast('Produto adicionado ao carrinho');
-      modal.remove();
-      UI.restoreFocus();
+      _fecharModalLocal(modal);
     });
   }
 
@@ -655,13 +670,12 @@ Economizei.Pedido = (function () {
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-label', 'Escolher tamanho de ' + produto.nome);
-    modal.style.display = 'flex';
 
     modal.innerHTML =
       '<div class="modal-conteudo modal-extras-pontual">' +
         '<div class="modal-header modal-header-config">' +
           '<div><span class="modal-eyebrow">PERSONALIZE SEU ITEM</span><h3>' + Core.sanitize(produto.nome) + '</h3></div>' +
-          '<button type="button" class="btn-modal-fechar" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Fechar">✕</button>' +
+          '<button type="button" class="modal-close-btn" data-fechar-modal aria-label="Fechar">×</button>' +
         '</div>' +
         '<div class="modal-body modal-config-body">' +
           '<div class="modal-config-main">' +
@@ -695,7 +709,7 @@ Economizei.Pedido = (function () {
       '</div>';
 
     document.body.appendChild(modal);
-    UI.trapFocus(modal);
+    _abrirModalLocal(modal);
 
     var extrasContainer = modal.querySelector('#extrasContainerModal');
     var tamanhosContainer = modal.querySelector('#tamanhosContainerModal');
@@ -787,8 +801,7 @@ Economizei.Pedido = (function () {
       else carrinho.push(Object.assign({}, produto, { id: produto.id, nome: nomeFinal, preco: precoFinal, quantidade: 1, tamanho: tamanhoSelecionado, extras: selecaoExtras.filter(function (e) { return e.quantidade > 0; }) }));
       atualizarCarrinhoVisual(); recalcularTotal(); atualizarBadgeCarrinho();
       UI.mostrarToast('Produto adicionado ao carrinho');
-      modal.remove();
-      UI.restoreFocus();
+      _fecharModalLocal(modal);
     });
   }
 
@@ -809,13 +822,12 @@ Economizei.Pedido = (function () {
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-label', 'Adicionar extras para ' + produto.nome);
-    modal.style.display = 'flex';
 
     modal.innerHTML =
       '<div class="modal-conteudo modal-extras-pontual">' +
         '<div class="modal-header modal-header-config">' +
           '<div><span class="modal-eyebrow">PERSONALIZE SEU ITEM</span><h3>' + Core.sanitize(produto.nome) + '</h3></div>' +
-          '<button type="button" class="btn-modal-fechar" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Fechar">✕</button>' +
+          '<button type="button" class="modal-close-btn" data-fechar-modal aria-label="Fechar">×</button>' +
         '</div>' +
         '<div class="modal-body modal-config-body">' +
           '<div class="modal-config-main">' +
@@ -840,7 +852,7 @@ Economizei.Pedido = (function () {
       '</div>';
 
     document.body.appendChild(modal);
-    UI.trapFocus(modal);
+    _abrirModalLocal(modal);
 
     var extrasContainer = modal.querySelector('#extrasSimplesContainer');
     var precoTotalEl = modal.querySelector('#precoTotalSimples');
@@ -911,8 +923,7 @@ Economizei.Pedido = (function () {
       else carrinho.push(Object.assign({}, produto, { id: produto.id, nome: nomeFinal, preco: precoFinal, quantidade: 1, tamanho: null, extras: selecaoExtras.filter(function (e) { return e.quantidade > 0; }) }));
       atualizarCarrinhoVisual(); recalcularTotal(); atualizarBadgeCarrinho();
       UI.mostrarToast('Produto adicionado ao carrinho');
-      modal.remove();
-      UI.restoreFocus();
+      _fecharModalLocal(modal);
     });
   }
 
@@ -1370,17 +1381,17 @@ Economizei.Pedido = (function () {
 
   function abrirModalPedido(nomeEstab, estId, produtos, fretes, isLoading) {
     var antigo = document.getElementById('modalPedidoRest');
-    if (antigo) { pararTodosListeners(); antigo.remove(); }
+    if (antigo) { pararTodosListeners(); if (antigo.__ctrl) antigo.__ctrl.fechar(); else antigo.remove(); }
     var produtosHtml = isLoading
       ? '<div class="loading" style="padding:2rem;text-align:center;"><div class="spinner" aria-hidden="true"></div><span>Carregando cardápio...</span></div>'
       : '<div id="produtosContainer">' + (produtos ? renderizarProdutos(produtos) : '') + '</div>';
     var nomeEstabSeguro = Core.sanitize(nomeEstab);
     var modalHtml =
-      '<div class="modal-overlay" id="modalPedidoRest" style="display:flex;" role="dialog" aria-modal="true" aria-labelledby="modalPedidoTitulo">' +
+      '<div class="modal-overlay" id="modalPedidoRest" role="dialog" aria-modal="true" aria-labelledby="modalPedidoTitulo">' +
         '<div class="modal-conteudo fullscreen">' +
           '<div class="modal-header">' +
             '<h3 id="modalPedidoTitulo">🍽️ ' + nomeEstabSeguro + '</h3>' +
-            '<button class="modal-close-btn" onclick="Economizei.Pedido.fecharModalPedido()" aria-label="Fechar pedido">×</button>' +
+            '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar pedido">×</button>' +
           '</div>' +
           '<div class="modal-tabs">' +
             '<button class="modal-tab active" data-tab="produtos" aria-label="Produtos">📦 Produtos</button>' +
@@ -1444,11 +1455,12 @@ Economizei.Pedido = (function () {
         '</div>' +
       '</div>';
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    UI.trapFocus(document.getElementById('modalPedidoRest'));
+    var modalEl = document.getElementById('modalPedidoRest');
+    _abrirModalLocal(modalEl);
     var scanBtn = document.getElementById('btnEscanearMesa');
     if (scanBtn && UI.iniciarScanner) scanBtn.addEventListener('click', function () {
       var sc = document.getElementById('modalScanner');
-      if (sc) { sc.style.display = 'flex'; UI.iniciarScanner(); }
+      if (sc) { _abrirModalLocal(sc); UI.iniciarScanner(); }
       else { UI.mostrarToast('Scanner de QR não disponível nesta página.'); }
     });
     document.querySelectorAll('#modalPedidoRest .modal-tab').forEach(function (tab) {
@@ -1481,8 +1493,10 @@ Economizei.Pedido = (function () {
   function fecharModalPedido() {
     pararTodosListeners();
     var modal = document.getElementById('modalPedidoRest');
-    if (modal) { modal.style.display = 'none'; modal.remove(); }
-    UI.restoreFocus();
+    if (modal) {
+      if (modal.__ctrl) modal.__ctrl.fechar();
+      else modal.remove();
+    }
   }
 
   return {
