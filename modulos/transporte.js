@@ -18,6 +18,23 @@
   var Cards = Economizei.Cards;
   var COLUNAS = Economizei.Horario.COLUNAS;
 
+  function _abrirModalLocal(el) {
+    if (!el) return null;
+    var ctrl = EU.criarModalAcessivel();
+    ctrl.abrir(el, function () { if (el.parentNode) el.remove(); });
+    el.__ctrl = ctrl;
+    el.addEventListener('click', function (e) {
+      if (e.target === el) { e.preventDefault(); e.stopPropagation(); ctrl.fechar(); return; }
+      var btn = e.target.closest('.modal-close-btn, .btn-modal-fechar, [data-fechar-modal]');
+      if (btn) { e.preventDefault(); e.stopPropagation(); ctrl.fechar(); }
+    }, true);
+    return ctrl;
+  }
+  function _fecharModalLocal(el) {
+    if (el && el.__ctrl) el.__ctrl.fechar();
+    else if (el) el.remove();
+  }
+
   Cards.registrarModulo('transporte', {
     label: '🚕 Solicitar corrida',
     ariaLabel: 'Solicitar corrida ou frete',
@@ -98,11 +115,11 @@
         var tarifas = result.tarifas;
 
         var modalHtml =
-          '<div class="modal-overlay" id="modalTransporte" style="display:flex;">' +
+          '<div class="modal-overlay" id="modalTransporte" role="dialog" aria-modal="true" aria-labelledby="modalTransporteTitulo">' +
             '<div class="modal-conteudo fullscreen">' +
               '<div class="modal-header">' +
-                '<h3>🚕 ' + Core.sanitize(nomeEstab) + '</h3>' +
-                '<button class="btn-modal-fechar" onclick="fecharModalTransporte()" aria-label="Fechar">✕</button>' +
+                '<h3 id="modalTransporteTitulo">🚕 ' + Core.sanitize(nomeEstab) + '</h3>' +
+                '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar">×</button>' +
               '</div>' +
               '<div class="modal-tabs">' +
                 '<button class="modal-tab active" data-tab="solicitar">📍 Solicitar corrida</button>' +
@@ -167,6 +184,8 @@
           '</div>';
 
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+        var modalTransporteEl = document.getElementById('modalTransporte');
+        _abrirModalLocal(modalTransporteEl);
 
         var btnSolicitar = document.getElementById('btnSolicitarCorrida');
         var msgStatus = document.getElementById('statusLojaMsgTransporte');
@@ -389,9 +408,8 @@
 
         window.fecharModalTransporte = function () {
           var modal = document.getElementById('modalTransporte');
-          if (modal) modal.remove();
           if (mapboxMap) { mapboxMap.remove(); mapboxMap = null; }
-          UI.restoreFocus();
+          _fecharModalLocal(modal);
         };
 
         document.querySelectorAll('#modalTransporte .modal-tab').forEach(function (tab) {
@@ -481,18 +499,6 @@
         }
 
         EU.aplicarMascaraTelefone(document.getElementById('clienteTelTransporte'));
-
-        UI.trapFocus(document.getElementById('modalTransporte'));
-
-        document.addEventListener('keydown', function escHandler(e) {
-          if (e.key === 'Escape') {
-            var modal = document.getElementById('modalTransporte');
-            if (modal && modal.style.display !== 'none') {
-              fecharModalTransporte();
-              document.removeEventListener('keydown', escHandler);
-            }
-          }
-        });
       })
       .catch(function (err) {
         UI.mostrarToast('Erro ao carregar dados: ' + err.message, 'erro');
