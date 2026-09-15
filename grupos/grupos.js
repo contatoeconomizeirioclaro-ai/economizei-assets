@@ -5,7 +5,9 @@ var CFG = window.GRUPO_CONFIG || {};
 var Economizei = window.Economizei = window.Economizei || {};
 var EU = window.EconomizeiUtils;
 
-  (function detectarModoApp() {
+if (!EU) console.error('[grupos.js] comum/utils.js não foi carregado antes deste script.');
+
+(function () {
   function isAppMode() {
     var s = window.location.search || '';
     if (s.indexOf('app=1') !== -1 || s.indexOf('app=true') !== -1) return true;
@@ -22,8 +24,6 @@ var EU = window.EconomizeiUtils;
     });
   }
 })();
-
-if (!EU) console.error('[grupos.js] comum/utils.js não foi carregado antes deste script.');
 
 var CARDS_CFG = {
   csvUrl: '',
