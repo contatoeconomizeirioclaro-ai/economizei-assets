@@ -43,8 +43,8 @@
 
   var MAPBOX_TOKEN = (window.ECONOMIZEI_CONFIG && window.ECONOMIZEI_CONFIG.mapboxToken) || window.ECONOMIZEI_MAPBOX_TOKEN || '';
 
-  /* Coordenadas de Rio Claro/SP — bias forte pro geocoder */
-  var RC_CENTER = [-47.5616, -22.4108];
+  /* Rio Claro/SP */
+  var RC_CENTER = [-47.5615, -22.4117];
   var RC_BBOX   = [-47.75, -22.55, -47.35, -22.25];
 
   function statusSeguro(s) { return ['aberta', 'pausada', 'fechada'].indexOf(s) !== -1 ? s : 'aberta'; }
@@ -188,10 +188,8 @@
               '<div class="modal-body">' +
                 '<div id="tabSolicitar" class="modal-tab-content active">' +
 
-                  /* Banner de status */
                   '<div id="statusLojaMsgTransporte" style="display:none;" role="alert"></div>' +
 
-                  /* Bloco: Rota */
                   '<div class="tp-bloco">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-route"></i> Rota</div>' +
                     '<div class="search-fields-wrapper">' +
@@ -221,13 +219,11 @@
                     '<button type="button" id="btnEnderecoManual" onclick="toggleEnderecoManualTransporte()">Não encontrei meu endereço</button>' +
                   '</div>' +
 
-                  /* Bloco: Mapa */
                   '<div class="tp-bloco tp-bloco-mapa">' +
                     '<div id="mapboxMap"></div>' +
                     '<div id="infoRotaContainer" class="info-viagem" style="display:none;"></div>' +
                   '</div>' +
 
-                  /* Bloco: Tarifa */
                   '<div class="tp-bloco">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-tag"></i> Tarifa</div>' +
                     '<select id="selectTarifa" aria-label="Selecione a tarifa">' +
@@ -239,7 +235,6 @@
                     '</select>' +
                   '</div>' +
 
-                  /* Bloco: Seus dados */
                   '<div class="tp-bloco">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-user"></i> Seus dados</div>' +
                     '<div class="form-row">' +
@@ -249,7 +244,6 @@
                     '<textarea id="obsTransporte" class="input-pedido" placeholder="Observações (opcional)" aria-label="Observações"></textarea>' +
                   '</div>' +
 
-                  /* CTA */
                   '<button class="btn-pedido-cta" id="btnSolicitarCorrida" style="width:100%;">Solicitar corrida</button>' +
 
                 '</div>' +
@@ -293,7 +287,6 @@
             btnSolicitar.style.pointerEvents = bloqueado ? 'none' : 'auto';
           }
           if (msgStatus) {
-            /* Banner aparece se bloqueado OU se tem mensagem do lojista */
             var mostrar = bloqueado || statusMessage !== '';
             if (mostrar) {
               msgStatus.style.display = 'flex';
