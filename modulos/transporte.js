@@ -43,9 +43,9 @@
 
   var MAPBOX_TOKEN = (window.ECONOMIZEI_CONFIG && window.ECONOMIZEI_CONFIG.mapboxToken) || window.ECONOMIZEI_MAPBOX_TOKEN || '';
 
-  /* Rio Claro/SP */
-  var RC_CENTER = [-47.5615, -22.4117];
-  var RC_BBOX   = [-47.75, -22.55, -47.35, -22.25];
+  /* Rio Claro — RIO DE JANEIRO */
+  var RC_CENTER = [-44.135, -22.723];
+  var RC_BBOX   = [-44.30, -22.90, -43.95, -22.55];
 
   function statusSeguro(s) { return ['aberta', 'pausada', 'fechada'].indexOf(s) !== -1 ? s : 'aberta'; }
   function gerarIniciais(nome) {
@@ -188,7 +188,7 @@
               '<div class="modal-body">' +
                 '<div id="tabSolicitar" class="modal-tab-content active">' +
 
-                  '<div id="statusLojaMsgTransporte" style="display:none;" role="alert"></div>' +
+                  '<div id="statusLojaMsgTransporte" role="alert"></div>' +
 
                   '<div class="tp-bloco">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-route"></i> Rota</div>' +
@@ -287,20 +287,14 @@
             btnSolicitar.style.pointerEvents = bloqueado ? 'none' : 'auto';
           }
           if (msgStatus) {
-            var mostrar = bloqueado || statusMessage !== '';
-            if (mostrar) {
-              msgStatus.style.display = 'flex';
-              msgStatus.className = 'status-' + st;
-              if (st === 'fechada') {
-                msgStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + Core.sanitize(statusMessage || 'Serviço indisponível no momento.');
-              } else if (st === 'pausada') {
-                msgStatus.innerHTML = '<i class="fa-solid fa-circle-pause"></i> ' + Core.sanitize(statusMessage || 'Serviço pausado no momento.');
-              } else {
-                msgStatus.innerHTML = '<i class="fa-solid fa-circle-info"></i> ' + Core.sanitize(statusMessage);
-              }
+            /* Banner SEMPRE visível — muda a cor e o texto conforme o status */
+            msgStatus.className = 'status-' + st;
+            if (st === 'fechada') {
+              msgStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + Core.sanitize(statusMessage || 'Serviço indisponível no momento.');
+            } else if (st === 'pausada') {
+              msgStatus.innerHTML = '<i class="fa-solid fa-circle-pause"></i> ' + Core.sanitize(statusMessage || 'Serviço pausado no momento.');
             } else {
-              msgStatus.style.display = 'none';
-              msgStatus.innerHTML = '';
+              msgStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + Core.sanitize(statusMessage || 'Disponível para solicitar corridas.');
             }
           }
         }
