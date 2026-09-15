@@ -14,18 +14,13 @@ var Economizei = window.Economizei = window.Economizei || {};
    CORE
    ============================================================ */
 Economizei.Core = (function () {
-  var firebaseConfig = CFG.firebase || {
-    apiKey: "AIzaSyDrNlMrrlYJhC78ALOBUdr8bSJ7ykLs_O4",
-    authDomain: "economizeirioclaro.firebaseapp.com",
-    projectId: "economizeirioclaro",
-    storageBucket: "economizeirioclaro.firebasestorage.app",
-    messagingSenderId: "243852155427",
-    appId: "1:243852155427:web:57bcc18ca6b329f1bc6f96"
-  };
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  var db = firebase.firestore();
-  var auth = firebase.auth();
-  var provider = new firebase.auth.GoogleAuthProvider();
+  if (!window.EconomizeiFirebase) {
+    console.error('[grupos.js] comum/firebase.js não foi carregado antes deste script.');
+    return { authReady: Promise.resolve() };
+  }
+  var db = EconomizeiFirebase.db;
+  var auth = EconomizeiFirebase.auth;
+  var provider = EconomizeiFirebase.provider;
 
   var currentUser = null, userPhotoURL = '', userDisplayName = '';
   var authReadyResolve, authReady = new Promise(function (r) { authReadyResolve = r; });
