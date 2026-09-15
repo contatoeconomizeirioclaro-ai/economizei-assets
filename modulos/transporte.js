@@ -8,7 +8,7 @@
     var l = document.createElement('link');
     l.id = 'css-transporte';
     l.rel = 'stylesheet';
-    l.href = 'https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/modulos/transporte.css';
+    l.href = 'https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/modulos/transporte.css?v=6';
     document.head.appendChild(l);
   })();
 
