@@ -1,10 +1,3 @@
-/* ============================================================
-   ECONOMIZEI! RIO CLARO — GRUPOS (padrão)
-   Lê window.GRUPO_CONFIG e monta a página inteira.
-   Depende de: firebase-app-compat, firebase-firestore-compat,
-               firebase-auth-compat (carregados antes),
-               comum/firebase.js, comum/utils.js.
-   ============================================================ */
 (function () {
 'use strict';
 
@@ -12,13 +5,44 @@ var CFG = window.GRUPO_CONFIG || {};
 var Economizei = window.Economizei = window.Economizei || {};
 var EU = window.EconomizeiUtils;
 
-if (!EU) {
-  console.error('[grupos.js] comum/utils.js não foi carregado antes deste script.');
-}
+if (!EU) console.error('[grupos.js] comum/utils.js não foi carregado antes deste script.');
 
-/* ============================================================
-   CORE
-   ============================================================ */
+var CARDS_CFG = {
+  csvUrl: '',
+  cacheKey: 'economizeiCacheGrupo',
+  cacheDuration: 3600000,
+  paginaCategorias: 'https://www.economizeirioclaro.com.br/p/categorias.html',
+  paginaCadastro: 'https://www.economizeirioclaro.com.br/p/cadastro.html',
+  paginaAtualUrl: '',
+  favoritosKey: 'economizeiFavoritosGrupo',
+  mapeamentoExato: {},
+  imagemFallback: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=300&fit=crop',
+  iconeSemResultados: '📋',
+  modoHorario: '7dias',
+  colunas: null,
+  filtros: null,
+  camposDetalhe: null,
+  botoes: null,
+  tiposFiltroVisiveis: null
+};
+
+(function aplicarGRUPO_CONFIG() {
+  if (!CFG || !Object.keys(CFG).length) return;
+  var m = {
+    titulo: 1, descricao: 1, textoUtilidade: 1,
+    csvUrl: 1, cacheKey: 1, favoritosKey: 1,
+    urlBaseQR: 1, imagemFallback: 1, iconeSemResultados: 1,
+    modoHorario: 1, colunas: 1, filtros: 1, camposDetalhe: 1,
+    botoes: 1, mapeamentoExato: 1
+  };
+  for (var k in CFG) {
+    if (m[k] && CFG[k] !== undefined) {
+      if (k === 'urlBaseQR') CARDS_CFG.paginaAtualUrl = CFG[k];
+      else CARDS_CFG[k] = CFG[k];
+    }
+  }
+})();
+
 Economizei.Core = (function () {
   if (!window.EconomizeiFirebase) {
     console.error('[grupos.js] comum/firebase.js não foi carregado antes deste script.');
@@ -45,6 +69,7 @@ Economizei.Core = (function () {
   function getUserDisplayName() { return userDisplayName; }
 
   function sanitize(str) { return EU.sanitize(str); }
+  function jsEscape(str) { if (!str) return ''; return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
   function ensureHttps(url) { return EU.ensureHttps(url); }
   function gerarSlug(texto) { return EU.gerarSlug(texto); }
 
@@ -62,8 +87,8 @@ Economizei.Core = (function () {
     if (!limpo.startsWith('55')) limpo = '55' + limpo;
     return limpo;
   }
-  function showLoginOverlay() { document.getElementById('loginOverlay').style.display = 'flex'; }
-  function hideLoginOverlay() { document.getElementById('loginOverlay').style.display = 'none'; }
+  function showLoginOverlay() { var el = document.getElementById('loginOverlay'); if (el) el.style.display = 'flex'; }
+  function hideLoginOverlay() { var el = document.getElementById('loginOverlay'); if (el) el.style.display = 'none'; }
 
   async function getEstatisticasAvaliacoes() {
     try {
@@ -128,7 +153,7 @@ Economizei.Core = (function () {
   return {
     db:db, auth:auth, provider:provider, authReady:authReady,
     getCurrentUser:getCurrentUser, getUserPhotoURL:getUserPhotoURL, getUserDisplayName:getUserDisplayName,
-    sanitize:sanitize, ensureHttps:ensureHttps, gerarSlug:gerarSlug,
+    sanitize:sanitize, jsEscape:jsEscape, ensureHttps:ensureHttps, gerarSlug:gerarSlug,
     formatarTelefone:formatarTelefone, sanitizarWhatsapp:sanitizarWhatsapp,
     showLoginOverlay:showLoginOverlay, hideLoginOverlay:hideLoginOverlay,
     getEstatisticasAvaliacoes:getEstatisticasAvaliacoes,
@@ -139,9 +164,6 @@ Economizei.Core = (function () {
   };
 })();
 
-/* ============================================================
-   UTILS
-   ============================================================ */
 Economizei.Utils = (function () {
   var Core = Economizei.Core;
   var parseCSV = EU.parseCSV;
@@ -163,12 +185,12 @@ Economizei.Utils = (function () {
     var str = String(valor).trim().toLowerCase();
     return str === '' || str === 'não' || str === 'nao';
   }
-  function gerarURLQRCode(nome) {
-    var base = CFG.urlBaseQR || 'https://www.economizeirioclaro.com.br/p/onde-comer_13.html';
+  function gerarURLQRCode(nome, urlBase) {
+    var base = urlBase || CARDS_CFG.paginaAtualUrl || 'https://www.economizeirioclaro.com.br/p/categorias.html';
     return EU.gerarURLQRCode(base, Core.gerarSlug(nome));
   }
-  function gerarImagemQRCode(nome, tamanho) {
-    return EU.gerarImagemQRCode(gerarURLQRCode(nome), tamanho);
+  function gerarImagemQRCode(nome, urlBase, tamanho) {
+    return EU.gerarImagemQRCode(gerarURLQRCode(nome, urlBase), tamanho);
   }
   return {
     parseCSV:parseCSV, splitValores:splitValores, valorAtendeFiltro:valorAtendeFiltro,
@@ -177,13 +199,19 @@ Economizei.Utils = (function () {
   };
 })();
 
-/* ============================================================
-   HORÁRIO — modo configurável: '7dias' (padrão) ou '3blocos'
-   ============================================================ */
 Economizei.Horario = (function () {
   var Utils = Economizei.Utils;
-  var C = CFG.colunas;
-  var MODO = CFG.modoHorario || '7dias';
+  var C = CFG.colunas || {
+    NOME:0, CATEGORIA:1, SUBCATEGORIA:2, DISTRITO:3, IMAGEM:4, WHATSAPP:5, MAPS:6,
+    HORARIO:7, DELIVERY:8, CONSUMO:9, OBSERVACAO:10, CARDAPIO:11, ATIVO:12,
+    ID_UNICO:13, SLUG:14, URL_QR_CODE:15, LATITUDE:16, LONGITUDE:17,
+    VERIFICADO:18, DATA_VERIFICACAO:19, SITE:20, FACEBOOK:21, INSTAGRAM:22, PROMOCAO:23,
+    HORARIO_SEG:24, HORARIO_TER:25, HORARIO_QUA:26, HORARIO_QUI:27,
+    HORARIO_SEX:28, HORARIO_SAB:29, HORARIO_DOM:30, ESTILO:31
+  };
+  if (C.ESTILO === undefined) C.ESTILO = 31;
+  CARDS_CFG.colunas = C;
+  var MODO = CARDS_CFG.modoHorario || '7dias';
 
   function getHorarioParaDia(est, dia) {
     var col;
@@ -295,14 +323,12 @@ Economizei.Horario = (function () {
   }
 
   return {
+    COLUNAS: C,
     getHorarioPorDia:getHorarioPorDia, formatHorarioDisplay:formatHorarioDisplay,
     getStatusHorario:getStatusHorario, isClosedValue:Utils.isClosedValue
   };
 })();
 
-/* ============================================================
-   UI
-   ============================================================ */
 Economizei.UI = (function () {
   var Core = Economizei.Core;
   var modalAcessivel = EU.criarModalAcessivel();
@@ -345,67 +371,23 @@ Economizei.UI = (function () {
     modalAcessivel.abrir(modal);
   }
 
-  function abrirModalReservas(index) {
-    var card = Economizei.Cards.getCardByIndex(index);
-    if (!card) return;
-    var rData = JSON.parse(card.dataset.reservas || '[]');
-    if (!rData.length) return;
-    var modal = document.getElementById('modalReservas');
-    if (!modal) return;
-    document.getElementById('modalReservasTitulo').innerHTML =
-      '<i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Opções de Reserva';
-    var lista = document.getElementById('listaReservas'); lista.innerHTML = '';
-    rData.forEach(function (r) {
-      var a = document.createElement('a');
-      a.href = r.url;
-      a.target = '_blank'; a.rel = 'noopener noreferrer';
-      a.className = 'item-opcao item-reserva';
-      var host = '';
-      try { host = new URL(r.url).hostname.replace(/^www\./, ''); } catch (e) {}
-      a.setAttribute('aria-label', 'Reservar via ' + r.nome);
-      a.innerHTML =
-        '<span class="item-icone" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></span>' +
-        '<span class="item-texto">' +
-          '<span class="item-label">' + Core.sanitize(r.nome) + '</span>' +
-          (host ? '<span class="item-sublabel">' + Core.sanitize(host) + '</span>' : '') +
-        '</span>' +
-        '<span class="item-seta" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>';
-      lista.appendChild(a);
-    });
-    modalAcessivel.abrir(modal);
-  }
-
   function trapFocus(modal) { modalAcessivel.abrir(modal); }
   function restoreFocus() { modalAcessivel.fechar(); }
 
   return {
     mostrarToast:mostrarToast, abrirModalWhatsapp:abrirModalWhatsapp,
-    abrirModalReservas:abrirModalReservas,
     trapFocus:trapFocus, restoreFocus:restoreFocus
   };
 })();
 
-/* ============================================================
-   CARDS
-   ============================================================ */
 Economizei.Cards = (function () {
   var Core = Economizei.Core;
   var Utils = Economizei.Utils;
   var Horario = Economizei.Horario;
   var UI = Economizei.UI;
-  var C = CFG.colunas;
+  var C = Horario.COLUNAS;
 
-  var paginaCategorias = CFG.paginaCategorias || 'https://www.economizeirioclaro.com.br/p/categorias.html';
-  var paginaCadastro   = CFG.paginaCadastro   || 'https://www.economizeirioclaro.com.br/p/cadastro.html';
-  var favoritosKey     = CFG.favoritosKey     || 'grupoFavoritos';
-  var imagemFallback   = CFG.imagemFallback   || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=300&fit=crop';
-  var iconeSemResult   = CFG.iconeSemResultados || '📋';
-  var mapeamentoExato  = CFG.mapeamentoExato  || {};
-  var filtrosCfg       = CFG.filtros          || [];
-  var camposDetalhe    = CFG.camposDetalhe    || [];
-  var botoesCfg        = CFG.botoes           || [];
-
-  var gerenciadorFav = EU.criarGerenciadorFavoritos(favoritosKey);
+  var gerenciadorFav = EU.criarGerenciadorFavoritos(CARDS_CFG.favoritosKey);
 
   var dadosProcessados = [];
   var todosCardsRenderizados = [];
@@ -417,9 +399,52 @@ Economizei.Cards = (function () {
   var ordenarPorMedia = false;
   var cardsPorPagina = 20, paginaAtual = 1, vigiaScroll = null;
   var estatisticasGlobais = {}, avaliacoesUsuarioGlobais = {};
+  var modulosRegistrados = {};
+  var dadosResolvidos;
+  var dadosProntos = new Promise(function (r) { dadosResolvidos = r; });
+
+  function configurar(opcoes) {
+    opcoes = opcoes || {};
+    if (opcoes.colunas) {
+      for (var k in opcoes.colunas) C[k] = opcoes.colunas[k];
+      if (C.ESTILO === undefined) C.ESTILO = 31;
+      Horario.COLUNAS = C;
+    }
+    if (opcoes.tiposFiltroVisiveis) CARDS_CFG.tiposFiltroVisiveis = opcoes.tiposFiltroVisiveis;
+    if (opcoes.filtros && !opcoes.tiposFiltroVisiveis) {
+      var t = {};
+      opcoes.filtros.forEach(function (f) {
+        t[f.id.toUpperCase()] = { id: f.id, nome: f.nome, coluna: f.coluna };
+      });
+      CARDS_CFG.tiposFiltroVisiveis = t;
+    }
+    if (opcoes.botoes) CARDS_CFG.botoes = opcoes.botoes;
+    if (opcoes.camposDetalhe) CARDS_CFG.camposDetalhe = opcoes.camposDetalhe;
+    for (var key in opcoes) {
+      if (key === 'colunas' || key === 'filtros' || key === 'tiposFiltroVisiveis' || key === 'botoes' || key === 'camposDetalhe') continue;
+      CARDS_CFG[key] = opcoes[key];
+    }
+  }
+
+  function registrarModulo(estilo, definicao) {
+    if (!estilo || !definicao || typeof definicao.onClick !== 'function') {
+      console.error('[registrarModulo] inválido:', estilo, definicao);
+      return;
+    }
+    modulosRegistrados[String(estilo).toLowerCase().trim()] = definicao;
+  }
+
+  function montarBotaoModulo(estilo, idx) {
+    var def = modulosRegistrados[(estilo || '').toLowerCase().trim()];
+    if (!def) return '';
+    var label = def.label || 'Abrir';
+    var aria = def.ariaLabel || label;
+    return '<button class="btn-acao btn-modulo" onclick="' + def.onClick(idx) + '" aria-label="' + Core.sanitize(aria) + '">' + label + '</button>';
+  }
 
   function getFavoritos() { return gerenciadorFav.getTodos(); }
   function toggleFavorito(nome) { return gerenciadorFav.toggle(nome); }
+
   function estaVerificado(c) {
     var v = c[C.VERIFICADO] && c[C.VERIFICADO].toLowerCase() === 'sim';
     var dataStr = c[C.DATA_VERIFICACAO];
@@ -463,8 +488,15 @@ Economizei.Cards = (function () {
     return Array.from(set).sort();
   }
   function infoFiltroPorId(tipoId) {
-    for (var i = 0; i < filtrosCfg.length; i++) if (filtrosCfg[i].id === tipoId) return filtrosCfg[i];
+    var vis = CARDS_CFG.tiposFiltroVisiveis || {};
+    for (var k in vis) if (vis[k].id === tipoId) return vis[k];
     return null;
+  }
+  function listarTiposFiltro() {
+    var vis = CARDS_CFG.tiposFiltroVisiveis || {};
+    var out = [];
+    for (var k in vis) out.push(vis[k]);
+    return out;
   }
 
   function criarIndicadorCategoria(cat) {
@@ -477,7 +509,7 @@ Economizei.Cards = (function () {
             '<span class="categoria-nome">' + Core.sanitize(cat) + '</span>' +
           '</div>' +
         '</div>' +
-        '<a href="' + paginaCategorias + '" class="botao-voltar-categorias">← Voltar para página de categorias</a>' +
+        '<a href="' + CARDS_CFG.paginaCategorias + '" class="botao-voltar-categorias">← Voltar para página de categorias</a>' +
       '</div>';
   }
   function criarIndicadorQRCode(nome, categoria) {
@@ -496,7 +528,7 @@ Economizei.Cards = (function () {
   function fecharQRCode(categoria) {
     document.getElementById('indicadorQRCodeContainer').innerHTML = '';
     estabelecimentoViaQR = null;
-    document.getElementById('busca').value = '';
+    var b = document.getElementById('busca'); if (b) b.value = '';
     var url = new URL(window.location);
     url.searchParams.delete('qr');
     window.history.replaceState({}, '', url);
@@ -518,18 +550,19 @@ Economizei.Cards = (function () {
     var hasCat = !!categoriaGlobal || params.has('cat');
     var temBusca = document.getElementById('busca').value.trim() !== '';
     var temOutrosFiltros = filtrosAtivos.size > 0;
+    var icone = CARDS_CFG.iconeSemResultados || '📋';
     if (hasCat && !temBusca && !temOutrosFiltros) {
       lista.innerHTML += '<div class="sem-resultados sem-resultados-cadastro">' +
-        '<div style="font-size:2rem;margin-bottom:0.5rem;" aria-hidden="true">' + iconeSemResult + '</div>' +
+        '<div style="font-size:2rem;margin-bottom:0.5rem;" aria-hidden="true">' + icone + '</div>' +
         '<h3>Ainda não há estabelecimentos cadastrados nesta categoria</h3>' +
         '<p>Se você tem um negócio nesta área em Rio Claro, seja o primeiro a aparecer aqui!</p>' +
-        '<a href="' + paginaCadastro + '" target="_blank" rel="noopener noreferrer" class="btn-cadastro-cta">📋 Cadastrar meu estabelecimento</a><br>' +
-        '<button onclick="window.location.href=\'' + paginaCategorias + '\'" class="btn-adicionar-filtro" style="border-radius:2rem;border:none;padding:0.5rem 1rem;cursor:pointer;">← Voltar para categorias</button>' +
+        '<a href="' + CARDS_CFG.paginaCadastro + '" target="_blank" rel="noopener noreferrer" class="btn-cadastro-cta">📋 Cadastrar meu estabelecimento</a><br>' +
+        '<button onclick="window.location.href=\'' + CARDS_CFG.paginaCategorias + '\'" class="btn-adicionar-filtro" style="border-radius:2rem;border:none;padding:0.5rem 1rem;cursor:pointer;">← Voltar para categorias</button>' +
         '</div>';
       return;
     }
     var botao = hasCat
-      ? '<button onclick="window.location.href=\'' + paginaCategorias + '\'" class="btn-adicionar-filtro" style="border-radius:2rem;border:none;padding:0.5rem 1rem;cursor:pointer;">← Voltar para categorias</button>'
+      ? '<button onclick="window.location.href=\'' + CARDS_CFG.paginaCategorias + '\'" class="btn-adicionar-filtro" style="border-radius:2rem;border:none;padding:0.5rem 1rem;cursor:pointer;">← Voltar para categorias</button>'
       : '<button onclick="Economizei.Cards.limparTodosFiltros()" class="btn-adicionar-filtro" style="border-radius:2rem;border:none;padding:0.5rem 1rem;cursor:pointer;">↺ Limpar Filtros</button>';
     lista.innerHTML += '<div class="sem-resultados"><div style="font-size:2rem;margin-bottom:0.5rem;color:#d97706;" aria-hidden="true">🔍</div><h3>Nenhum estabelecimento encontrado</h3><p>Tente alterar os filtros de busca.</p>' + botao + '</div>';
   }
@@ -627,7 +660,7 @@ Economizei.Cards = (function () {
       f.className = 'ficha-filtro';
       f.setAttribute('role','button'); f.setAttribute('tabindex','0');
       f.setAttribute('aria-label', 'Remover filtro ' + info.nome + ': ' + valor);
-      f.innerHTML = '<span class="ficha-filtro-tipo">' + info.nome + '</span>: ' + valor +
+      f.innerHTML = '<span class="ficha-filtro-tipo">' + info.nome + '</span>: ' + Core.sanitize(valor) +
         '<button class="ficha-filtro-remover" data-tipo="' + tipo + '" aria-label="Remover filtro ' + valor + '">×</button>';
       f.querySelector('.ficha-filtro-remover').onclick = function (e) { e.stopPropagation(); removerFiltro(tipo); };
       f.onclick = function (e) { if (!e.target.classList.contains('ficha-filtro-remover')) abrirModalOpcoesFiltro(tipo); };
@@ -651,13 +684,13 @@ Economizei.Cards = (function () {
     filtrosAtivos.clear(); categoriaGlobal = null;
     document.getElementById('indicadorCategoriaContainer').innerHTML = '';
     estabelecimentoViaQR = null;
-    document.getElementById('busca').value = '';
-    document.getElementById('btnLimparBusca').classList.remove('visible');
+    var b = document.getElementById('busca'); if (b) b.value = '';
+    var bl = document.getElementById('btnLimparBusca'); if (bl) bl.classList.remove('visible');
     document.getElementById('indicadorQRCodeContainer').innerHTML = '';
+    var bp = document.getElementById('btnPertoMim');
     if (pertoMimAtivo) {
       pertoMimAtivo = false; usuarioPosicao = null;
-      document.getElementById('btnPertoMim').classList.remove('ativo');
-      document.getElementById('btnPertoMim').innerHTML = '📍 Perto de Mim';
+      if (bp) { bp.classList.remove('ativo'); bp.innerHTML = '📍 Perto de Mim'; }
     }
     ordenarPorMedia = false;
     atualizarFichasFiltros();
@@ -666,7 +699,7 @@ Economizei.Cards = (function () {
   function abrirModalTiposFiltro() {
     var modal = document.getElementById('modalAdicionarFiltro');
     var lista = document.getElementById('listaTiposFiltro'); lista.innerHTML = '';
-    filtrosCfg.forEach(function (tipo) {
+    listarTiposFiltro().forEach(function (tipo) {
       if (!colunaTemValores(tipo.coluna)) return;
       var item = document.createElement('button');
       item.type = 'button';
@@ -685,7 +718,7 @@ Economizei.Cards = (function () {
     var opcoes = obterOpcoesFiltro(info);
     var modalOpcoes = document.getElementById('modalOpcoesFiltro');
     document.getElementById('tituloOpcoesFiltro').innerHTML =
-      '<i class="fa-solid fa-list" aria-hidden="true"></i> Selecionar ' + info.nome;
+      '<i class="fa-solid fa-list" aria-hidden="true"></i> Selecionar ' + Core.sanitize(info.nome);
     var lista = document.getElementById('listaOpcoesFiltro'); lista.innerHTML = '';
     var todos = document.createElement('button');
     todos.type = 'button';
@@ -709,8 +742,9 @@ Economizei.Cards = (function () {
     var slug = params.get('cat').toLowerCase().trim();
     slug = slug.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var catEncontrada = null;
-    for (var key in mapeamentoExato) {
-      if (key === slug) { catEncontrada = mapeamentoExato[key]; break; }
+    var mape = CARDS_CFG.mapeamentoExato || {};
+    for (var key in mape) {
+      if (key === slug) { catEncontrada = mape[key]; break; }
     }
     if (!catEncontrada && dadosProcessados.length > 0) {
       var catsMap = new Map();
@@ -811,18 +845,24 @@ Economizei.Cards = (function () {
     });
   }
 
-  /* ---------- render principal ---------- */
   function renderizarCards(estatisticas, avaliacoesUsuario) {
     var favoritos = getFavoritos();
     var lista = document.getElementById('lista');
     lista.innerHTML = ''; todosCardsRenderizados = [];
+
+    var botoesCfg = CARDS_CFG.botoes || [
+      { tipo:'whatsapp' }, { tipo:'maps', rotulo:'Localização' }, { tipo:'qrcode' }
+    ];
+    var camposDetalhe = CARDS_CFG.camposDetalhe || [
+      { especial:'horario', rotulo:'Horário' }
+    ];
 
     dadosProcessados.forEach(function (c, idx) {
       var nome          = c[C.NOME] || '';
       var categoria     = c[C.CATEGORIA] || '';
       var subcategoria  = c[C.SUBCATEGORIA] || '';
       var distrito      = c[C.DISTRITO] || '';
-      var imagem        = Core.ensureHttps(c[C.IMAGEM]) || imagemFallback;
+      var imagem        = Core.ensureHttps(c[C.IMAGEM]) || CARDS_CFG.imagemFallback;
       var whatsappRaw   = c[C.WHATSAPP] || '';
       var maps          = c[C.MAPS] || '';
       var horarioDisplay = Horario.formatHorarioDisplay(c);
@@ -832,6 +872,7 @@ Economizei.Cards = (function () {
       var slug          = c[C.SLUG] || '';
       var latitude      = c[C.LATITUDE] || '';
       var longitude     = c[C.LONGITUDE] || '';
+      var estilo        = (c[C.ESTILO] || '').toLowerCase().trim();
 
       var verificado = estaVerificado(c);
       var dataVerif = '';
@@ -898,14 +939,15 @@ Economizei.Cards = (function () {
       card.dataset.latitude = latitude; card.dataset.longitude = longitude;
       card.dataset.index = idx; card.dataset.verificado = verificado ? 'true' : 'false';
       card.dataset.whatsapp = JSON.stringify(whatsappData);
+      card.dataset.estilo = estilo;
       if (reservasData.length) card.dataset.reservas = JSON.stringify(reservasData);
 
       var separadorHtml = (categoria && subcategoria) ? '<span class="card-categoria-separador">|</span>' : '';
 
       card.innerHTML =
-        '<div class="card-img-container"><img class="card-img" src="' + imagem + '" alt="' + Core.sanitize(nome) + '" loading="' + (idx < 8 ? 'eager' : 'lazy') + '" decoding="async" onerror="this.src=\'' + imagemFallback + '\'"></div>' +
+        '<div class="card-img-container"><img class="card-img" src="' + imagem + '" alt="' + Core.sanitize(nome) + '" loading="' + (idx < 8 ? 'eager' : 'lazy') + '" decoding="async" onerror="this.src=\'' + CARDS_CFG.imagemFallback + '\'"></div>' +
         '<div class="card-status ' + status.cor + '"><span class="status-texto">' + status.texto + '</span></div>' +
-        '<button class="btn-favorito ' + (isFav ? 'ativo' : '') + '" data-nome="' + nome + '" data-index="' + idx + '" aria-label="' + (isFav ? 'Remover' : 'Adicionar') + ' ' + nome + ' dos favoritos">' + (isFav ? '♥' : '♡') + '</button>' +
+        '<button class="btn-favorito ' + (isFav ? 'ativo' : '') + '" data-nome="' + Core.sanitize(nome) + '" data-index="' + idx + '" aria-label="' + (isFav ? 'Remover' : 'Adicionar') + ' ' + Core.sanitize(nome) + ' dos favoritos">' + (isFav ? '♥' : '♡') + '</button>' +
         '<div class="card-content">' +
           (verificado ? '<div class="badge-verificado-container"><span class="badge-tooltip" data-tooltip="Verificado em ' + dataVerif + '" tabindex="0">✅ Verificado</span></div>' : '') +
           '<h3 class="card-title">' + Core.sanitize(nome) + '</h3>' +
@@ -929,40 +971,42 @@ Economizei.Cards = (function () {
 
       var authHTML = gerarAuthHTML(idx);
 
-      // botões de ação
       var botoes = [];
       botoesCfg.forEach(function (b) {
         if (b.tipo === 'whatsapp') {
           if (whatsappData.length === 1) {
             var w = whatsappData[0];
-            botoes.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + (w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">WhatsApp</a>');
+            botoes.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + Core.sanitize(w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">WhatsApp</a>');
           } else if (whatsappData.length > 1) {
-            botoes.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + nome + '">WhatsApp</button>');
+            botoes.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + Core.sanitize(nome) + '">WhatsApp</button>');
           }
           return;
         }
         if (b.tipo === 'maps') {
-          if (maps) botoes.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + nome + '">' + (b.rotulo || 'Localização') + '</a>');
+          if (maps) botoes.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + Core.sanitize(nome) + '">' + (b.rotulo || 'Localização') + '</a>');
           return;
         }
         if (b.tipo === 'qrcode') {
-          botoes.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + nome + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + nome + '">📱 QR Code</button>');
+          botoes.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + Core.jsEscape(nome) + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + Core.sanitize(nome) + '">📱 QR Code</button>');
           return;
         }
         if (b.tipo === 'reserva') {
           if (reservasData.length > 0) {
-            botoes.push('<button class="btn-acao btn-reserva" data-index="' + idx + '" onclick="Economizei.UI.abrirModalReservas(' + idx + ')" aria-label="Opções de reserva para ' + nome + '">Reservas</button>');
+            botoes.push('<button class="btn-acao btn-reserva" data-index="' + idx + '" onclick="Economizei.Cards.abrirModalReservas(' + idx + ')" aria-label="Opções de reserva para ' + Core.sanitize(nome) + '">Reservas</button>');
           }
           return;
         }
         if (b.tipo === 'link') {
           var valor = c[b.coluna] || '';
-          if (valor) botoes.push('<a href="' + valor + '" target="_blank" rel="noopener noreferrer" class="btn-acao ' + (b.classe || 'btn-site') + '" aria-label="' + (b.rotulo || 'Link') + ' de ' + nome + '">' + (b.rotulo || 'Link') + '</a>');
+          if (valor) botoes.push('<a href="' + valor + '" target="_blank" rel="noopener noreferrer" class="btn-acao ' + (b.classe || 'btn-site') + '" aria-label="' + (b.rotulo || 'Link') + ' de ' + Core.sanitize(nome) + '">' + (b.rotulo || 'Link') + '</a>');
           return;
         }
       });
+      if (estilo) {
+        var btnMod = montarBotaoModulo(estilo, idx);
+        if (btnMod) botoes.push(btnMod);
+      }
 
-      // detalhes
       var detalhesHTML = '';
       camposDetalhe.forEach(function (d) {
         var valor;
@@ -976,8 +1020,8 @@ Economizei.Cards = (function () {
         '<div class="card-expanded">' +
           '<div class="detalhes-grid">' + detalhesHTML + '</div>' +
           '<div class="avaliacao-section">' +
-            '<div class="avaliacao-topo" data-index="' + idx + '" data-nome="' + nome + '">' + authHTML + '</div>' +
-            '<div class="avaliacao-estrelas" data-nome="' + nome + '" data-index="' + idx + '" role="radiogroup" aria-label="Avaliar ' + nome + '">' +
+            '<div class="avaliacao-topo" data-index="' + idx + '" data-nome="' + Core.sanitize(nome) + '">' + authHTML + '</div>' +
+            '<div class="avaliacao-estrelas" data-nome="' + Core.sanitize(nome) + '" data-index="' + idx + '" role="radiogroup" aria-label="Avaliar ' + Core.sanitize(nome) + '">' +
               Array.from({ length:5 }, function (_, i) {
                 var ativa = i < avUser ? 'ativa' : '';
                 return '<button class="estrela-btn ' + ativa + '" data-rating="' + (i+1) + '" data-index="' + idx + '" aria-label="' + (i+1) + ' estrela' + (i+1 > 1 ? 's' : '') + '" role="radio" aria-checked="' + (ativa ? 'true' : 'false') + '">★</button>';
@@ -996,9 +1040,50 @@ Economizei.Cards = (function () {
     listaEl.style.display = window.innerWidth <= 768 ? 'flex' : 'grid';
     if (window.innerWidth <= 768) listaEl.style.flexDirection = 'column';
     ativarInteracoesCards();
+    if (dadosResolvidos) { dadosResolvidos(); dadosResolvidos = null; }
   }
 
-  /* ---------- eventos ---------- */
+  function abrirModalReservas(index) {
+    var card = getCardByIndex(index);
+    if (!card) return;
+    var rData = JSON.parse(card.dataset.reservas || '[]');
+    if (!rData.length) return;
+    var modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true');
+    modal.setAttribute('aria-label', 'Opções de Reserva');
+    modal.innerHTML =
+      '<div class="modal-conteudo modal-multis">' +
+        '<div class="modal-header">' +
+          '<h3><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Opções de Reserva</h3>' +
+          '<button class="modal-close-btn" data-fechar aria-label="Fechar">×</button>' +
+        '</div>' +
+        '<div class="modal-body"><div id="listaReservasModal"></div></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+    var lista = modal.querySelector('#listaReservasModal');
+    rData.forEach(function (r) {
+      var a = document.createElement('a');
+      a.href = r.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.className = 'item-opcao item-reserva';
+      var host = '';
+      try { host = new URL(r.url).hostname.replace(/^www\./, ''); } catch (e) {}
+      a.innerHTML =
+        '<span class="item-icone" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></span>' +
+        '<span class="item-texto">' +
+          '<span class="item-label">' + Core.sanitize(r.nome) + '</span>' +
+          (host ? '<span class="item-sublabel">' + Core.sanitize(host) + '</span>' : '') +
+        '</span>' +
+        '<span class="item-seta" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>';
+      lista.appendChild(a);
+    });
+    var ctrl = EU.criarModalAcessivel();
+    ctrl.abrir(modal, function () { modal.remove(); });
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal || e.target.closest('[data-fechar]')) ctrl.fechar();
+    });
+  }
+
   function ativarInteracoesCards() {
     document.querySelectorAll('.card').forEach(function (c) {
       c.removeEventListener('click', handleCardClick); c.addEventListener('click', handleCardClick);
@@ -1019,12 +1104,12 @@ Economizei.Cards = (function () {
   }
 
   function handleCardClick(e) {
-    if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .badge-tooltip, .link-entrar, .link-sair')) return;
+    if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .btn-modulo, .badge-tooltip, .link-entrar, .link-sair')) return;
     toggleCardExpand(this);
   }
   function handleCardKeydown(e) {
     if (e.key === 'Enter' || e.key === ' ') {
-      if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .badge-tooltip, .link-entrar, .link-sair')) return;
+      if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .btn-modulo, .badge-tooltip, .link-entrar, .link-sair')) return;
       e.preventDefault(); toggleCardExpand(this);
     }
   }
@@ -1134,8 +1219,6 @@ Economizei.Cards = (function () {
   function abrirLoginParaAcao(pending) {
     var modal = document.getElementById('modalAvisoLogin');
     var estaNoApp = !!(window.Android && typeof window.Android.iniciarLoginGoogle === 'function');
-
-    // No app, injeta um × no header se ainda não existir
     var header = modal.querySelector('.modal-header');
     if (estaNoApp && header && !header.querySelector('.modal-close-btn')) {
       var btnX = document.createElement('button');
@@ -1146,45 +1229,26 @@ Economizei.Cards = (function () {
       btnX.onclick = function () { UI.restoreFocus(); };
       header.appendChild(btnX);
     }
-
     UI.trapFocus(modal);
-
     var btnGoogle = document.getElementById('btnContinuarGoogle');
     btnGoogle.onclick = function () {
       UI.restoreFocus();
       Core.showLoginOverlay();
-
-      // Timeout de segurança: se o SDK não responder em 30s, esconde o spinner
       var timeoutId = setTimeout(function () {
         Core.hideLoginOverlay();
         UI.mostrarToast('O login demorou demais. Tente novamente.');
       }, 30000);
-
-      function finalizar() {
-        clearTimeout(timeoutId);
-        Core.hideLoginOverlay();
-      }
-
+      function finalizar() { clearTimeout(timeoutId); Core.hideLoginOverlay(); }
       Core.auth.signInWithPopup(Core.provider).then(function (result) {
         finalizar();
         finalizarLogin(result.user, pending);
       }).catch(function (err) {
         finalizar();
-        if (err && (
-          err.code === 'auth/popup-closed-by-user' ||
-          err.code === 'auth/cancelled-popup-request' ||
-          err.code === 'auth/user-cancelled'
-        )) {
-          return;
-        }
-        if (err.code === 'auth/popup-blocked') {
-          UI.mostrarToast('O pop-up foi bloqueado. Permita pop-ups para este site.');
-        } else {
-          UI.mostrarToast('Erro ao fazer login: ' + (err.message || err));
-        }
+        if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/user-cancelled')) return;
+        if (err.code === 'auth/popup-blocked') UI.mostrarToast('O pop-up foi bloqueado. Permita pop-ups para este site.');
+        else UI.mostrarToast('Erro ao fazer login: ' + (err.message || err));
       });
     };
-
     document.getElementById('btnCancelarAviso').onclick = function () { UI.restoreFocus(); };
   }
   function finalizarLogin(user, pending) {
@@ -1221,11 +1285,10 @@ Economizei.Cards = (function () {
   }
   function getCardByIndex(idx) { var item = todosCardsRenderizados[idx]; return item ? item.card : null; }
 
-  /* ---------- carga de dados ---------- */
   function carregarDados() {
-    var csvUrl = CFG.csvUrl;
-    var cacheKey = CFG.cacheKey || 'grupoCacheV1';
-    var cacheDuration = CFG.cacheDuration || 3600000;
+    var csvUrl = CARDS_CFG.csvUrl;
+    var cacheKey = CARDS_CFG.cacheKey;
+    var cacheDuration = CARDS_CFG.cacheDuration;
     var loading = document.getElementById('loading');
     loading.style.display = 'flex';
     loading.innerHTML = '<div class="spinner" aria-hidden="true"></div><span>Carregando estabelecimentos...</span>';
@@ -1293,7 +1356,7 @@ Economizei.Cards = (function () {
     var cat = est[C.CATEGORIA];
     categoriaGlobal = cat;
     criarIndicadorQRCode(est[C.NOME], cat);
-    document.getElementById('busca').value = est[C.NOME];
+    var busca = document.getElementById('busca'); if (busca) busca.value = est[C.NOME];
     var idx = dadosProcessados.findIndex(function (e) { return e[C.NOME] === est[C.NOME]; });
     if (idx !== -1 && todosCardsRenderizados[idx]) {
       var cardEl = todosCardsRenderizados[idx].card;
@@ -1308,35 +1371,39 @@ Economizei.Cards = (function () {
   }
 
   return {
+    configurar: configurar,
+    registrarModulo: registrarModulo,
+    dadosProntos: dadosProntos,
+    get dadosProcessados() { return dadosProcessados; },
     getFavoritos:getFavoritos, toggleFavorito:toggleFavorito, estaVerificado:estaVerificado,
     criarIndicadorCategoria:criarIndicadorCategoria, criarIndicadorQRCode:criarIndicadorQRCode, fecharQRCode:fecharQRCode,
     mostrarMensagemSemResultados:mostrarMensagemSemResultados, renderizarPagina:renderizarPagina,
     aplicarFiltrosEOrdenacao:aplicarFiltrosEOrdenacao, atualizarFichasFiltros:atualizarFichasFiltros,
     adicionarFiltro:adicionarFiltro, removerFiltro:removerFiltro, limparTodosFiltros:limparTodosFiltros,
     abrirModalTiposFiltro:abrirModalTiposFiltro, abrirModalOpcoesFiltro:abrirModalOpcoesFiltro, aplicarFiltroURL:aplicarFiltroURL,
+    abrirModalReservas:abrirModalReservas,
     togglePertoDeMim:togglePertoDeMim, abrirQRCode:abrirQRCode, renderizarCards:renderizarCards,
     ativarInteracoesCards:ativarInteracoesCards, getCardByIndex:getCardByIndex, carregarDados:carregarDados,
     set ordenarPorMedia(v) { ordenarPorMedia = v; }, get ordenarPorMedia() { return ordenarPorMedia; }
   };
 })();
 
-/* ============================================================
-   INIT
-   ============================================================ */
 Economizei.Init = (function () {
   function iniciar() {
     var buscaInput = document.getElementById('busca');
     var btnLimparBusca = document.getElementById('btnLimparBusca');
-    function toggleLimparBusca() {
-      if (buscaInput.value.length > 0) btnLimparBusca.classList.add('visible');
-      else btnLimparBusca.classList.remove('visible');
+    if (buscaInput && btnLimparBusca) {
+      function toggleLimparBusca() {
+        if (buscaInput.value.length > 0) btnLimparBusca.classList.add('visible');
+        else btnLimparBusca.classList.remove('visible');
+      }
+      buscaInput.addEventListener('input', function () { toggleLimparBusca(); Economizei.Cards.aplicarFiltrosEOrdenacao(); });
+      btnLimparBusca.addEventListener('click', function () {
+        buscaInput.value = ''; toggleLimparBusca();
+        Economizei.Cards.aplicarFiltrosEOrdenacao(); buscaInput.focus();
+      });
+      buscaInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { e.preventDefault(); this.blur(); } });
     }
-    buscaInput.addEventListener('input', function () { toggleLimparBusca(); Economizei.Cards.aplicarFiltrosEOrdenacao(); });
-    btnLimparBusca.addEventListener('click', function () {
-      buscaInput.value = ''; toggleLimparBusca();
-      Economizei.Cards.aplicarFiltrosEOrdenacao(); buscaInput.focus();
-    });
-    buscaInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { e.preventDefault(); this.blur(); } });
 
     function onClick(id, handler) {
       var el = document.getElementById(id);
@@ -1349,7 +1416,6 @@ Economizei.Init = (function () {
     onClick('btnFecharModal', function () { Economizei.UI.restoreFocus(); });
     onClick('btnFecharModalOpcoes', function () { Economizei.UI.restoreFocus(); });
     onClick('btnFecharModalWhatsapp', function () { Economizei.UI.restoreFocus(); });
-    onClick('btnFecharModalReservas', function () { Economizei.UI.restoreFocus(); });
     document.querySelectorAll('.modal-overlay').forEach(function (m) {
       m.addEventListener('click', function (e) {
         if (e.target === this) { Economizei.UI.restoreFocus(); }
@@ -1361,7 +1427,7 @@ Economizei.Init = (function () {
     });
     window.addEventListener('resize', function () {
       var lista = document.getElementById('lista');
-      lista.style.display = window.innerWidth <= 768 ? 'flex' : 'grid';
+      if (lista) lista.style.display = window.innerWidth <= 768 ? 'flex' : 'grid';
     });
 
     document.addEventListener('click', function (e) {
@@ -1369,19 +1435,34 @@ Economizei.Init = (function () {
       if (b) Economizei.Cards.fecharQRCode(b.dataset.categoria);
     });
 
-    Economizei.Cards.carregarDados();
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      var modais = document.querySelectorAll('.modal-overlay[style*="display: flex"], .modal-overlay[style*="display:flex"], .modal-imagem-full, .popup-confirmacao');
+      if (modais.length === 0) return;
+      var ultimo = modais[modais.length - 1];
+      if (ultimo.classList.contains('modal-imagem-full') || ultimo.classList.contains('popup-confirmacao')) {
+        ultimo.remove();
+      } else {
+        ultimo.style.display = 'none';
+      }
+      Economizei.UI.restoreFocus();
+    });
   }
   return { iniciar:iniciar };
 })();
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', Economizei.Init.iniciar);
+  document.addEventListener('DOMContentLoaded', function () {
+    Economizei.Init.iniciar();
+    Economizei.Cards.carregarDados();
+  });
 } else {
   Economizei.Init.iniciar();
+  Economizei.Cards.carregarDados();
 }
 
-// expõe pra onclick inline (compatibilidade com HTML existente)
 window.abrirQRCode = Economizei.Cards.abrirQRCode;
 window.togglePertoDeMim = Economizei.Cards.togglePertoDeMim;
+window.abrirModalReservas = Economizei.Cards.abrirModalReservas;
 
 })();
