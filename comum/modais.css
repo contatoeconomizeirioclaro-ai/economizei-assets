@@ -16,16 +16,13 @@
    LIMITE DE ITENS VISÍVEIS (configurável em :root abaixo):
    - Multis: 5 itens. Passando disso, o body rola.
    - Lista:  6 itens. Passando, o body rola.
-   Em telas pequenas, o teto de tela (vh/dvh) encolhe o body antes disso.
    ============================================================ */
 
 :root {
-  /* Multis — item tem 64px, gap 12px, padding do body 0.85rem */
   --modal-multis-linhas: 5;
   --modal-multis-item-altura: 64px;
   --modal-multis-item-gap: 12px;
 
-  /* Lista — item tem ~44px, gap 6px, padding do body 0.6rem */
   --modal-lista-linhas: 6;
   --modal-lista-item-altura: 44px;
   --modal-lista-item-gap: 6px;
@@ -266,8 +263,7 @@
   min-width: 110px;
 }
 
-/* ===== FAMÍLIA: LISTA =====
-   Mostra até --modal-lista-linhas itens. Passando, o body rola. */
+/* ===== FAMÍLIA: LISTA ===== */
 .modal-conteudo.modal-lista .modal-body {
   padding: 0.6rem;
   display: flex;
@@ -351,8 +347,7 @@
   min-width: 120px;
 }
 
-/* ===== FAMÍLIA: MULTIS =====
-   Mostra até --modal-multis-linhas itens. Passando, o body rola. */
+/* ===== FAMÍLIA: MULTIS ===== */
 .modal-conteudo.modal-multis .modal-body {
   padding: 0.85rem;
   display: flex;
@@ -363,6 +358,15 @@
     + (var(--modal-multis-linhas) - 1) * var(--modal-multis-item-gap)
     + 1.7rem
   );
+}
+
+/* Wrapper interno (grupos.js usa <div id="listaWhatsapp"> etc.)
+   Faz o div intermediário carregar o espaçamento entre itens. */
+.modal-conteudo.modal-multis .modal-body > div,
+.modal-conteudo.modal-lista .modal-body > div {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
 }
 
 .modal-conteudo.modal-multis .item-opcao {
@@ -537,8 +541,6 @@
 }
 
 /* ===== AJUSTES POR TELA ===== */
-
-/* Telas curtas (paisagem de celular, split-screen) — reduz teto geral */
 @media (max-height: 520px) {
   .modal-conteudo {
     max-height: calc(100vh - 24px);
@@ -546,14 +548,12 @@
   @supports (height: 100dvh) {
     .modal-conteudo { max-height: calc(100dvh - 24px); }
   }
-  /* Deixa o flexbox decidir — o teto em itens atrapalharia */
   .modal-conteudo.modal-lista .modal-body,
   .modal-conteudo.modal-multis .modal-body {
     max-height: none;
   }
 }
 
-/* Telas estreitas — padding menor, teto geral mais conservador */
 @media (max-width: 520px) {
   .modal-overlay { padding: 12px; }
   .modal-conteudo { max-height: 82vh; }
@@ -569,8 +569,8 @@
 }
 
 /* Modo app: desconta a barra inferior nativa.
-   O app injeta --app-bottom-bar em px CSS (via JavaScript).
-   Fallback conservador de 60px se a variável não existir. */
+   O app injeta --app-bottom-bar em px CSS via JavaScript.
+   Fallback de 60px se a variável não existir. */
 body.app-ativo .modal-conteudo {
   max-height: calc(100vh - var(--app-bottom-bar, 60px) - 32px);
 }
