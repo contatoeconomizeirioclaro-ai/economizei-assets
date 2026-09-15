@@ -38,20 +38,15 @@ var CARDS_CFG = {
   iconeSemResultados: '📋',
   modoHorario: '7dias',
   colunas: null,
-  filtros: null,
-  camposDetalhe: null,
-  botoes: null,
   tiposFiltroVisiveis: null
 };
 
 (function aplicarGRUPO_CONFIG() {
   if (!CFG || !Object.keys(CFG).length) return;
   var m = {
-    titulo: 1, descricao: 1, textoUtilidade: 1,
     csvUrl: 1, cacheKey: 1, favoritosKey: 1,
     urlBaseQR: 1, imagemFallback: 1, iconeSemResultados: 1,
-    modoHorario: 1, colunas: 1, filtros: 1, camposDetalhe: 1,
-    botoes: 1, mapeamentoExato: 1
+    modoHorario: 1, colunas: 1, mapeamentoExato: 1
   };
   for (var k in CFG) {
     if (m[k] && CFG[k] !== undefined) {
@@ -429,17 +424,8 @@ Economizei.Cards = (function () {
       Horario.COLUNAS = C;
     }
     if (opcoes.tiposFiltroVisiveis) CARDS_CFG.tiposFiltroVisiveis = opcoes.tiposFiltroVisiveis;
-    if (opcoes.filtros && !opcoes.tiposFiltroVisiveis) {
-      var t = {};
-      opcoes.filtros.forEach(function (f) {
-        t[f.id.toUpperCase()] = { id: f.id, nome: f.nome, coluna: f.coluna };
-      });
-      CARDS_CFG.tiposFiltroVisiveis = t;
-    }
-    if (opcoes.botoes) CARDS_CFG.botoes = opcoes.botoes;
-    if (opcoes.camposDetalhe) CARDS_CFG.camposDetalhe = opcoes.camposDetalhe;
     for (var key in opcoes) {
-      if (key === 'colunas' || key === 'filtros' || key === 'tiposFiltroVisiveis' || key === 'botoes' || key === 'camposDetalhe') continue;
+      if (key === 'colunas' || key === 'filtros' || key === 'tiposFiltroVisiveis') continue;
       CARDS_CFG[key] = opcoes[key];
     }
   }
@@ -868,13 +854,6 @@ Economizei.Cards = (function () {
     var lista = document.getElementById('lista');
     lista.innerHTML = ''; todosCardsRenderizados = [];
 
-    var botoesCfg = CARDS_CFG.botoes || [
-      { tipo:'whatsapp' }, { tipo:'maps', rotulo:'Localização' }, { tipo:'qrcode' }
-    ];
-    var camposDetalhe = CARDS_CFG.camposDetalhe || [
-      { especial:'horario', rotulo:'Horário' }
-    ];
-
     dadosProcessados.forEach(function (c, idx) {
       var nome          = c[C.NOME] || '';
       var categoria     = c[C.CATEGORIA] || '';
@@ -886,6 +865,14 @@ Economizei.Cards = (function () {
       var horarioDisplay = Horario.formatHorarioDisplay(c);
       var horarioStatus  = Horario.getHorarioPorDia(c);
       var status         = Horario.getStatusHorario(horarioStatus);
+      var delivery      = c[C.DELIVERY] || '';
+      var consumo       = c[C.CONSUMO] || '';
+      var observacao    = c[C.OBSERVACAO] || '';
+      var cardapio      = c[C.CARDAPIO] || '';
+      var site          = c[C.SITE] || '';
+      var facebook      = c[C.FACEBOOK] || '';
+      var instagram     = c[C.INSTAGRAM] || '';
+      var promocao      = c[C.PROMOCAO] || '';
       var idUnico       = c[C.ID_UNICO] || '';
       var slug          = c[C.SLUG] || '';
       var latitude      = c[C.LATITUDE] || '';
@@ -990,48 +977,26 @@ Economizei.Cards = (function () {
       var authHTML = gerarAuthHTML(idx);
 
       var botoes = [];
-      botoesCfg.forEach(function (b) {
-        if (b.tipo === 'whatsapp') {
-          if (whatsappData.length === 1) {
-            var w = whatsappData[0];
-            botoes.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + Core.sanitize(w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">WhatsApp</a>');
-          } else if (whatsappData.length > 1) {
-            botoes.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + Core.sanitize(nome) + '">WhatsApp</button>');
-          }
-          return;
-        }
-        if (b.tipo === 'maps') {
-          if (maps) botoes.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + Core.sanitize(nome) + '">' + (b.rotulo || 'Localização') + '</a>');
-          return;
-        }
-        if (b.tipo === 'qrcode') {
-          botoes.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + Core.jsEscape(nome) + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + Core.sanitize(nome) + '">📱 QR Code</button>');
-          return;
-        }
-        if (b.tipo === 'reserva') {
-          if (reservasData.length > 0) {
-            botoes.push('<button class="btn-acao btn-reserva" data-index="' + idx + '" onclick="Economizei.Cards.abrirModalReservas(' + idx + ')" aria-label="Opções de reserva para ' + Core.sanitize(nome) + '">Reservas</button>');
-          }
-          return;
-        }
-        if (b.tipo === 'link') {
-          var valor = c[b.coluna] || '';
-          if (valor) botoes.push('<a href="' + valor + '" target="_blank" rel="noopener noreferrer" class="btn-acao ' + (b.classe || 'btn-site') + '" aria-label="' + (b.rotulo || 'Link') + ' de ' + Core.sanitize(nome) + '">' + (b.rotulo || 'Link') + '</a>');
-          return;
-        }
-      });
-      if (estilo) {
-        var btnMod = montarBotaoModulo(estilo, idx);
-        if (btnMod) botoes.push(btnMod);
+      if (whatsappData.length === 1) {
+        var w = whatsappData[0];
+        botoes.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + Core.sanitize(w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">WhatsApp</a>');
+      } else if (whatsappData.length > 1) {
+        botoes.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + Core.sanitize(nome) + '">WhatsApp</button>');
       }
+      if (maps) botoes.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + Core.sanitize(nome) + '">Localização</a>');
+      if (cardapio) botoes.push('<a href="' + cardapio + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-cardapio" aria-label="Cardápio de ' + Core.sanitize(nome) + '">Cardápio</a>');
+      if (site) botoes.push('<a href="' + site + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-site-pedido" aria-label="Site/Pedido de ' + Core.sanitize(nome) + '">Site/Pedido</a>');
+      if (facebook) botoes.push('<a href="' + facebook + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-facebook" aria-label="Facebook de ' + Core.sanitize(nome) + '">Facebook</a>');
+      if (instagram) botoes.push('<a href="' + instagram + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-instagram" aria-label="Instagram de ' + Core.sanitize(nome) + '">Instagram</a>');
+      if (promocao) botoes.push('<a href="' + promocao + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-promocao" aria-label="Promoção de ' + Core.sanitize(nome) + '">🔥 Promoção</a>');
+      if (estilo) botoes.push(montarBotaoModulo(estilo, idx));
+      botoes.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + Core.jsEscape(nome) + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + Core.sanitize(nome) + '">📱 QR Code</button>');
 
       var detalhesHTML = '';
-      camposDetalhe.forEach(function (d) {
-        var valor;
-        if (d.especial === 'horario') valor = horarioDisplay;
-        else valor = c[d.coluna] || '';
-        if (valor) detalhesHTML += '<div class="detalhe-item"><strong>' + d.rotulo + ':</strong> ' + Core.sanitize(valor) + '</div>';
-      });
+      if (horarioDisplay) detalhesHTML += '<div class="detalhe-item"><strong>Horário:</strong> ' + Core.sanitize(horarioDisplay) + '</div>';
+      if (delivery) detalhesHTML += '<div class="detalhe-item"><strong>Delivery:</strong> ' + Core.sanitize(delivery) + '</div>';
+      if (consumo) detalhesHTML += '<div class="detalhe-item"><strong>Consumo Local:</strong> ' + Core.sanitize(consumo) + '</div>';
+      if (observacao) detalhesHTML += '<div class="detalhe-item"><strong>Observações:</strong> ' + Core.sanitize(observacao) + '</div>';
       if (idUnico) detalhesHTML += '<div class="detalhe-item"><strong>ID Único:</strong> ' + Core.sanitize(idUnico) + '</div>';
 
       expanded.innerHTML =
