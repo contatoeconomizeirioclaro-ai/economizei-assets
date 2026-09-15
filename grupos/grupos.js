@@ -2,13 +2,19 @@
    ECONOMIZEI! RIO CLARO — GRUPOS (padrão)
    Lê window.GRUPO_CONFIG e monta a página inteira.
    Depende de: firebase-app-compat, firebase-firestore-compat,
-               firebase-auth-compat (carregados antes).
+               firebase-auth-compat (carregados antes),
+               comum/firebase.js, comum/utils.js.
    ============================================================ */
 (function () {
 'use strict';
 
 var CFG = window.GRUPO_CONFIG || {};
 var Economizei = window.Economizei = window.Economizei || {};
+var EU = window.EconomizeiUtils;
+
+if (!EU) {
+  console.error('[grupos.js] comum/utils.js não foi carregado antes deste script.');
+}
 
 /* ============================================================
    CORE
@@ -38,17 +44,10 @@ Economizei.Core = (function () {
   function getUserPhotoURL() { return userPhotoURL; }
   function getUserDisplayName() { return userDisplayName; }
 
-  function sanitize(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-  }
-  function ensureHttps(url) { return url && !url.startsWith('http') ? 'https://' + url : url; }
-  function gerarSlug(texto) {
-    if (!texto) return '';
-    return texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-      .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').trim();
-  }
+  function sanitize(str) { return EU.sanitize(str); }
+  function ensureHttps(url) { return EU.ensureHttps(url); }
+  function gerarSlug(texto) { return EU.gerarSlug(texto); }
+
   function formatarTelefone(numero) {
     if (!numero) return '';
     var n = numero.replace(/\D/g,'');
@@ -145,24 +144,9 @@ Economizei.Core = (function () {
    ============================================================ */
 Economizei.Utils = (function () {
   var Core = Economizei.Core;
-  function parseCSV(texto) {
-    var linhas = [], dentroAspas = false, campo = '', linha = [];
-    for (var i = 0; i < texto.length; i++) {
-      var c = texto[i], p = texto[i+1];
-      if (c === '"') {
-        if (!dentroAspas) dentroAspas = true;
-        else if (p === '"') { campo += '"'; i++; }
-        else dentroAspas = false;
-      } else if (c === ',' && !dentroAspas) { linha.push(campo); campo = ''; }
-      else if ((c === '\n' || c === '\r') && !dentroAspas) {
-        if (campo || linha.length) { linha.push(campo); linhas.push(linha); }
-        campo = ''; linha = [];
-        if (c === '\r' && p === '\n') i++;
-      } else campo += c;
-    }
-    if (campo || linha.length) { linha.push(campo); linhas.push(linha); }
-    return linhas;
-  }
+
+  var parseCSV = EU.parseCSV;
+
   function splitValores(val) {
     if (!val) return [];
     return val.split(',').map(function (v) { return v.trim(); }).filter(function (v) { return v !== ''; });
@@ -182,12 +166,10 @@ Economizei.Utils = (function () {
   }
   function gerarURLQRCode(nome) {
     var base = CFG.urlBaseQR || 'https://www.economizeirioclaro.com.br/p/onde-comer_13.html';
-    return base + '?qr=' + Core.gerarSlug(nome);
+    return EU.gerarURLQRCode(base, Core.gerarSlug(nome));
   }
   function gerarImagemQRCode(nome, tamanho) {
-    tamanho = tamanho || 200;
-    return 'https://api.qrserver.com/v1/create-qr-code/?size=' + tamanho + 'x' + tamanho +
-      '&data=' + encodeURIComponent(gerarURLQRCode(nome));
+    return EU.gerarImagemQRCode(gerarURLQRCode(nome), tamanho);
   }
   return {
     parseCSV:parseCSV, splitValores:splitValores, valorAtendeFiltro:valorAtendeFiltro,
@@ -324,7 +306,7 @@ Economizei.Horario = (function () {
    ============================================================ */
 Economizei.UI = (function () {
   var Core = Economizei.Core;
-  var lastFocusedElement = null;
+  var modalAcessivel = EU.criarModalAcessivel();
 
   function mostrarToast(msg) {
     var t = document.createElement('div');
@@ -352,8 +334,7 @@ Economizei.UI = (function () {
       a.setAttribute('aria-label', 'WhatsApp ' + (w.nome ? w.nome : Core.formatarTelefone(w.numero)));
       lista.appendChild(a);
     });
-    modal.style.display = 'flex';
-    trapFocus(modal);
+    modalAcessivel.abrir(modal);
   }
 
   function abrirModalReservas(index) {
@@ -374,19 +355,11 @@ Economizei.UI = (function () {
       a.setAttribute('aria-label', 'Reserva via ' + r.nome);
       lista.appendChild(a);
     });
-    modal.style.display = 'flex';
-    trapFocus(modal);
+    modalAcessivel.abrir(modal);
   }
 
-  function trapFocus(modal) {
-    lastFocusedElement = document.activeElement;
-    var focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-    if (focusable.length > 0) focusable[0].focus();
-  }
-  function restoreFocus() {
-    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') lastFocusedElement.focus();
-    lastFocusedElement = null;
-  }
+  function trapFocus(modal) { modalAcessivel.abrir(modal); }
+  function restoreFocus() { modalAcessivel.fechar(); }
 
   return {
     mostrarToast:mostrarToast, abrirModalWhatsapp:abrirModalWhatsapp,
@@ -415,6 +388,8 @@ Economizei.Cards = (function () {
   var camposDetalhe    = CFG.camposDetalhe    || [];
   var botoesCfg        = CFG.botoes           || [];
 
+  var gerenciadorFav = EU.criarGerenciadorFavoritos(favoritosKey);
+
   var dadosProcessados = [];
   var todosCardsRenderizados = [];
   var listaFiltradaIndices = [];
@@ -426,13 +401,8 @@ Economizei.Cards = (function () {
   var cardsPorPagina = 20, paginaAtual = 1, vigiaScroll = null;
   var estatisticasGlobais = {}, avaliacoesUsuarioGlobais = {};
 
-  function getFavoritos() { try { return JSON.parse(localStorage.getItem(favoritosKey)) || []; } catch (e) { return []; } }
-  function toggleFavorito(nome) {
-    var fav = getFavoritos(); var idx = fav.indexOf(nome);
-    if (idx > -1) fav.splice(idx,1); else fav.push(nome);
-    localStorage.setItem(favoritosKey, JSON.stringify(fav));
-    return fav.indexOf(nome) !== -1;
-  }
+  function getFavoritos() { return gerenciadorFav.getTodos(); }
+  function toggleFavorito(nome) { return gerenciadorFav.toggle(nome); }
   function estaVerificado(c) {
     var v = c[C.VERIFICADO] && c[C.VERIFICADO].toLowerCase() === 'sim';
     var dataStr = c[C.DATA_VERIFICACAO];
@@ -503,7 +473,7 @@ Economizei.Cards = (function () {
             '<span class="qr-code-nome">' + Core.sanitize(nome) + '</span>' +
           '</div>' +
         '</div>' +
-        '<button class="botao-fechar-qr" onclick="Economizei.Cards.fecharQRCode(\'' + Core.sanitize(categoria).replace(/'/g,"\\'") + '\')">← Voltar para ' + Core.sanitize(categoria) + '</button>' +
+        '<button class="botao-fechar-qr" data-categoria="' + Core.sanitize(categoria) + '">← Voltar para ' + Core.sanitize(categoria) + '</button>' +
       '</div>';
   }
   function fecharQRCode(categoria) {
@@ -691,7 +661,6 @@ Economizei.Cards = (function () {
       item.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); } });
       lista.appendChild(item);
     });
-    modal.style.display = 'flex';
     UI.trapFocus(modal);
   }
   function abrirModalOpcoesFiltro(tipoId) {
@@ -703,18 +672,17 @@ Economizei.Cards = (function () {
     var todos = document.createElement('div');
     todos.className = 'item-opcao-filtro'; todos.textContent = 'Todos';
     todos.setAttribute('role','option'); todos.setAttribute('tabindex','0');
-    todos.onclick = function () { removerFiltro(tipoId); modalOpcoes.style.display = 'none'; UI.restoreFocus(); };
+    todos.onclick = function () { removerFiltro(tipoId); UI.restoreFocus(); };
     todos.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); todos.click(); } });
     lista.appendChild(todos);
     opcoes.forEach(function (op) {
       var item = document.createElement('div');
       item.className = 'item-opcao-filtro'; item.textContent = op;
       item.setAttribute('role','option'); item.setAttribute('tabindex','0');
-      item.onclick = function () { adicionarFiltro(tipoId, op); modalOpcoes.style.display = 'none'; UI.restoreFocus(); };
+      item.onclick = function () { adicionarFiltro(tipoId, op); UI.restoreFocus(); };
       item.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); } });
       lista.appendChild(item);
     });
-    modalOpcoes.style.display = 'flex';
     UI.trapFocus(modalOpcoes);
   }
   function aplicarFiltroURL() {
@@ -787,23 +755,40 @@ Economizei.Cards = (function () {
     modal.className = 'modal-overlay';
     modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true');
     modal.setAttribute('aria-label', 'QR Code de ' + nome);
-    modal.style.display = 'flex';
     modal.innerHTML =
       '<div class="modal-conteudo qr-modal-conteudo">' +
         '<div class="modal-header"><h3>QR Code</h3>' +
-        '<button class="modal-close-btn" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Fechar QR Code">&times;</button></div>' +
+        '<button class="modal-close-btn" data-fechar-qr aria-label="Fechar QR Code">&times;</button></div>' +
         '<div class="modal-body" style="text-align:center;">' +
           '<div class="qr-modal-img-wrap"><img src="' + qrCodeURL + '" alt="QR Code para ' + Core.sanitize(nome) + '" loading="lazy" decoding="async" width="200" height="200"></div>' +
           '<p class="qr-modal-nome">' + Core.sanitize(nome) + '</p>' +
           '<div class="qr-modal-acoes">' +
-            '<button class="qr-btn-secondary" onclick="navigator.share ? navigator.share({title:\'' + nome + '\', url:\'' + urlQRCode + '\'}) : Economizei.UI.mostrarToast(\'Compartilhamento não suportado\')"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Compartilhar</button>' +
-            '<button class="qr-btn-primary" onclick="navigator.clipboard.writeText(\'' + urlQRCode + '\').then(function(){ Economizei.UI.mostrarToast(\'URL copiada!\'); })"><i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar</button>' +
+            '<button class="qr-btn-secondary" data-acao="compartilhar" data-nome="' + Core.sanitize(nome) + '" data-url="' + Core.sanitize(urlQRCode) + '"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Compartilhar</button>' +
+            '<button class="qr-btn-primary" data-acao="copiar" data-url="' + Core.sanitize(urlQRCode) + '"><i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar</button>' +
           '</div>' +
         '</div>' +
       '</div>';
     document.body.appendChild(modal);
-    modal.addEventListener('click', function (e) { if (e.target === modal) modal.remove(); });
-    UI.trapFocus(modal);
+
+    var ctrl = EU.criarModalAcessivel();
+    ctrl.abrir(modal, function () { modal.remove(); });
+
+    modal.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t === modal) { ctrl.fechar(); return; }
+      if (t.closest('[data-fechar-qr]')) { ctrl.fechar(); return; }
+      var btn = t.closest('[data-acao]');
+      if (!btn) return;
+      var url = btn.dataset.url;
+      if (btn.dataset.acao === 'compartilhar') {
+        if (navigator.share) navigator.share({ title: btn.dataset.nome, url: url });
+        else Economizei.UI.mostrarToast('Compartilhamento não suportado');
+      } else if (btn.dataset.acao === 'copiar') {
+        navigator.clipboard.writeText(url).then(function () {
+          Economizei.UI.mostrarToast('URL copiada!');
+        });
+      }
+    });
   }
 
   /* ---------- render principal ---------- */
@@ -1128,9 +1113,9 @@ Economizei.Cards = (function () {
   }
   function abrirLoginParaAcao(pending) {
     var modal = document.getElementById('modalAvisoLogin');
-    modal.style.display = 'flex'; UI.trapFocus(modal);
+    UI.trapFocus(modal);
     document.getElementById('btnContinuarGoogle').onclick = function () {
-      modal.style.display = 'none'; Core.showLoginOverlay();
+      UI.restoreFocus(); Core.showLoginOverlay();
       Core.auth.signInWithPopup(Core.provider).then(function (result) {
         Core.hideLoginOverlay(); finalizarLogin(result.user, pending);
       }).catch(function (err) {
@@ -1139,7 +1124,7 @@ Economizei.Cards = (function () {
         else UI.mostrarToast('Erro ao fazer login: ' + err.message);
       });
     };
-    document.getElementById('btnCancelarAviso').onclick = function () { modal.style.display = 'none'; UI.restoreFocus(); };
+    document.getElementById('btnCancelarAviso').onclick = function () { UI.restoreFocus(); };
   }
   function finalizarLogin(user, pending) {
     document.querySelectorAll('.avaliacao-topo').forEach(function (topo) {
@@ -1200,10 +1185,11 @@ Economizei.Cards = (function () {
       });
     }
 
-    var cached = localStorage.getItem(cacheKey);
-    var ts = localStorage.getItem(cacheKey + '_timestamp');
-    if (cached && ts && (Date.now() - ts < cacheDuration)) {
-      try { var dados = JSON.parse(cached); if (dados && dados.length) { finalizarComDados(dados); return; } } catch (e) {}
+    var cache = EU.criarCacheCSV(cacheKey, cacheDuration);
+    var dadosCacheados = cache.ler();
+    if (dadosCacheados && dadosCacheados.length) {
+      finalizarComDados(dadosCacheados);
+      return;
     }
 
     fetch(csvUrl).then(function (response) {
@@ -1212,12 +1198,17 @@ Economizei.Cards = (function () {
     }).then(function (texto) {
       var dadosCompletos = Utils.parseCSV(texto).slice(1);
       var ativos = dadosCompletos.filter(function (c) { return c[C.ATIVO] && c[C.ATIVO].toLowerCase() === 'sim'; });
-      localStorage.setItem(cacheKey, JSON.stringify(ativos));
-      localStorage.setItem(cacheKey + '_timestamp', Date.now());
+      cache.salvar(ativos);
       finalizarComDados(ativos);
     }).catch(function (err) {
       console.error('Erro no carregamento:', err);
-      if (cached) { try { var fb = JSON.parse(cached); if (fb && fb.length) { finalizarComDados(fb); UI.mostrarToast('⚠️ Dados desatualizados. Verifique sua conexão.'); return; } } catch (e) {} }
+      var fallback = null;
+      try { fallback = JSON.parse(localStorage.getItem(cacheKey)); } catch (e) {}
+      if (fallback && fallback.length) {
+        finalizarComDados(fallback);
+        UI.mostrarToast('⚠️ Dados desatualizados. Verifique sua conexão.');
+        return;
+      }
       loading.innerHTML = '<div class="estado-erro"><div class="estado-erro-icone" aria-hidden="true">⚠️</div><h3>Não foi possível carregar os estabelecimentos</h3><p>' + Core.sanitize(err.message) + '</p><button class="retry-button" onclick="Economizei.Cards.carregarDados()">Tentar novamente</button></div>';
     });
   }
@@ -1295,31 +1286,27 @@ Economizei.Init = (function () {
     onClick('btnAdicionarFiltro', function () { Economizei.Cards.abrirModalTiposFiltro(); });
     onClick('btnLimparFiltros', function () { Economizei.Cards.limparTodosFiltros(); });
     onClick('btnPertoMim', function () { Economizei.Cards.togglePertoDeMim(); });
-    onClick('btnFecharModal', function () { document.getElementById('modalAdicionarFiltro').style.display = 'none'; Economizei.UI.restoreFocus(); });
-    onClick('btnFecharModalOpcoes', function () { document.getElementById('modalOpcoesFiltro').style.display = 'none'; Economizei.UI.restoreFocus(); });
-    onClick('btnFecharModalWhatsapp', function () { document.getElementById('modalWhatsapp').style.display = 'none'; Economizei.UI.restoreFocus(); });
-    onClick('btnFecharModalReservas', function () { document.getElementById('modalReservas').style.display = 'none'; Economizei.UI.restoreFocus(); });
+    onClick('btnFecharModal', function () { Economizei.UI.restoreFocus(); });
+    onClick('btnFecharModalOpcoes', function () { Economizei.UI.restoreFocus(); });
+    onClick('btnFecharModalWhatsapp', function () { Economizei.UI.restoreFocus(); });
+    onClick('btnFecharModalReservas', function () { Economizei.UI.restoreFocus(); });
     document.querySelectorAll('.modal-overlay').forEach(function (m) {
       m.addEventListener('click', function (e) {
-        if (e.target === this) { this.style.display = 'none'; Economizei.UI.restoreFocus(); }
+        if (e.target === this) { Economizei.UI.restoreFocus(); }
       });
     });
     onClick('btnMelhoresAvaliados', function () {
       Economizei.Cards.ordenarPorMedia = !Economizei.Cards.ordenarPorMedia;
       Economizei.Cards.aplicarFiltrosEOrdenacao();
     });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        var modais = document.querySelectorAll('.modal-overlay[style*="display: flex"], .modal-overlay[style*="display:flex"]');
-        if (modais.length > 0) {
-          modais[modais.length - 1].style.display = 'none';
-          Economizei.UI.restoreFocus();
-        }
-      }
-    });
     window.addEventListener('resize', function () {
       var lista = document.getElementById('lista');
       lista.style.display = window.innerWidth <= 768 ? 'flex' : 'grid';
+    });
+
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest('.botao-fechar-qr');
+      if (b) Economizei.Cards.fecharQRCode(b.dataset.categoria);
     });
 
     Economizei.Cards.carregarDados();
