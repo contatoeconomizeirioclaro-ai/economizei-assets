@@ -144,7 +144,6 @@ Economizei.Core = (function () {
    ============================================================ */
 Economizei.Utils = (function () {
   var Core = Economizei.Core;
-
   var parseCSV = EU.parseCSV;
 
   function splitValores(val) {
@@ -323,15 +322,24 @@ Economizei.UI = (function () {
     if (!wData.length) return;
     var modal = document.getElementById('modalWhatsapp');
     if (!modal) return;
-    document.getElementById('modalWhatsappTitulo').textContent = 'WhatsApp - ' + card.dataset.nome;
+    document.getElementById('modalWhatsappTitulo').innerHTML =
+      '<i class="fa-solid fa-comment-dots" aria-hidden="true"></i> WhatsApp';
     var lista = document.getElementById('listaWhatsapp'); lista.innerHTML = '';
     wData.forEach(function (w) {
       var a = document.createElement('a');
       a.href = 'https://wa.me/' + w.numero;
       a.target = '_blank'; a.rel = 'noopener noreferrer';
-      a.className = 'item-whatsapp';
-      a.textContent = w.nome ? w.nome : Core.formatarTelefone(w.numero);
-      a.setAttribute('aria-label', 'WhatsApp ' + (w.nome ? w.nome : Core.formatarTelefone(w.numero)));
+      a.className = 'item-opcao item-whatsapp';
+      var nome = w.nome || 'WhatsApp';
+      var tel  = Core.formatarTelefone(w.numero);
+      a.setAttribute('aria-label', 'Abrir WhatsApp ' + nome + ' — ' + tel);
+      a.innerHTML =
+        '<span class="item-icone" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></span>' +
+        '<span class="item-texto">' +
+          '<span class="item-label">' + Core.sanitize(nome) + '</span>' +
+          '<span class="item-sublabel">' + Core.sanitize(tel) + '</span>' +
+        '</span>' +
+        '<span class="item-seta" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>';
       lista.appendChild(a);
     });
     modalAcessivel.abrir(modal);
@@ -344,15 +352,24 @@ Economizei.UI = (function () {
     if (!rData.length) return;
     var modal = document.getElementById('modalReservas');
     if (!modal) return;
-    document.getElementById('modalReservasTitulo').textContent = 'Opções de Reserva - ' + card.dataset.nome;
+    document.getElementById('modalReservasTitulo').innerHTML =
+      '<i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Opções de Reserva';
     var lista = document.getElementById('listaReservas'); lista.innerHTML = '';
     rData.forEach(function (r) {
       var a = document.createElement('a');
       a.href = r.url;
       a.target = '_blank'; a.rel = 'noopener noreferrer';
-      a.className = 'item-reserva';
-      a.textContent = r.nome;
-      a.setAttribute('aria-label', 'Reserva via ' + r.nome);
+      a.className = 'item-opcao item-reserva';
+      var host = '';
+      try { host = new URL(r.url).hostname.replace(/^www\./, ''); } catch (e) {}
+      a.setAttribute('aria-label', 'Reservar via ' + r.nome);
+      a.innerHTML =
+        '<span class="item-icone" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></span>' +
+        '<span class="item-texto">' +
+          '<span class="item-label">' + Core.sanitize(r.nome) + '</span>' +
+          (host ? '<span class="item-sublabel">' + Core.sanitize(host) + '</span>' : '') +
+        '</span>' +
+        '<span class="item-seta" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>';
       lista.appendChild(a);
     });
     modalAcessivel.abrir(modal);
@@ -651,14 +668,14 @@ Economizei.Cards = (function () {
     var lista = document.getElementById('listaTiposFiltro'); lista.innerHTML = '';
     filtrosCfg.forEach(function (tipo) {
       if (!colunaTemValores(tipo.coluna)) return;
-      var item = document.createElement('div');
-      item.className = 'item-tipo-filtro'; item.textContent = tipo.nome;
-      item.setAttribute('role','option'); item.setAttribute('tabindex','0');
+      var item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'item-opcao';
+      item.textContent = tipo.nome;
       item.onclick = function () {
         UI.restoreFocus();
         abrirModalOpcoesFiltro(tipo.id);
       };
-      item.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); } });
       lista.appendChild(item);
     });
     UI.trapFocus(modal);
@@ -667,20 +684,21 @@ Economizei.Cards = (function () {
     var info = infoFiltroPorId(tipoId); if (!info) return;
     var opcoes = obterOpcoesFiltro(info);
     var modalOpcoes = document.getElementById('modalOpcoesFiltro');
-    document.getElementById('tituloOpcoesFiltro').textContent = 'Selecionar ' + info.nome;
+    document.getElementById('tituloOpcoesFiltro').innerHTML =
+      '<i class="fa-solid fa-list" aria-hidden="true"></i> Selecionar ' + info.nome;
     var lista = document.getElementById('listaOpcoesFiltro'); lista.innerHTML = '';
-    var todos = document.createElement('div');
-    todos.className = 'item-opcao-filtro'; todos.textContent = 'Todos';
-    todos.setAttribute('role','option'); todos.setAttribute('tabindex','0');
+    var todos = document.createElement('button');
+    todos.type = 'button';
+    todos.className = 'item-opcao';
+    todos.textContent = 'Todos';
     todos.onclick = function () { removerFiltro(tipoId); UI.restoreFocus(); };
-    todos.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); todos.click(); } });
     lista.appendChild(todos);
     opcoes.forEach(function (op) {
-      var item = document.createElement('div');
-      item.className = 'item-opcao-filtro'; item.textContent = op;
-      item.setAttribute('role','option'); item.setAttribute('tabindex','0');
+      var item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'item-opcao' + (filtrosAtivos.get(tipoId) === op ? ' selecionada' : '');
+      item.textContent = op;
       item.onclick = function () { adicionarFiltro(tipoId, op); UI.restoreFocus(); };
-      item.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); } });
       lista.appendChild(item);
     });
     UI.trapFocus(modalOpcoes);
@@ -756,15 +774,17 @@ Economizei.Cards = (function () {
     modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true');
     modal.setAttribute('aria-label', 'QR Code de ' + nome);
     modal.innerHTML =
-      '<div class="modal-conteudo qr-modal-conteudo">' +
-        '<div class="modal-header"><h3>QR Code</h3>' +
-        '<button class="modal-close-btn" data-fechar-qr aria-label="Fechar QR Code">&times;</button></div>' +
-        '<div class="modal-body" style="text-align:center;">' +
-          '<div class="qr-modal-img-wrap"><img src="' + qrCodeURL + '" alt="QR Code para ' + Core.sanitize(nome) + '" loading="lazy" decoding="async" width="200" height="200"></div>' +
-          '<p class="qr-modal-nome">' + Core.sanitize(nome) + '</p>' +
-          '<div class="qr-modal-acoes">' +
-            '<button class="qr-btn-secondary" data-acao="compartilhar" data-nome="' + Core.sanitize(nome) + '" data-url="' + Core.sanitize(urlQRCode) + '"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Compartilhar</button>' +
-            '<button class="qr-btn-primary" data-acao="copiar" data-url="' + Core.sanitize(urlQRCode) + '"><i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar</button>' +
+      '<div class="modal-conteudo modal-sm modal-midia">' +
+        '<div class="modal-header">' +
+          '<h3><i class="fa-solid fa-qrcode" aria-hidden="true"></i> QR Code</h3>' +
+          '<button class="modal-close-btn" data-fechar-qr aria-label="Fechar QR Code">×</button>' +
+        '</div>' +
+        '<div class="modal-body">' +
+          '<div class="midia-wrap"><img src="' + qrCodeURL + '" alt="QR Code para ' + Core.sanitize(nome) + '" loading="lazy" decoding="async" width="220" height="220"></div>' +
+          '<p class="midia-titulo">' + Core.sanitize(nome) + '</p>' +
+          '<div class="midia-acoes">' +
+            '<button class="btn-modal-secundario" data-acao="compartilhar" data-nome="' + Core.sanitize(nome) + '" data-url="' + Core.sanitize(urlQRCode) + '"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Compartilhar</button>' +
+            '<button class="btn-modal-primario" data-acao="copiar" data-url="' + Core.sanitize(urlQRCode) + '"><i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -1113,17 +1133,58 @@ Economizei.Cards = (function () {
   }
   function abrirLoginParaAcao(pending) {
     var modal = document.getElementById('modalAvisoLogin');
+    var estaNoApp = !!(window.Android && typeof window.Android.iniciarLoginGoogle === 'function');
+
+    // No app, injeta um × no header se ainda não existir
+    var header = modal.querySelector('.modal-header');
+    if (estaNoApp && header && !header.querySelector('.modal-close-btn')) {
+      var btnX = document.createElement('button');
+      btnX.type = 'button';
+      btnX.className = 'modal-close-btn';
+      btnX.setAttribute('aria-label', 'Fechar');
+      btnX.textContent = '×';
+      btnX.onclick = function () { UI.restoreFocus(); };
+      header.appendChild(btnX);
+    }
+
     UI.trapFocus(modal);
-    document.getElementById('btnContinuarGoogle').onclick = function () {
-      UI.restoreFocus(); Core.showLoginOverlay();
-      Core.auth.signInWithPopup(Core.provider).then(function (result) {
-        Core.hideLoginOverlay(); finalizarLogin(result.user, pending);
-      }).catch(function (err) {
+
+    var btnGoogle = document.getElementById('btnContinuarGoogle');
+    btnGoogle.onclick = function () {
+      UI.restoreFocus();
+      Core.showLoginOverlay();
+
+      // Timeout de segurança: se o SDK não responder em 30s, esconde o spinner
+      var timeoutId = setTimeout(function () {
         Core.hideLoginOverlay();
-        if (err.code === 'auth/popup-blocked') UI.mostrarToast('O pop-up foi bloqueado. Permita pop-ups para este site.');
-        else UI.mostrarToast('Erro ao fazer login: ' + err.message);
+        UI.mostrarToast('O login demorou demais. Tente novamente.');
+      }, 30000);
+
+      function finalizar() {
+        clearTimeout(timeoutId);
+        Core.hideLoginOverlay();
+      }
+
+      Core.auth.signInWithPopup(Core.provider).then(function (result) {
+        finalizar();
+        finalizarLogin(result.user, pending);
+      }).catch(function (err) {
+        finalizar();
+        if (err && (
+          err.code === 'auth/popup-closed-by-user' ||
+          err.code === 'auth/cancelled-popup-request' ||
+          err.code === 'auth/user-cancelled'
+        )) {
+          return;
+        }
+        if (err.code === 'auth/popup-blocked') {
+          UI.mostrarToast('O pop-up foi bloqueado. Permita pop-ups para este site.');
+        } else {
+          UI.mostrarToast('Erro ao fazer login: ' + (err.message || err));
+        }
       });
     };
+
     document.getElementById('btnCancelarAviso').onclick = function () { UI.restoreFocus(); };
   }
   function finalizarLogin(user, pending) {
@@ -1260,7 +1321,7 @@ Economizei.Cards = (function () {
 })();
 
 /* ============================================================
-   INIT — só liga os botões; a lógica fica nos módulos
+   INIT
    ============================================================ */
 Economizei.Init = (function () {
   function iniciar() {
