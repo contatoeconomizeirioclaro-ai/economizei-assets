@@ -1380,7 +1380,7 @@ Economizei.Pedido = (function () {
         '<div class="modal-conteudo fullscreen">' +
           '<div class="modal-header">' +
             '<h3 id="modalPedidoTitulo">🍽️ ' + nomeEstabSeguro + '</h3>' +
-            '<button class="btn-modal-fechar" onclick="Economizei.Pedido.fecharModalPedido()" aria-label="Fechar pedido">✕</button>' +
+            '<button class="modal-close-btn" onclick="Economizei.Pedido.fecharModalPedido()" aria-label="Fechar pedido">×</button>' +
           '</div>' +
           '<div class="modal-tabs">' +
             '<button class="modal-tab active" data-tab="produtos" aria-label="Produtos">📦 Produtos</button>' +
