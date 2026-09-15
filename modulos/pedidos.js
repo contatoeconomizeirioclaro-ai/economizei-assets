@@ -1,8 +1,3 @@
-/* ============================================================
-   MÓDULO PEDIDOS
-   Depende de: economizei-core.js, comum/utils.js,
-               modais.css, componentes.css, _base.css, pedidos.css
-   ============================================================ */
 Economizei.Pedido = (function () {
   var EU = EconomizeiUtils;
   var Core = Economizei.Core;
@@ -27,14 +22,12 @@ Economizei.Pedido = (function () {
   var mesaQR = null;
   var enviandoPedido = false;
 
-  // Registro no Core
   Cards.registrarModulo('pedido', {
     label: '🍽️ Fazer pedido',
     ariaLabel: 'Fazer pedido',
     onClick: function (idx) { return 'Economizei.Pedido.abrirModal(' + idx + ')'; }
   });
 
-  // ---------- #modalScanner injetado sob demanda ----------
   function garantirModalScanner() {
     if (document.getElementById('modalScanner')) return;
     var html =
@@ -68,7 +61,6 @@ Economizei.Pedido = (function () {
   function setMesaQR(val) { mesaQR = val; sessionStorage.setItem('mesaQR', val); }
   UI.setMesaQR = setMesaQR;
 
-  // ---------- Scanner ----------
   var html5QrCode = null;
   function iniciarScanner() {
     if (typeof Html5Qrcode === 'undefined') { UI.mostrarToast('Leitor de QR Code não carregado nesta página.'); return; }
@@ -128,7 +120,6 @@ Economizei.Pedido = (function () {
   UI.iniciarScanner = iniciarScanner;
   UI.pararScanner = pararScanner;
 
-  // ---------- Cupom ----------
   async function validarCupom(cod, subtotal, frete, estId) {
     if (!cod) return null;
     var snap = await Core.db.collection('lojistas').where('estabelecimentoId', '==', estId).limit(1).get();
@@ -145,7 +136,6 @@ Economizei.Pedido = (function () {
     return Object.assign({}, cup, { desconto: desc, id: cupSnap.docs[0].id });
   }
 
-  // ---------- Comprovante (usa EU.abrirJanelaHTML) ----------
   function gerarComprovantePedido(pedido, codigoCurto) {
     var itensHTML = pedido.itens ? '<ul>' + pedido.itens.map(function (i) {
       return '<li>' + i.quantidade + 'x ' + Core.sanitize(i.nome) + ' - R$ ' + (i.precoUnitario * i.quantidade).toFixed(2) + '</li>';
@@ -175,7 +165,6 @@ Economizei.Pedido = (function () {
     EU.abrirJanelaHTML(html);
   }
 
-  // ---------- Abrir produto ----------
   function abrirProdutoPeloCard(prodId) {
     var produto = produtosCache.find(function (p) { return p.id === prodId; });
     if (!produto) { UI.mostrarToast('Produto não encontrado.'); return; }
@@ -247,8 +236,7 @@ Economizei.Pedido = (function () {
       var precoSpan = modal.querySelector('.preco');
       function atualizarPrecoImagem() {
         var qtd = parseInt(qtdInput.value) || 1;
-        var total = precoSelecionado * qtd;
-        precoSpan.textContent = 'R$ ' + total.toFixed(2);
+        precoSpan.textContent = 'R$ ' + (precoSelecionado * qtd).toFixed(2);
       }
       menosBtn.addEventListener('click', function () { qtdInput.stepDown(); atualizarPrecoImagem(); });
       maisBtn.addEventListener('click', function () { qtdInput.stepUp(); atualizarPrecoImagem(); });
@@ -273,7 +261,6 @@ Economizei.Pedido = (function () {
     UI.trapFocus(modal);
   }
 
-  // ---------- Personalização completa ----------
   function abrirModalCustomizacaoCompleta(produto) {
     var tamanhos = produto.tamanhosDisponiveis || [];
     var temTamanhosCustom = tamanhos.length > 0;
@@ -641,7 +628,6 @@ Economizei.Pedido = (function () {
     });
   }
 
-  // ---------- Tamanhos + Extras ----------
   function abrirModalTamanhosExtras(produto) {
     var tamanhos = produto.tamanhos || [];
     if (!tamanhos.length) { UI.mostrarToast('Produto sem variações de tamanho.'); return; }
@@ -798,7 +784,6 @@ Economizei.Pedido = (function () {
     });
   }
 
-  // ---------- Extras simples ----------
   function abrirModalExtrasSimples(produto) {
     var idsExtrasPermitidos = produto.extrasPermitidos || [];
     var categoriaProduto = produto.categoria || '';
@@ -923,7 +908,6 @@ Economizei.Pedido = (function () {
     });
   }
 
-  // ---------- Estoque / carrinho ----------
   function validarEstoqueAdicao(produto, quantidade) {
     if (produto.estoque === null || produto.estoque === undefined || produto.estoque === '') return true;
     var estoque = parseInt(produto.estoque, 10);
@@ -1065,7 +1049,6 @@ Economizei.Pedido = (function () {
     enviandoPedido = true;
     if (btnFinalizar) { btnFinalizar.disabled = true; btnFinalizar.textContent = 'Enviando...'; }
 
-    // ⬇️ movido para EconomizeiUtils
     EU.salvarDadosClienteLocal(nome, tel, end, mesa);
     var subtotal = carrinho.reduce(function (acc, i) { return acc + i.preco * i.quantidade; }, 0);
     var freteSelect = document.getElementById('selectFrete');
@@ -1088,7 +1071,6 @@ Economizei.Pedido = (function () {
 
     validarEstoqueAntesFinalizar().then(function () { return Core.db.collection('pedidos').add(pedido); }).then(function () {
       gerarComprovantePedido(pedido, codigoCurto);
-      // ⬇️ movido para EconomizeiUtils
       EU.mostrarPopupConfirmacao({
         titulo: '✅ Pedido Confirmado!',
         mensagem: 'Seu pedido foi enviado com sucesso!',
@@ -1480,7 +1462,6 @@ Economizei.Pedido = (function () {
       if (saved.telefone) document.getElementById('clienteTel').value = saved.telefone;
       if (saved.endereco) document.getElementById('clienteEndereco').value = saved.endereco;
     }
-    // ⬇️ movido para EconomizeiUtils
     EU.aplicarMascaraTelefone(document.getElementById('clienteTel'));
     var mesaAtual = getMesaQR();
     if (mesaAtual) {
@@ -1510,7 +1491,7 @@ Economizei.Pedido = (function () {
     finalizarPedido: finalizarPedido,
     consultarPedido: consultarPedido,
     gerarComprovantePedido: gerarComprovantePedido,
-    mostrarPopupConfirmacao: EU.mostrarPopupConfirmacao, // ⬅️ redireciona
+    mostrarPopupConfirmacao: EU.mostrarPopupConfirmacao,
     validarCupom: validarCupom,
     fecharModalPedido: fecharModalPedido,
     pararListenerPedidos: pararListenerPedidos,
