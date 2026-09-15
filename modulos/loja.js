@@ -3,6 +3,15 @@
   if (!window.Economizei) window.Economizei = {};
   if (!Economizei.Cards) { console.error('[loja] Core não carregado.'); return; }
 
+  (function () {
+    if (document.getElementById('css-loja')) return;
+    var l = document.createElement('link');
+    l.id = 'css-loja';
+    l.rel = 'stylesheet';
+    l.href = 'https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/modulos/loja.css';
+    document.head.appendChild(l);
+  })();
+
   var EU = EconomizeiUtils;
   var Core = Economizei.Core;
   var UI = Economizei.UI;
