@@ -1,15 +1,10 @@
 /* ============================================================
-   MÓDULO PEDIDOS — Registro + lógica + HTML do modal
-   Carregar DEPOIS de economizei-core.js, só nas páginas com ESTILO=pedido.
-
-   Adaptações em relação ao original (economizei-pedidos.js):
-   1. CSS saiu do arquivo: agora vive em modulos/pedidos.css.
-   2. Registra-se no Core via Economizei.Cards.registrarModulo('pedido', ...).
-   3. #modalScanner HTML é injetado pelo módulo (a página não tem mais).
-   4. Todos os Core.sanitize / Core.jsEscape preservados.
+   MÓDULO PEDIDOS
+   Depende de: economizei-core.js, comum/utils.js,
+               modais.css, componentes.css, _base.css, pedidos.css
    ============================================================ */
-
 Economizei.Pedido = (function () {
+  var EU = EconomizeiUtils;
   var Core = Economizei.Core;
   var UI = Economizei.UI;
   var Cards = Economizei.Cards;
@@ -20,7 +15,6 @@ Economizei.Pedido = (function () {
   var cupomDesconto = 0;
   var currentEstId = null;
   var currentLojistaId = null;
-  var CLIENTE_DATA_KEY = 'ultimoClienteData';
   var unsubscribePedidos = null, unsubscribeCardapio = null, unsubscribeFretes = null, unsubscribeSabores = null, unsubscribeExtras = null, unsubscribeStatusLoja = null;
   var statusLojaAtual = 'aberta';
   var tamanhoSelecionadoCustom = null;
@@ -33,18 +27,14 @@ Economizei.Pedido = (function () {
   var mesaQR = null;
   var enviandoPedido = false;
 
-  // ============================================================
-  // Registro no Core (botão "Fazer pedido" aparece automático)
-  // ============================================================
+  // Registro no Core
   Cards.registrarModulo('pedido', {
     label: '🍽️ Fazer pedido',
     ariaLabel: 'Fazer pedido',
     onClick: function (idx) { return 'Economizei.Pedido.abrirModal(' + idx + ')'; }
   });
 
-  // ============================================================
-  // HTML do #modalScanner (injetado sob demanda)
-  // ============================================================
+  // ---------- #modalScanner injetado sob demanda ----------
   function garantirModalScanner() {
     if (document.getElementById('modalScanner')) return;
     var html =
@@ -78,9 +68,7 @@ Economizei.Pedido = (function () {
   function setMesaQR(val) { mesaQR = val; sessionStorage.setItem('mesaQR', val); }
   UI.setMesaQR = setMesaQR;
 
-  // ============================================================
-  // Scanner de QR Code da mesa
-  // ============================================================
+  // ---------- Scanner ----------
   var html5QrCode = null;
   function iniciarScanner() {
     if (typeof Html5Qrcode === 'undefined') { UI.mostrarToast('Leitor de QR Code não carregado nesta página.'); return; }
@@ -140,35 +128,7 @@ Economizei.Pedido = (function () {
   UI.iniciarScanner = iniciarScanner;
   UI.pararScanner = pararScanner;
 
-  // ============================================================
-  // Persistência local do cliente
-  // ============================================================
-  function salvarDadosClienteLocal(nome, telefone, endereco, mesa) {
-    if (!nome && !telefone && !endereco && !mesa) return;
-    localStorage.setItem(CLIENTE_DATA_KEY, JSON.stringify({ nome: nome, telefone: telefone, endereco: endereco, mesa: mesa, timestamp: Date.now() }));
-  }
-  function carregarDadosClienteLocal() {
-    var saved = localStorage.getItem(CLIENTE_DATA_KEY);
-    if (!saved) return null;
-    try { return JSON.parse(saved); } catch (e) { return null; }
-  }
-  function aplicarMascaraTelefone(input) {
-    input.addEventListener('input', function () {
-      var value = input.value.replace(/\D/g, '');
-      if (value.length > 11) value = value.slice(0, 11);
-      var formatted = '';
-      if (value.length > 0) {
-        formatted = '(' + value.slice(0, 2);
-        if (value.length > 2) formatted += ') ' + value.slice(2, 7);
-        if (value.length > 7) formatted += '-' + value.slice(7, 11);
-      }
-      input.value = formatted;
-    });
-  }
-
-  // ============================================================
-  // Cupom / comprovante / popup
-  // ============================================================
+  // ---------- Cupom ----------
   async function validarCupom(cod, subtotal, frete, estId) {
     if (!cod) return null;
     var snap = await Core.db.collection('lojistas').where('estabelecimentoId', '==', estId).limit(1).get();
@@ -185,69 +145,37 @@ Economizei.Pedido = (function () {
     return Object.assign({}, cup, { desconto: desc, id: cupSnap.docs[0].id });
   }
 
-  function gerarComprovanteResponsivo(titulo, dados) {
-    var conteudo = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>' + titulo + '</title><style>' +
+  // ---------- Comprovante (usa EU.abrirJanelaHTML) ----------
+  function gerarComprovantePedido(pedido, codigoCurto) {
+    var itensHTML = pedido.itens ? '<ul>' + pedido.itens.map(function (i) {
+      return '<li>' + i.quantidade + 'x ' + Core.sanitize(i.nome) + ' - R$ ' + (i.precoUnitario * i.quantidade).toFixed(2) + '</li>';
+    }).join('') + '</ul>' : '';
+    var dados =
+      '<h2>Comprovante de Pedido</h2>' +
+      '<p style="text-align:center;"><strong>Pedido #' + Core.sanitize(codigoCurto) + '</strong><br>Data: ' + new Date().toLocaleString() + '</p>' +
+      '<div class="info">' +
+        '<p><strong>Estabelecimento:</strong> ' + Core.sanitize(pedido.estabelecimentoNome || '') + '</p>' +
+        '<p><strong>Cliente:</strong> ' + Core.sanitize(pedido.clienteNome || '') + '</p>' +
+        '<p><strong>Endereço:</strong> ' + Core.sanitize(pedido.endereco || '') + '</p>' +
+        (pedido.numeroMesa ? '<p><strong>Mesa:</strong> ' + Core.sanitize(pedido.numeroMesa) + '</p>' : '') +
+        '<p><strong>Telefone:</strong> ' + Core.sanitize(pedido.clienteTelefone || '') + '</p>' +
+      '</div>' +
+      '<div class="itens"><h3>Itens</h3>' + itensHTML + '</div>' +
+      '<div class="total">Subtotal: R$ ' + (pedido.subtotal || 0).toFixed(2) + '<br>Frete: R$ ' + (pedido.taxaEntrega || 0).toFixed(2) + '<br>Total: R$ ' + (pedido.total || 0).toFixed(2) + '</div>' +
+      '<p><strong>Pagamento:</strong> ' + Core.sanitize(pedido.formaPagamento || '') + (pedido.trocoPara ? ' (Troco para R$ ' + parseFloat(pedido.trocoPara).toFixed(2) + ')' : '') + '</p>' +
+      '<p><strong>Observação:</strong> ' + Core.sanitize(pedido.observacao || 'Nenhuma') + '</p>';
+    var html =
+      '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Comprovante de Pedido</title><style>' +
       'body{font-family:Arial,sans-serif;margin:0;padding:1rem;background:#f2f4f7;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;box-sizing:border-box;}' +
       '.comprovante{width:100%;max-width:600px;background:white;border-radius:1rem;padding:1.5rem;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin:0 auto;}' +
       'h2{color:#0a66c2;text-align:center;font-size:1.3rem;}.info{background:#f8fafc;padding:1rem;border-radius:0.5rem;margin:1rem 0;font-size:0.9rem;}.info p{margin:0.3rem 0;}' +
       '.itens{border-top:1px solid #ddd;margin:1rem 0;padding:0.5rem 0;}.itens ul{list-style:none;padding:0;}.itens li{padding:0.3rem 0;border-bottom:1px solid #eee;font-size:0.9rem;}' +
       '.total{font-weight:bold;font-size:1.2rem;text-align:right;margin-top:1rem;}.obrigado{text-align:center;margin-top:1.5rem;color:#64748b;font-size:0.85rem;}' +
       '@media (max-width:480px){.comprovante{padding:1rem;}h2{font-size:1.1rem;}.info{font-size:0.8rem;}}</style></head><body><div class="comprovante">' + dados + '<p class="obrigado">Obrigado pela preferência!</p></div></body></html>';
-    var win = window.open();
-    win.document.write(conteudo);
-    win.document.close();
+    EU.abrirJanelaHTML(html);
   }
 
-  function gerarComprovantePedido(pedido, codigoCurto) {
-    var itensHTML = pedido.itens ? '<ul>' + pedido.itens.map(function (i) {
-      return '<li>' + i.quantidade + 'x ' + Core.sanitize(i.nome) + ' - R$ ' + (i.precoUnitario * i.quantidade).toFixed(2) + '</li>';
-    }).join('') + '</ul>' : '';
-    var dados = '<h2>Comprovante de Pedido</h2>' +
-      '<p style="text-align:center;"><strong>Pedido #' + Core.sanitize(codigoCurto) + '</strong><br>Data: ' + new Date().toLocaleString() + '</p>' +
-      '<div class="info"><p><strong>Estabelecimento:</strong> ' + Core.sanitize(pedido.estabelecimentoNome || '') + '</p>' +
-      '<p><strong>Cliente:</strong> ' + Core.sanitize(pedido.clienteNome || '') + '</p>' +
-      '<p><strong>Endereço:</strong> ' + Core.sanitize(pedido.endereco || '') + '</p>' +
-      (pedido.numeroMesa ? '<p><strong>Mesa:</strong> ' + Core.sanitize(pedido.numeroMesa) + '</p>' : '') +
-      '<p><strong>Telefone:</strong> ' + Core.sanitize(pedido.clienteTelefone || '') + '</p></div>' +
-      '<div class="itens"><h3>Itens</h3>' + itensHTML + '</div>' +
-      '<div class="total">Subtotal: R$ ' + (pedido.subtotal || 0).toFixed(2) + '<br>Frete: R$ ' + (pedido.taxaEntrega || 0).toFixed(2) + '<br>Total: R$ ' + (pedido.total || 0).toFixed(2) + '</div>' +
-      '<p><strong>Pagamento:</strong> ' + Core.sanitize(pedido.formaPagamento || '') + (pedido.trocoPara ? ' (Troco para R$ ' + parseFloat(pedido.trocoPara).toFixed(2) + ')' : '') + '</p>' +
-      '<p><strong>Observação:</strong> ' + Core.sanitize(pedido.observacao || 'Nenhuma') + '</p>';
-    gerarComprovanteResponsivo('Comprovante de Pedido', dados);
-  }
-
-  function mostrarPopupConfirmacao(opcoes) {
-    var overlay = document.createElement('div');
-    overlay.className = 'popup-confirmacao';
-    overlay.setAttribute('role', 'dialog');
-    overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-label', opcoes.titulo);
-    overlay.innerHTML =
-      '<div class="popup-confirmacao-card">' +
-        '<div class="popup-confirmacao-header">' +
-          '<h3>' + opcoes.titulo + '</h3>' +
-          '<button type="button" class="modal-close-btn popup-confirmacao-close" onclick="this.closest(\'.popup-confirmacao\').remove()" aria-label="Fechar">×</button>' +
-        '</div>' +
-        '<div class="popup-confirmacao-body">' +
-          '<p>Seu pedido foi enviado com sucesso!</p>' +
-          '<div class="popup-confirmacao-codigo">' +
-            '<p class="label">Código</p>' +
-            '<p class="valor">#' + Core.sanitize(opcoes.codigo) + '</p>' +
-            '<button class="btn-adicionar-filtro" style="background:white;color:var(--primary);border:1px solid var(--primary);padding:0.5rem 1rem;margin-top:0.5rem;" onclick="navigator.clipboard.writeText(\'' + Core.jsEscape(opcoes.codigo) + '\').then(function(){ Economizei.UI.mostrarToast(\'Código copiado!\'); })">📋 Copiar código</button>' +
-          '</div>' +
-          '<div class="popup-confirmacao-botoes">' + opcoes.botoes + '</div>' +
-        '</div>' +
-        '<div class="popup-confirmacao-footer">' +
-          '<button class="btn-modal-fechar" onclick="this.closest(\'.popup-confirmacao\').remove(); ' + (opcoes.onClose || '') + '">Fechar</button>' +
-        '</div>' +
-      '</div>';
-    document.body.appendChild(overlay);
-    UI.trapFocus(overlay);
-  }
-
-  // ============================================================
-  // Abrir produto (roteia entre card e imagem/customização)
-  // ============================================================
+  // ---------- Abrir produto ----------
   function abrirProdutoPeloCard(prodId) {
     var produto = produtosCache.find(function (p) { return p.id === prodId; });
     if (!produto) { UI.mostrarToast('Produto não encontrado.'); return; }
@@ -345,9 +273,7 @@ Economizei.Pedido = (function () {
     UI.trapFocus(modal);
   }
 
-  // ============================================================
-  // Modal de personalização completa
-  // ============================================================
+  // ---------- Personalização completa ----------
   function abrirModalCustomizacaoCompleta(produto) {
     var tamanhos = produto.tamanhosDisponiveis || [];
     var temTamanhosCustom = tamanhos.length > 0;
@@ -368,28 +294,20 @@ Economizei.Pedido = (function () {
 
     var idsSaboresPermitidos = produto.saboresPermitidos || [];
     var categoriaProduto = produto.categoria || '';
-    var saboresDisponiveis = [];
-    if (idsSaboresPermitidos.length > 0) {
-      saboresDisponiveis = saboresGlobais.filter(function (s) { return idsSaboresPermitidos.indexOf(s.id) !== -1; });
-    } else {
-      saboresDisponiveis = saboresGlobais.filter(function (s) {
-        if (!s.categorias || s.categorias === '') return true;
-        var cats = s.categorias.split(',').map(function (c) { return c.trim(); });
-        return cats.indexOf(categoriaProduto) !== -1;
-      });
-    }
+    var saboresDisponiveis = idsSaboresPermitidos.length > 0
+      ? saboresGlobais.filter(function (s) { return idsSaboresPermitidos.indexOf(s.id) !== -1; })
+      : saboresGlobais.filter(function (s) {
+          if (!s.categorias || s.categorias === '') return true;
+          return s.categorias.split(',').map(function (c) { return c.trim(); }).indexOf(categoriaProduto) !== -1;
+        });
 
     var idsExtrasPermitidos = produto.extrasPermitidos || [];
-    var extrasFiltrados = [];
-    if (idsExtrasPermitidos.length > 0) {
-      extrasFiltrados = extrasGlobais.filter(function (e) { return idsExtrasPermitidos.indexOf(e.id) !== -1; });
-    } else {
-      extrasFiltrados = extrasGlobais.filter(function (e) {
-        if (!e.categorias || e.categorias === '') return true;
-        var cats = e.categorias.split(',').map(function (c) { return c.trim(); });
-        return cats.indexOf(categoriaProduto) !== -1;
-      });
-    }
+    var extrasFiltrados = idsExtrasPermitidos.length > 0
+      ? extrasGlobais.filter(function (e) { return idsExtrasPermitidos.indexOf(e.id) !== -1; })
+      : extrasGlobais.filter(function (e) {
+          if (!e.categorias || e.categorias === '') return true;
+          return e.categorias.split(',').map(function (c) { return c.trim(); }).indexOf(categoriaProduto) !== -1;
+        });
 
     saboresSelecionados = [];
     extrasSelecionados = extrasFiltrados.map(function (e) { return Object.assign({}, e, { quantidade: 0 }); });
@@ -516,28 +434,16 @@ Economizei.Pedido = (function () {
         var itemDiv = document.createElement('article');
         itemDiv.className = 'item-sabor modal-option-card' + (isSelected ? ' selecionado' : '');
         itemDiv.dataset.id = sabor.id;
-        var main = document.createElement('div');
-        main.className = 'modal-extra-main';
-        if (sabor.imagem) {
-          var img = document.createElement('img');
-          img.src = sabor.imagem; img.className = 'sabor-imagem extra-imagem'; img.alt = '';
-          main.appendChild(img);
-        }
-        var info = document.createElement('div');
-        info.className = 'modal-extra-info';
-        var titleLine = document.createElement('div');
-        titleLine.className = 'modal-extra-title-line';
-        var nomeSpan = document.createElement('strong');
-        nomeSpan.className = 'modal-extra-title'; nomeSpan.textContent = sabor.nome;
-        var precoSpan = document.createElement('span');
-        precoSpan.className = 'item-preco modal-extra-price'; precoSpan.textContent = 'R$ ' + preco.toFixed(2);
+        var main = document.createElement('div'); main.className = 'modal-extra-main';
+        if (sabor.imagem) { var img = document.createElement('img'); img.src = sabor.imagem; img.className = 'sabor-imagem extra-imagem'; img.alt = ''; main.appendChild(img); }
+        var info = document.createElement('div'); info.className = 'modal-extra-info';
+        var titleLine = document.createElement('div'); titleLine.className = 'modal-extra-title-line';
+        var nomeSpan = document.createElement('strong'); nomeSpan.className = 'modal-extra-title'; nomeSpan.textContent = sabor.nome;
+        var precoSpan = document.createElement('span'); precoSpan.className = 'item-preco modal-extra-price'; precoSpan.textContent = 'R$ ' + preco.toFixed(2);
         titleLine.appendChild(nomeSpan); titleLine.appendChild(precoSpan);
-        var descDiv = document.createElement('p');
-        descDiv.className = 'modal-extra-description'; descDiv.textContent = sabor.descricao || 'Sem descrição';
-        info.appendChild(titleLine); info.appendChild(descDiv);
-        main.appendChild(info);
-        var action = document.createElement('div');
-        action.className = 'modal-extra-actions';
+        var descDiv = document.createElement('p'); descDiv.className = 'modal-extra-description'; descDiv.textContent = sabor.descricao || 'Sem descrição';
+        info.appendChild(titleLine); info.appendChild(descDiv); main.appendChild(info);
+        var action = document.createElement('div'); action.className = 'modal-extra-actions';
         var btnSelect = document.createElement('button');
         btnSelect.type = 'button';
         btnSelect.className = 'btn-selecionar-sabor modal-select-btn' + (isSelected ? ' selecionado' : '');
@@ -566,8 +472,7 @@ Economizei.Pedido = (function () {
           atualizarPrecoCustom();
         });
         action.appendChild(btnSelect);
-        itemDiv.appendChild(main);
-        itemDiv.appendChild(action);
+        itemDiv.appendChild(main); itemDiv.appendChild(action);
         saboresContainer.appendChild(itemDiv);
       });
     }
@@ -589,24 +494,16 @@ Economizei.Pedido = (function () {
       extrasSelecionados.forEach(function (extra) {
         var extraDiv = document.createElement('article');
         extraDiv.className = 'item-extra modal-option-card';
-        var main = document.createElement('div');
-        main.className = 'modal-extra-main';
+        var main = document.createElement('div'); main.className = 'modal-extra-main';
         if (extra.imagem) { var img = document.createElement('img'); img.src = extra.imagem; img.className = 'extra-imagem'; img.alt = ''; main.appendChild(img); }
-        var info = document.createElement('div');
-        info.className = 'modal-extra-info';
-        var titleLine = document.createElement('div');
-        titleLine.className = 'modal-extra-title-line';
-        var nomeSpan = document.createElement('strong');
-        nomeSpan.className = 'modal-extra-title'; nomeSpan.textContent = extra.nome;
-        var precoSpan = document.createElement('span');
-        precoSpan.className = 'item-preco modal-extra-price'; precoSpan.textContent = 'R$ ' + extra.preco.toFixed(2);
+        var info = document.createElement('div'); info.className = 'modal-extra-info';
+        var titleLine = document.createElement('div'); titleLine.className = 'modal-extra-title-line';
+        var nomeSpan = document.createElement('strong'); nomeSpan.className = 'modal-extra-title'; nomeSpan.textContent = extra.nome;
+        var precoSpan = document.createElement('span'); precoSpan.className = 'item-preco modal-extra-price'; precoSpan.textContent = 'R$ ' + extra.preco.toFixed(2);
         titleLine.appendChild(nomeSpan); titleLine.appendChild(precoSpan);
-        var descDiv = document.createElement('p');
-        descDiv.className = 'modal-extra-description'; descDiv.textContent = extra.descricao || 'Sem descrição';
-        info.appendChild(titleLine); info.appendChild(descDiv);
-        main.appendChild(info);
-        var qtdDiv = document.createElement('div');
-        qtdDiv.className = 'modal-extra-actions';
+        var descDiv = document.createElement('p'); descDiv.className = 'modal-extra-description'; descDiv.textContent = extra.descricao || 'Sem descrição';
+        info.appendChild(titleLine); info.appendChild(descDiv); main.appendChild(info);
+        var qtdDiv = document.createElement('div'); qtdDiv.className = 'modal-extra-actions';
         qtdDiv.innerHTML = '<button type="button" class="extra-add-btn" data-extra-id="' + extra.id + '" data-delta="1" aria-label="Adicionar extra ' + Core.sanitize(extra.nome) + '">' + (extra.quantidade > 0 ? 'Adicionado' : 'Adicionar') + '</button>' +
           '<div class="extra-qtd" aria-label="Quantidade de ' + Core.sanitize(extra.nome) + '">' +
             '<button type="button" data-extra-id="' + extra.id + '" data-delta="-1" aria-label="Diminuir quantidade de ' + Core.sanitize(extra.nome) + '">−</button>' +
@@ -744,25 +641,19 @@ Economizei.Pedido = (function () {
     });
   }
 
-  // ============================================================
-  // Modal de tamanhos + extras
-  // ============================================================
+  // ---------- Tamanhos + Extras ----------
   function abrirModalTamanhosExtras(produto) {
     var tamanhos = produto.tamanhos || [];
     if (!tamanhos.length) { UI.mostrarToast('Produto sem variações de tamanho.'); return; }
     var tamanhoSelecionado = tamanhos[0].nome;
     var idsExtrasPermitidos = produto.extrasPermitidos || [];
     var categoriaProduto = produto.categoria || '';
-    var extrasDisponiveis = [];
-    if (idsExtrasPermitidos.length > 0) {
-      extrasDisponiveis = extrasGlobais.filter(function (e) { return idsExtrasPermitidos.indexOf(e.id) !== -1; });
-    } else {
-      extrasDisponiveis = extrasGlobais.filter(function (e) {
-        if (!e.categorias || e.categorias === '') return true;
-        var cats = e.categorias.split(',').map(function (c) { return c.trim(); });
-        return cats.indexOf(categoriaProduto) !== -1;
-      });
-    }
+    var extrasDisponiveis = idsExtrasPermitidos.length > 0
+      ? extrasGlobais.filter(function (e) { return idsExtrasPermitidos.indexOf(e.id) !== -1; })
+      : extrasGlobais.filter(function (e) {
+          if (!e.categorias || e.categorias === '') return true;
+          return e.categorias.split(',').map(function (c) { return c.trim(); }).indexOf(categoriaProduto) !== -1;
+        });
     var selecaoExtras = extrasDisponiveis.map(function (e) { return Object.assign({}, e, { quantidade: 0 }); });
 
     var modal = document.createElement('div');
@@ -836,18 +727,15 @@ Economizei.Pedido = (function () {
     }
     function atualizarPrecoTotalTamanho() {
       var extraTotal = selecaoExtras.reduce(function (acc, e) { return acc + (e.preco * e.quantidade); }, 0);
-      var total = precoTamanhoAtual + extraTotal;
-      precoTotalEl.textContent = 'R$ ' + total.toFixed(2);
+      precoTotalEl.textContent = 'R$ ' + (precoTamanhoAtual + extraTotal).toFixed(2);
       atualizarResumoTamanhosExtras();
     }
     function renderizarExtras() {
       extrasContainer.innerHTML = '';
       if (selecaoExtras.length === 0) { extrasContainer.innerHTML = '<p class="modal-empty-state">Nenhum extra disponível para este produto.</p>'; atualizarResumoTamanhosExtras(); return; }
       selecaoExtras.forEach(function (extra) {
-        var extraDiv = document.createElement('article');
-        extraDiv.className = 'item-extra modal-extra-card';
-        var main = document.createElement('div');
-        main.className = 'modal-extra-main';
+        var extraDiv = document.createElement('article'); extraDiv.className = 'item-extra modal-extra-card';
+        var main = document.createElement('div'); main.className = 'modal-extra-main';
         if (extra.imagem) { var img = document.createElement('img'); img.src = extra.imagem; img.className = 'extra-imagem'; img.alt = ''; main.appendChild(img); }
         var info = document.createElement('div'); info.className = 'modal-extra-info';
         var titleLine = document.createElement('div'); titleLine.className = 'modal-extra-title-line';
@@ -857,12 +745,8 @@ Economizei.Pedido = (function () {
         var descDiv = document.createElement('p'); descDiv.className = 'modal-extra-description'; descDiv.textContent = extra.descricao || 'Sem descrição';
         info.appendChild(titleLine); info.appendChild(descDiv); main.appendChild(info);
         var qtdDiv = document.createElement('div'); qtdDiv.className = 'modal-extra-actions';
-        qtdDiv.innerHTML = '<button type="button" class="extra-add-btn" data-extra-id="' + extra.id + '" data-delta="1" aria-label="Adicionar extra ' + Core.sanitize(extra.nome) + '">' + (extra.quantidade > 0 ? 'Adicionado' : 'Adicionar') + '</button>' +
-          '<div class="extra-qtd" aria-label="Quantidade de ' + Core.sanitize(extra.nome) + '">' +
-            '<button type="button" data-extra-id="' + extra.id + '" data-delta="-1" aria-label="Diminuir quantidade de ' + Core.sanitize(extra.nome) + '">−</button>' +
-            '<span id="extra-qtd-' + extra.id + '">' + extra.quantidade + '</span>' +
-            '<button type="button" data-extra-id="' + extra.id + '" data-delta="1" aria-label="Aumentar quantidade de ' + Core.sanitize(extra.nome) + '">+</button>' +
-          '</div>';
+        qtdDiv.innerHTML = '<button type="button" class="extra-add-btn" data-extra-id="' + extra.id + '" data-delta="1">' + (extra.quantidade > 0 ? 'Adicionado' : 'Adicionar') + '</button>' +
+          '<div class="extra-qtd"><button type="button" data-extra-id="' + extra.id + '" data-delta="-1">−</button><span id="extra-qtd-' + extra.id + '">' + extra.quantidade + '</span><button type="button" data-extra-id="' + extra.id + '" data-delta="1">+</button></div>';
         extraDiv.appendChild(main); extraDiv.appendChild(qtdDiv);
         extrasContainer.appendChild(extraDiv);
         atualizarCardExtra(extra, extraDiv, qtdDiv);
@@ -907,31 +791,23 @@ Economizei.Pedido = (function () {
       var existing = carrinho.find(function (i) { return i.id === produto.id && i.tamanho === tamanhoSelecionado; });
       if (existing) existing.quantidade += 1;
       else carrinho.push(Object.assign({}, produto, { id: produto.id, nome: nomeFinal, preco: precoFinal, quantidade: 1, tamanho: tamanhoSelecionado, extras: selecaoExtras.filter(function (e) { return e.quantidade > 0; }) }));
-      atualizarCarrinhoVisual();
-      recalcularTotal();
-      atualizarBadgeCarrinho();
+      atualizarCarrinhoVisual(); recalcularTotal(); atualizarBadgeCarrinho();
       UI.mostrarToast('Produto adicionado ao carrinho');
       modal.remove();
       UI.restoreFocus();
     });
   }
 
-  // ============================================================
-  // Modal de extras simples
-  // ============================================================
+  // ---------- Extras simples ----------
   function abrirModalExtrasSimples(produto) {
     var idsExtrasPermitidos = produto.extrasPermitidos || [];
     var categoriaProduto = produto.categoria || '';
-    var extrasDisponiveis = [];
-    if (idsExtrasPermitidos.length > 0) {
-      extrasDisponiveis = extrasGlobais.filter(function (e) { return idsExtrasPermitidos.indexOf(e.id) !== -1; });
-    } else {
-      extrasDisponiveis = extrasGlobais.filter(function (e) {
-        if (!e.categorias || e.categorias === '') return true;
-        var cats = e.categorias.split(',').map(function (c) { return c.trim(); });
-        return cats.indexOf(categoriaProduto) !== -1;
-      });
-    }
+    var extrasDisponiveis = idsExtrasPermitidos.length > 0
+      ? extrasGlobais.filter(function (e) { return idsExtrasPermitidos.indexOf(e.id) !== -1; })
+      : extrasGlobais.filter(function (e) {
+          if (!e.categorias || e.categorias === '') return true;
+          return e.categorias.split(',').map(function (c) { return c.trim(); }).indexOf(categoriaProduto) !== -1;
+        });
     var selecaoExtras = extrasDisponiveis.map(function (e) { return Object.assign({}, e, { quantidade: 0 }); });
     var precoBase = parseFloat(produto.preco) || 0;
 
@@ -942,9 +818,6 @@ Economizei.Pedido = (function () {
     modal.setAttribute('aria-label', 'Adicionar extras para ' + produto.nome);
     modal.style.display = 'flex';
 
-    // (Layout reaproveitado do TamanhosExtras; omitido aqui por compactação,
-    //  mas idêntico — usa os mesmos seletores e classes, e o botão final
-    //  adiciona direto ao carrinho sem seleção de tamanho.)
     modal.innerHTML =
       '<div class="modal-conteudo modal-extras-pontual">' +
         '<div class="modal-header modal-header-config">' +
@@ -991,8 +864,7 @@ Economizei.Pedido = (function () {
     }
     function atualizarPrecoTotalSimples() {
       var extraTotal = selecaoExtras.reduce(function (acc, e) { return acc + (e.preco * e.quantidade); }, 0);
-      var total = precoBase + extraTotal;
-      precoTotalEl.textContent = 'Total: R$ ' + total.toFixed(2);
+      precoTotalEl.textContent = 'Total: R$ ' + (precoBase + extraTotal).toFixed(2);
     }
     function renderizarExtras() {
       extrasContainer.innerHTML = '';
@@ -1051,9 +923,7 @@ Economizei.Pedido = (function () {
     });
   }
 
-  // ============================================================
-  // Estoque / carrinho / totais
-  // ============================================================
+  // ---------- Estoque / carrinho ----------
   function validarEstoqueAdicao(produto, quantidade) {
     if (produto.estoque === null || produto.estoque === undefined || produto.estoque === '') return true;
     var estoque = parseInt(produto.estoque, 10);
@@ -1070,7 +940,7 @@ Economizei.Pedido = (function () {
       return '<div class="item-carrinho">' +
         '<img src="' + (item.imagem || 'https://via.placeholder.com/40') + '" class="item-carrinho-imagem" alt="' + Core.sanitize(item.nome) + '" onerror="this.style.display=\'none\'">' +
         '<div style="flex:1"><strong>' + Core.sanitize(item.nome) + '</strong><br>R$ ' + item.preco.toFixed(2) + '</div>' +
-        '<input type="number" min="1" value="' + item.quantidade + '" class="qtd-item" data-id="' + item.id + '" onchange="Economizei.Pedido.alterarQuantidade(\'' + Core.jsEscape(item.id) + '\', this.value)" aria-label="Quantidade de ' + Core.sanitize(item.nome) + '">' +
+        '<input type="number" min="1" value="' + item.quantidade + '" class="qtd-item" onchange="Economizei.Pedido.alterarQuantidade(\'' + Core.jsEscape(item.id) + '\', this.value)" aria-label="Quantidade de ' + Core.sanitize(item.nome) + '">' +
         '<button class="btn-pequeno" onclick="Economizei.Pedido.removerItem(\'' + Core.jsEscape(item.id) + '\')" aria-label="Remover ' + Core.sanitize(item.nome) + '">✕</button>' +
         '</div>';
     }).join('');
@@ -1151,9 +1021,6 @@ Economizei.Pedido = (function () {
     }
   }
 
-  // ============================================================
-  // Validação de estoque e finalização
-  // ============================================================
   function validarEstoqueAntesFinalizar() {
     var totais = {};
     carrinho.forEach(function (item) {
@@ -1167,8 +1034,8 @@ Economizei.Pedido = (function () {
         if (!snap.exists) { var erro = new Error('Produto não encontrado no cardápio.'); erro.estoque = true; throw erro; }
         var dado = snap.data() || {};
         var estoque = parseInt(dado.estoque, 10);
-        if (isNaN(estoque) || estoque < 0) { var erroInvalido = new Error('Estoque inválido para ' + totalItem.nome + '.'); erroInvalido.estoque = true; throw erroInvalido; }
-        if (totalItem.quantidade > estoque) { var erroInsuficiente = new Error('Estoque insuficiente para ' + totalItem.nome + '. Disponível: ' + estoque); erroInsuficiente.estoque = true; throw erroInsuficiente; }
+        if (isNaN(estoque) || estoque < 0) { var e1 = new Error('Estoque inválido para ' + totalItem.nome + '.'); e1.estoque = true; throw e1; }
+        if (totalItem.quantidade > estoque) { var e2 = new Error('Estoque insuficiente para ' + totalItem.nome + '. Disponível: ' + estoque); e2.estoque = true; throw e2; }
       });
     }));
   }
@@ -1198,7 +1065,8 @@ Economizei.Pedido = (function () {
     enviandoPedido = true;
     if (btnFinalizar) { btnFinalizar.disabled = true; btnFinalizar.textContent = 'Enviando...'; }
 
-    salvarDadosClienteLocal(nome, tel, end, mesa);
+    // ⬇️ movido para EconomizeiUtils
+    EU.salvarDadosClienteLocal(nome, tel, end, mesa);
     var subtotal = carrinho.reduce(function (acc, i) { return acc + i.preco * i.quantidade; }, 0);
     var freteSelect = document.getElementById('selectFrete');
     var frete = freteSelect ? (parseFloat(freteSelect.value) || 0) : 0;
@@ -1220,8 +1088,10 @@ Economizei.Pedido = (function () {
 
     validarEstoqueAntesFinalizar().then(function () { return Core.db.collection('pedidos').add(pedido); }).then(function () {
       gerarComprovantePedido(pedido, codigoCurto);
-      mostrarPopupConfirmacao({
+      // ⬇️ movido para EconomizeiUtils
+      EU.mostrarPopupConfirmacao({
         titulo: '✅ Pedido Confirmado!',
+        mensagem: 'Seu pedido foi enviado com sucesso!',
         codigo: codigoCurto,
         botoes: '<button class="btn-pedido-cta" style="width:auto;" onclick="document.getElementById(\'consultaInput\').value=\'' + Core.jsEscape(codigoCurto) + '\'; document.querySelector(\'#modalPedidoRest .modal-tab[data-tab=\\"acompanhar\\"]\').click(); this.closest(\'.popup-confirmacao\').remove();">🔍 Acompanhar</button>',
         onClose: ''
@@ -1229,7 +1099,6 @@ Economizei.Pedido = (function () {
       var carrinhoParaEstoque = carrinho.slice();
       carrinho = []; cupomDesconto = 0;
       atualizarCarrinhoVisual(); recalcularTotal(); atualizarBadgeCarrinho();
-
       var updates = carrinhoParaEstoque.map(function (item) {
         if (item.estoque !== null && item.estoque !== undefined && item.estoque !== '') {
           var novoEstoque = Math.max(0, parseInt(item.estoque) - item.quantidade);
@@ -1237,9 +1106,7 @@ Economizei.Pedido = (function () {
         }
         return Promise.resolve();
       });
-      Promise.all(updates).catch(function (err) {
-        console.warn('Baixa de estoque não aplicada (pedido já confirmado):', err.message);
-      });
+      Promise.all(updates).catch(function (err) { console.warn('Baixa de estoque não aplicada:', err.message); });
     }).catch(function (err) {
       UI.mostrarToast(err && err.estoque ? err.message : 'Erro ao finalizar pedido: ' + err.message);
     }).finally(function () {
@@ -1476,8 +1343,7 @@ Economizei.Pedido = (function () {
     if (!validarEstoqueAdicao(produto, quantidade)) return;
     var temExtras = (produto.extrasPermitidos && produto.extrasPermitidos.length > 0) || extrasGlobais.some(function (e) {
       if (!e.categorias || e.categorias === '') return true;
-      var cats = e.categorias.split(',').map(function (c) { return c.trim(); });
-      return cats.indexOf(produto.categoria || 'Geral') !== -1;
+      return e.categorias.split(',').map(function (c) { return c.trim(); }).indexOf(produto.categoria || 'Geral') !== -1;
     });
     if (temExtras) { abrirModalExtrasSimples(produto); }
     else {
@@ -1600,22 +1466,22 @@ Economizei.Pedido = (function () {
         document.querySelectorAll('#modalPedidoRest .modal-tab').forEach(function (t) { t.classList.remove('active'); });
         tab.classList.add('active');
         document.querySelectorAll('#modalPedidoRest .modal-tab-content').forEach(function (c) { c.classList.remove('active'); });
-        var tabId = tab.dataset.tab;
-        var contentId = 'tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1);
+        var contentId = 'tab' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1);
         var contentEl = document.getElementById(contentId);
         if (contentEl) contentEl.classList.add('active');
-        if (tabId === 'historico' && Core.getCurrentUser()) carregarHistorico(estId);
+        if (tab.dataset.tab === 'historico' && Core.getCurrentUser()) carregarHistorico(estId);
       };
     });
     if (!isLoading && produtos) { atualizarCarrinhoVisual(); recalcularTotal(); }
     toggleTroco();
-    var saved = carregarDadosClienteLocal();
+    var saved = EU.carregarDadosClienteLocal();
     if (saved) {
       if (saved.nome) document.getElementById('clienteNome').value = saved.nome;
       if (saved.telefone) document.getElementById('clienteTel').value = saved.telefone;
       if (saved.endereco) document.getElementById('clienteEndereco').value = saved.endereco;
     }
-    aplicarMascaraTelefone(document.getElementById('clienteTel'));
+    // ⬇️ movido para EconomizeiUtils
+    EU.aplicarMascaraTelefone(document.getElementById('clienteTel'));
     var mesaAtual = getMesaQR();
     if (mesaAtual) {
       var mesaField = document.getElementById('mesaInput');
@@ -1644,7 +1510,7 @@ Economizei.Pedido = (function () {
     finalizarPedido: finalizarPedido,
     consultarPedido: consultarPedido,
     gerarComprovantePedido: gerarComprovantePedido,
-    mostrarPopupConfirmacao: mostrarPopupConfirmacao,
+    mostrarPopupConfirmacao: EU.mostrarPopupConfirmacao, // ⬅️ redireciona
     validarCupom: validarCupom,
     fecharModalPedido: fecharModalPedido,
     pararListenerPedidos: pararListenerPedidos,
