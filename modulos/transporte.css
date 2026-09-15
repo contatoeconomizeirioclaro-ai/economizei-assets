@@ -1,7 +1,7 @@
 /* ============================================================
    MÓDULO TRANSPORTE — CSS específico
    Depende de: tokens.css, modais.css, componentes.css, _base.css
-   Padronizado com pedidos.css — usa .modal-estabelecimento-*
+   Padronizado com pedidos.css — v2 refinada
    ============================================================ */
 
 /* ===== HEADER (padrão pedidos/loja) ===== */
@@ -48,32 +48,59 @@
 
 /* ===== BODY ===== */
 #modalTransporte .modal-body {
-  padding: .75rem;
+  padding: 1rem;
   overflow-y: auto;
   flex: 1 1 auto;
   min-height: 0;
+  background: var(--gray-100, #f1f5f9);
 }
 #modalTransporte .modal-tab-content { padding: 0; }
 
-/* ===== BUSCA DE ENDEREÇOS (Mapbox Geocoder) ===== */
-.search-fields-wrapper {
+/* ===== BLOCOS (cards dentro do body) ===== */
+#modalTransporte .tp-bloco {
   background: #fff;
-  border-radius: 1rem;
-  padding: .75rem;
-  margin-bottom: .75rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,.06);
   border: 1px solid var(--gray-200);
-  position: relative;
-  z-index: 10;
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-bottom: .85rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+#modalTransporte .tp-bloco:last-of-type { margin-bottom: 0; }
+#modalTransporte .tp-bloco-titulo {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .72rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .04em;
+  color: var(--gray-500);
+  margin-bottom: .65rem;
+}
+#modalTransporte .tp-bloco-titulo i { color: var(--primary); font-size: .8rem; }
+
+/* ===== BUSCA DE ENDEREÇOS ===== */
+.search-fields-wrapper {
+  display: flex; flex-direction: column; gap: .65rem;
 }
 .search-field-group {
-  display: flex; gap: .5rem; align-items: stretch; margin-bottom: .5rem;
+  display: flex; gap: .5rem; align-items: center;
   position: relative;
 }
-.search-field-group:last-child { margin-bottom: 0; }
 .search-field-container {
   flex: 1; position: relative; display: flex; align-items: center;
   min-width: 0;
+}
+.search-field-container::before {
+  content: "";
+  position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, .15);
+  z-index: 6;
+  pointer-events: none;
+}
+.search-field-group:nth-child(2) .search-field-container::before {
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, .15);
+  border-radius: 2px;
 }
 
 /* Geocoder — input padronizado */
@@ -81,75 +108,119 @@
 #destinoGeocoder .mapboxgl-ctrl-geocoder {
   width: 100%; position: relative; z-index: 5;
   background: transparent; border: none; box-shadow: none;
+  min-width: 0;
 }
 #origemGeocoder .mapboxgl-ctrl-geocoder input[type="text"],
 #destinoGeocoder .mapboxgl-ctrl-geocoder input[type="text"] {
   border-radius: 2rem !important;
-  padding: .6rem .9rem !important;
-  font-size: .8rem !important;
-  height: 2.4rem !important;
+  padding: .7rem .9rem .7rem 2.1rem !important;
+  font-size: .85rem !important;
+  height: 2.75rem !important;
   border: 1px solid var(--gray-200) !important;
   background: #fff !important;
   transition: all .2s ease !important;
   margin: 0 !important;
+  color: var(--gray-800) !important;
+  width: 100% !important;
+}
+#origemGeocoder .mapboxgl-ctrl-geocoder input[type="text"]::placeholder,
+#destinoGeocoder .mapboxgl-ctrl-geocoder input[type="text"]::placeholder {
+  color: var(--gray-500);
 }
 #origemGeocoder .mapboxgl-ctrl-geocoder input[type="text"]:focus,
 #destinoGeocoder .mapboxgl-ctrl-geocoder input[type="text"]:focus {
   border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px rgba(10, 102, 194, .1) !important;
+  outline: none !important;
 }
 .mapboxgl-ctrl-geocoder--icon { display: none !important; }
 .mapboxgl-ctrl-geocoder { overflow: visible !important; }
+.mapboxgl-ctrl-geocoder--button { display: none !important; }
 
 .btn-location-modern {
   display: flex; align-items: center; justify-content: center;
-  width: 2.4rem; min-width: 2.4rem; height: 2.4rem;
+  width: 2.75rem; min-width: 2.75rem; height: 2.75rem;
   background: var(--primary); color: #fff; border: none;
   border-radius: 50%; cursor: pointer; font-size: 1rem;
   transition: all .2s ease; flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+  box-shadow: 0 2px 6px rgba(10, 102, 194, .3);
 }
 .btn-location-modern:hover {
   background: var(--primary-dark);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, .15);
+  box-shadow: 0 4px 10px rgba(10, 102, 194, .35);
   transform: translateY(-1px);
 }
+.btn-location-modern:active { transform: translateY(0) scale(.96); }
+
 .clear-btn {
-  position: absolute; right: .25rem; top: 50%;
+  position: absolute; right: .55rem; top: 50%;
   transform: translateY(-50%);
-  background: none; border: none; font-size: 1.1rem;
-  color: var(--gray-500); cursor: pointer; padding: .2rem;
-  line-height: 1;
+  width: 1.4rem; height: 1.4rem;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gray-100); border: none;
+  border-radius: 50%; font-size: .85rem;
+  color: var(--gray-500); cursor: pointer; padding: 0;
+  line-height: 1; z-index: 7;
+  transition: background .15s ease, color .15s ease;
 }
-.clear-btn:hover { color: var(--gray-700); }
+.clear-btn:hover { background: var(--gray-200); color: var(--gray-700); }
 
 .input-endereco-manual {
-  width: 100%; padding: .6rem .9rem;
+  width: 100%; padding: .7rem .9rem .7rem 2.1rem;
   border: 1px solid var(--gray-200); border-radius: 2rem;
-  font-size: .8rem; background: #fff;
+  font-size: .85rem; background: #fff;
   transition: all .2s ease; font-family: inherit;
+  height: 2.75rem;
+  color: var(--gray-800);
 }
+.input-endereco-manual::placeholder { color: var(--gray-500); }
 .input-endereco-manual:focus {
   outline: none; border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(10, 102, 194, .1);
 }
 
+/* ===== BOTÃO "Não encontrei meu endereço" ===== */
+#modalTransporte #btnEnderecoManual {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  width: 100%;
+  background: transparent !important;
+  color: var(--primary) !important;
+  border: 1px dashed #bfdbfe !important;
+  border-radius: 2rem;
+  padding: .6rem 1rem;
+  font-size: .78rem; font-weight: 700;
+  cursor: pointer;
+  margin-bottom: .85rem;
+  transition: all .15s ease;
+}
+#modalTransporte #btnEnderecoManual:hover {
+  background: var(--primary-light) !important;
+  border-color: var(--primary) !important;
+  transform: none !important;
+}
+
 /* ===== MAPA ===== */
 #mapboxMap {
-  height: 200px;
+  height: 190px;
   width: 100%;
-  margin-bottom: .75rem;
+  margin-bottom: .85rem;
   border-radius: 1rem;
   position: relative;
   overflow: hidden;
   border: 1px solid var(--gray-200);
   background: var(--gray-100);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
 #mapboxMap .mapboxgl-canvas { outline: none; }
 #mapboxMap .mapboxgl-ctrl-logo,
 #mapboxMap .mapboxgl-ctrl-attrib { display: none !important; }
 #mapboxMap .mapboxgl-ctrl-cooperative-gestures,
 .mapboxgl-ctrl-cooperative-gestures { display: none !important; }
+#mapboxMap .mapboxgl-ctrl-group {
+  border-radius: .65rem !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, .15) !important;
+  overflow: hidden;
+}
 
 .mapa-indisponivel {
   min-height: 150px; display: flex; flex-direction: column;
@@ -162,34 +233,110 @@
 
 /* ===== INFO VIAGEM ===== */
 .info-viagem {
+  display: flex; align-items: center; justify-content: center;
+  gap: .55rem;
   background: var(--primary-light, #eef4ff);
   border: 1px solid #bfdbfe;
-  padding: .6rem .75rem;
-  border-radius: .75rem;
-  margin-bottom: .75rem;
+  padding: .65rem .85rem;
+  border-radius: 2rem;
+  margin-bottom: .85rem;
   font-size: .78rem;
-  text-align: center;
   color: var(--primary-dark);
+  font-weight: 600;
 }
 .info-viagem strong { color: var(--primary); }
+.info-viagem:empty { display: none; }
 
-/* ===== FORMULÁRIO (padrão pedidos) ===== */
+/* ===== FORMULÁRIO ===== */
+#modalTransporte #selectTarifa {
+  margin-bottom: .65rem;
+  height: 2.75rem;
+  padding: .7rem 2.2rem .7rem 1rem;
+  border-radius: 2rem;
+  border: 1px solid var(--gray-200);
+  font-size: .85rem;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%2364748b' d='M6 8 0 0h12z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  appearance: none; -webkit-appearance: none;
+  color: var(--gray-800);
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+#modalTransporte #selectTarifa:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, .1);
+}
+
 #modalTransporte .form-row {
   display: grid; grid-template-columns: 1fr 1fr;
-  gap: .5rem; margin-bottom: .5rem;
+  gap: .55rem; margin-bottom: .55rem;
 }
 @media (max-width: 480px) {
-  #modalTransporte .form-row { grid-template-columns: 1fr; }
+  #modalTransporte .form-row { grid-template-columns: 1fr; gap: .55rem; }
 }
-#modalTransporte #selectTarifa {
-  margin-bottom: .5rem;
+
+#modalTransporte #clienteNomeTransporte,
+#modalTransporte #clienteTelTransporte,
+#modalTransporte #obsTransporte {
+  height: 2.75rem;
+  padding: .7rem 1rem;
+  border-radius: 2rem;
+  border: 1px solid var(--gray-200);
+  font-size: .85rem;
+  color: var(--gray-800);
+  transition: border-color .15s ease, box-shadow .15s ease;
+  width: 100%;
+  font-family: inherit;
 }
 #modalTransporte #obsTransporte {
-  min-height: 2.6rem;
+  height: auto;
+  min-height: 3.5rem;
+  resize: vertical;
+  padding: .7rem 1rem;
+  margin-bottom: .85rem;
 }
+#modalTransporte #clienteNomeTransporte:focus,
+#modalTransporte #clienteTelTransporte:focus,
+#modalTransporte #obsTransporte:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, .1);
+}
+#modalTransporte #clienteNomeTransporte::placeholder,
+#modalTransporte #clienteTelTransporte::placeholder,
+#modalTransporte #obsTransporte::placeholder {
+  color: var(--gray-500);
+}
+
+/* ===== BOTÃO CTA ===== */
 #modalTransporte #btnSolicitarCorrida {
   width: 100%;
-  margin-top: .5rem;
+  margin-top: .25rem;
+  height: 3rem;
+  font-size: .9rem;
+  box-shadow: 0 2px 8px rgba(10, 102, 194, .25);
+}
+#modalTransporte #btnSolicitarCorrida:hover {
+  box-shadow: 0 4px 12px rgba(10, 102, 194, .3);
+}
+
+/* ===== ABA ACOMPANHAR ===== */
+#modalTransporte #tabAcompanhar .input-pedido {
+  height: 2.75rem;
+  padding: .7rem 1rem;
+  border-radius: 2rem;
+  border: 1px solid var(--gray-200);
+  font-size: .85rem;
+  margin-bottom: .55rem;
+  width: 100%;
+}
+#modalTransporte #tabAcompanhar .btn-consultar-pedido,
+#modalTransporte #tabAcompanhar .btn-limpar-historico {
+  height: 2.75rem;
+  border-radius: 2rem;
 }
 
 /* ===== APP MODE ===== */
@@ -201,5 +348,5 @@ body.modo-app #modalTransporte > .modal-conteudo.fullscreen {
 }
 html.modo-app-inicial #modalTransporte .modal-body,
 body.modo-app #modalTransporte .modal-body {
-  padding-bottom: max(.75rem, var(--reserva-barra-app)) !important;
+  padding-bottom: max(1rem, var(--reserva-barra-app)) !important;
 }
