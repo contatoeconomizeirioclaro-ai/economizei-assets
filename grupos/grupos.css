@@ -3,11 +3,10 @@
    Base compartilhada das 18 páginas de grupo.
    Escopado em .pagina-wrap pra não vazar pro resto do site.
 
-   DEPENDE DE tokens.css — carregue tokens.css ANTES deste arquivo.
-   Não redefine :root, .texto-utilidade, .modal-overlay/.modal-conteudo/
-   .btn-modal-fechar, .loading/.spinner nem .secao-sobre-pagina: essas
-   classes já vêm de lá, pra não haver duas fontes de verdade (e
-   diverguirem sem ninguém notar).
+   DEPENDE DE tokens.css E modais.css — carregar os dois ANTES
+   deste arquivo. As classes de modal (.modal-overlay, .modal-header,
+   .modal-body, .modal-footer, .modal-close-btn, .btn-modal-fechar,
+   .item-opcao, etc.) vêm de comum/modais.css. Não são redefinidas aqui.
    ============================================================ */
 
 .pagina-wrap * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -142,48 +141,7 @@
 .btn-promocao:hover { transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,.2),0 0 30px #ff5722; }
 @keyframes neonPulseSuave { 0%{box-shadow:0 0 5px #ff5722,0 0 10px #ff5722,0 0 15px #ff5722;} 50%{box-shadow:0 0 20px #ff5722,0 0 40px #ff5722,0 0 60px #ff5722;} 100%{box-shadow:0 0 5px #ff5722,0 0 10px #ff5722,0 0 15px #ff5722;} }
 
-/* ===== MODAIS =====
-   .modal-overlay / .modal-conteudo / .btn-modal-fechar já vêm do tokens.css.
-   Aqui só as extensões que os modais de grupo precisam a mais. */
-.modal-header { padding:.75rem 1rem; border-bottom:1px solid var(--gray-200); display:flex; justify-content:space-between; align-items:center; }
-.modal-header h3 { font-size:1rem; font-weight:700; }
-.modal-body { padding:.75rem; overflow-y:auto; flex:1; }
-.modal-footer { padding:.75rem; border-top:1px solid var(--gray-200); display:flex; gap:.75rem; background:var(--gray-100); }
-.modal-close-btn { background:var(--gray-100); border:1px solid var(--gray-200); width:2rem; height:2rem; min-width:2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; line-height:1; cursor:pointer; color:var(--gray-600); transition:var(--transition); flex-shrink:0; }
-.modal-close-btn:hover { background:var(--gray-200); color:var(--gray-800); }
-
-.qr-modal-conteudo { max-width:300px; }
-.qr-modal-img-wrap { background:var(--gray-100); border-radius:var(--radius); padding:1rem; display:flex; justify-content:center; }
-.qr-modal-img-wrap img { width:100%; max-width:200px; border-radius:.75rem; display:block; }
-.qr-modal-nome { margin-top:.6rem; font-weight:700; color:var(--gray-800); text-align:center; }
-.qr-modal-acoes { display:flex; gap:.5rem; margin-top:1rem; }
-.qr-modal-acoes button { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:.4rem; padding:.6rem .8rem; border-radius:2rem; font-weight:600; font-size:.8rem; cursor:pointer; transition:var(--transition); border:1px solid var(--gray-200); }
-.qr-btn-secondary { background:#fff; color:var(--gray-700); }
-.qr-btn-secondary:hover { background:var(--gray-100); }
-.qr-btn-primary { background:var(--primary); color:#fff; border-color:var(--primary); }
-.qr-btn-primary:hover { background:var(--primary-dark); }
-
-.btn-google { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; background:#fff; color:var(--gray-700); border:1px solid var(--gray-200); padding:.5rem 1rem; border-radius:2rem; font-weight:600; cursor:pointer; transition:var(--transition); }
-.btn-google:hover { background:var(--gray-100); box-shadow:var(--shadow-xs); }
-.btn-google i { color:#4285F4; font-size:.95rem; }
-
-.estado-erro { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem 1rem; gap:.5rem; text-align:center; }
-.estado-erro .estado-erro-icone { font-size:2rem; }
-.estado-erro h3 { color:var(--gray-800); font-size:1rem; margin:0; }
-.estado-erro p { color:var(--gray-500); font-size:.85rem; margin:0; max-width:320px; }
-.retry-button { margin-top:.5rem; padding:.55rem 1.1rem; border-radius:2rem; border:none; background:var(--primary); color:#fff; font-weight:600; cursor:pointer; transition:var(--transition); }
-.retry-button:hover { background:var(--primary-dark); transform:translateY(-1px); }
-
-.lista-tipos-filtro, .lista-opcoes-filtro, .lista-whatsapp, .lista-reservas { display:flex; flex-direction:column; gap:.3rem; }
-.item-whatsapp, .item-tipo-filtro, .item-opcao-filtro, .item-reserva { padding:.5rem .8rem; border:1px solid var(--gray-200); border-radius:.75rem; background:#fff; cursor:pointer; color:var(--gray-700); font-size:.8rem; transition:var(--transition); text-align:center; text-decoration:none; display:block; }
-.item-whatsapp:hover, .item-tipo-filtro:hover, .item-opcao-filtro:hover, .item-reserva:hover { background:var(--primary-light); border-color:var(--primary); }
-.item-whatsapp { background:var(--primary); color:#fff; border-color:var(--primary); }
-.item-whatsapp:hover { background:var(--primary-dark); }
-.item-reserva { background:#9333ea; color:#fff; border-color:#9333ea; }
-.item-reserva:hover { background:#7e22ce; }
-
-/* ===== ESTADOS =====
-   .loading/.spinner já vêm do tokens.css. */
+/* ===== ESTADOS ===== */
 .login-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; justify-content:center; align-items:center; z-index:3000; flex-direction:column; gap:1rem; }
 .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; font-size:12px; padding:8px 16px; border-radius:24px; z-index:10000; white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.2); pointer-events:none; opacity:.95; }
 
@@ -194,7 +152,13 @@
 .btn-cadastro-cta { display:inline-flex; align-items:center; gap:.4rem; background:#10b981; color:#fff !important; text-decoration:none; padding:.6rem 1.1rem; border-radius:2rem; font-weight:700; font-size:.85rem; transition:var(--transition); margin-bottom:.6rem; }
 .btn-cadastro-cta:hover { background:#059669; transform:translateY(-2px); }
 
-/* .secao-sobre-pagina e :focus-visible já vêm do tokens.css. */
+.estado-erro { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem 1rem; gap:.5rem; text-align:center; }
+.estado-erro .estado-erro-icone { font-size:2rem; }
+.estado-erro h3 { color:var(--gray-800); font-size:1rem; margin:0; }
+.estado-erro p { color:var(--gray-500); font-size:.85rem; margin:0; max-width:320px; }
+.retry-button { margin-top:.5rem; padding:.55rem 1.1rem; border-radius:2rem; border:none; background:var(--primary); color:#fff; font-weight:600; cursor:pointer; transition:var(--transition); }
+.retry-button:hover { background:var(--primary-dark); transform:translateY(-1px); }
+
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border-width:0; }
 
 @media (max-width:768px) {
@@ -213,9 +177,6 @@
   .card-status { font-size:.5rem; padding:.1rem .3rem; }
   .btn-acao, .btn-filtro { padding:.4rem .6rem; font-size:.6rem; min-height:2rem; }
   .btn-acao { min-height:2rem; font-size:.65rem; }
-  .modal-header h3 { font-size:.9rem; }
-  .secao-sobre-pagina { margin:1rem .25rem .5rem .25rem; padding:.9rem 1rem; font-size:.85rem; }
-  .secao-sobre-pagina h2 { font-size:.95rem; }
 }
 
 @media (pointer:coarse) {
