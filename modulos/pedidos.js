@@ -48,6 +48,43 @@ Economizei.Pedido = (function () {
     else if (el) el.remove();
   }
 
+  function statusSeguro(s) { return ['aberta', 'pausada', 'fechada'].indexOf(s) !== -1 ? s : 'aberta'; }
+  function gerarIniciais(nome) {
+    var p = String(nome || 'Loja').trim().split(/\s+/).filter(Boolean);
+    return (p.slice(0, 2).map(function (x) { return x.charAt(0); }).join('') || 'L').toUpperCase();
+  }
+  function atualizarIdentidadePedido(data, nome) {
+    var logoBox = document.getElementById('modalPedidoLogo');
+    var statusEl = document.getElementById('modalPedidoStatus');
+    if (logoBox) {
+      var url = '';
+      ['logoUrl', 'logo', 'imagemLogo', 'imagem'].forEach(function (k) {
+        if (!url && data && typeof data[k] === 'string' && /^https?:\/\//i.test(data[k].trim())) url = data[k].trim();
+      });
+      if (url && logoBox.getAttribute('data-logo-url') !== url) {
+        logoBox.setAttribute('data-logo-url', url);
+        logoBox.innerHTML = '';
+        var img = document.createElement('img');
+        img.src = url;
+        img.alt = 'Logo de ' + nome;
+        img.loading = 'eager';
+        img.referrerPolicy = 'no-referrer';
+        img.onerror = function () {
+          logoBox.removeAttribute('data-logo-url');
+          logoBox.innerHTML = '<span aria-hidden="true">' + gerarIniciais(nome) + '</span>';
+        };
+        logoBox.appendChild(img);
+      } else if (!url && !logoBox.querySelector('img')) {
+        logoBox.innerHTML = '<span aria-hidden="true">' + gerarIniciais(nome) + '</span>';
+      }
+    }
+    if (statusEl) {
+      var s = statusSeguro(data && data.statusLoja);
+      statusEl.className = 'modal-estabelecimento-status status-' + s;
+      statusEl.textContent = s === 'aberta' ? 'Aceitando pedidos' : s === 'pausada' ? 'Pedidos pausados' : 'Loja fechada';
+    }
+  }
+
   Cards.registrarModulo('pedido', {
     label: '🍽️ Fazer pedido',
     ariaLabel: 'Fazer pedido',
@@ -1374,6 +1411,14 @@ Economizei.Pedido = (function () {
         currentLojistaId = lojistaDoc.id;
         var data = lojistaDoc.data();
         atualizarStatusLojaUI(data.statusLoja || 'aberta', data.statusMessage || '');
+        atualizarIdentidadePedido(data, nome);
+        if (unsubscribeStatusLoja) { unsubscribeStatusLoja(); unsubscribeStatusLoja = null; }
+        unsubscribeStatusLoja = Core.db.collection('lojistas').doc(currentLojistaId).onSnapshot(function (d) {
+          if (!d.exists) return;
+          var dt = d.data();
+          atualizarStatusLojaUI(dt.statusLoja || 'aberta', dt.statusMessage || '');
+          atualizarIdentidadePedido(dt, nome);
+        });
         iniciarListenersTempoReal();
       })
       .catch(function (err) { mostrarErroNoModal('Erro ao carregar dados: ' + err.message); });
@@ -1390,15 +1435,15 @@ Economizei.Pedido = (function () {
       '<div class="modal-overlay" id="modalPedidoRest" role="dialog" aria-modal="true" aria-labelledby="modalPedidoTitulo">' +
         '<div class="modal-conteudo fullscreen">' +
           '<div class="modal-header">' +
-  '<div class="modal-estabelecimento-brand">' +
-    '<div class="modal-estabelecimento-logo" id="modalPedidoLogo"><span aria-hidden="true">🍽️</span></div>' +
-    '<div class="modal-estabelecimento-meta">' +
-      '<h3 id="modalPedidoTitulo">' + nomeEstabSeguro + '</h3>' +
-      '<span id="modalPedidoStatus" class="modal-estabelecimento-status status-aberta">Aceitando pedidos</span>' +
-    '</div>' +
-  '</div>' +
-  '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar pedido">×</button>' +
-'</div>'  +
+            '<div class="modal-estabelecimento-brand">' +
+              '<div class="modal-estabelecimento-logo" id="modalPedidoLogo"><span aria-hidden="true">🍽️</span></div>' +
+              '<div class="modal-estabelecimento-meta">' +
+                '<h3 id="modalPedidoTitulo">' + nomeEstabSeguro + '</h3>' +
+                '<span id="modalPedidoStatus" class="modal-estabelecimento-status status-aberta">Aceitando pedidos</span>' +
+              '</div>' +
+            '</div>' +
+            '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar pedido">×</button>' +
+          '</div>' +
           '<div class="modal-tabs">' +
             '<button class="modal-tab active" data-tab="produtos" aria-label="Produtos">📦 Produtos</button>' +
             '<button class="modal-tab" data-tab="carrinho" aria-label="Carrinho">🛒 Carrinho <span class="cart-tab-badge" id="cartBadge" aria-hidden="true">0</span></button>' +
