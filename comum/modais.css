@@ -569,13 +569,31 @@
 }
 
 /* Modo app: desconta a barra inferior nativa.
-   O app injeta --app-bottom-bar em px CSS via JavaScript.
-   Fallback de 60px se a variável não existir. */
-body.app-ativo .modal-conteudo {
-  max-height: calc(100vh - var(--app-bottom-bar, 60px) - 32px);
+   Reaproveita a mesma detecção e variável que os modais de módulo usam
+   (grupos.js já aplica html.modo-app-inicial / body.modo-app via isAppMode()) —
+   não depende de o app injetar nada via JS. */
+:root {
+  --reserva-barra-app: env(safe-area-inset-bottom, 0px);
+}
+html.modo-app-inicial,
+body.modo-app {
+  --reserva-barra-app: max(130px, env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.modal-overlay > .modal-conteudo {
+  margin-bottom: var(--reserva-barra-app);
+}
+html.modo-app-inicial .modal-conteudo,
+body.modo-app .modal-conteudo {
+  max-height: calc(100vh - var(--reserva-barra-app));
 }
 @supports (height: 100dvh) {
-  body.app-ativo .modal-conteudo {
-    max-height: calc(100dvh - var(--app-bottom-bar, 60px) - 32px);
+  html.modo-app-inicial .modal-conteudo,
+  body.modo-app .modal-conteudo {
+    max-height: calc(100dvh - var(--reserva-barra-app));
   }
+}
+
+.modal-footer {
+  padding-bottom: max(1rem, var(--reserva-barra-app, 0px));
 }
