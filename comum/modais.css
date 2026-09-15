@@ -1,38 +1,31 @@
 /* ============================================================
    ECONOMIZEI! RIO CLARO — SISTEMA DE MODAIS
-   Base compartilhada para todos os modais do site.
    Depende de tokens.css (carregar ANTES deste arquivo).
    Escopado em .modal-overlay — não vaza pro resto do site.
 
-   ESTRUTURA:
-     <div class="modal-overlay" role="dialog" aria-modal="true">
-       <div class="modal-conteudo [modal-{tamanho}] [modal-{familia}]">
-         <div class="modal-header">
-           <h3>Título</h3>
-           <button class="modal-close-btn">×</button>
-         </div>
-         <div class="modal-body">…</div>
-         <div class="modal-footer">…</div>
-       </div>
-     </div>
+   REGRAS DE OURO:
+   - modal-confirmar: SEM × no header. Footer tem [cancelar] [primário].
+   - modal-lista:     COM × no header. SEM footer.
+   - modal-midia:     COM × no header. Footer com ações, sem "Fechar".
+   - modal-multis:    COM × no header. SEM footer (os itens são as ações).
 
-   TAMANHOS:   .modal-sm  .modal-lg  .modal-xl   (padrão = 480px)
-   FAMÍLIAS:   .modal-confirmar  .modal-lista  .modal-midia  .modal-multis
-   TONS:       .tom-aviso  .tom-erro  .tom-sucesso
+   TAMANHOS:  .modal-sm  .modal-lg  .modal-xl  (padrão = 460px)
+   FAMÍLIAS:  .modal-confirmar  .modal-lista  .modal-midia  .modal-multis
+   TONS:      .tom-aviso  .tom-erro  .tom-sucesso
    ============================================================ */
 
-/* ===== BASE — todo modal usa ===== */
+/* ===== BASE ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
   display: none;
   justify-content: center;
   align-items: center;
   z-index: 2000;
-  padding: 12px;
+  padding: 16px;
   box-sizing: border-box;
 }
 .modal-overlay.ativo,
@@ -42,67 +35,90 @@
 }
 
 .modal-conteudo {
+  position: relative;
   background: #fff;
-  border-radius: var(--radius, 1rem);
+  border-radius: 20px;
   width: 100%;
-  max-width: 480px;
+  max-width: 460px;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0,0,0,0.1));
-  animation: modalEntrada 0.18s ease;
+  /* Sobrescreve o padding: 1.1rem do tokens.css e o overflow-y: auto */
+  padding: 0;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 24px -8px rgba(15, 23, 42, 0.14),
+    0 40px 64px -24px rgba(15, 23, 42, 0.22);
+  animation: modalEntrada 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes modalEntrada {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0)   scale(1);    }
 }
 
-/* Cabeçalho, corpo, rodapé */
+/* ===== HEADER ===== */
 .modal-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--gray-200, #e2e8f0);
-  background: var(--gray-100, #f1f5f9);
-  flex-shrink: 0;
-}
-.modal-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--gray-800, #1e293b);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-}
-.modal-header h3 .fa-solid,
-.modal-header h3 .fa-brands,
-.modal-header h3 [aria-hidden="true"] {
-  color: var(--primary, #0a66c2);
+  gap: 10px;
+  padding: 1rem 1rem 0.85rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  background: #fff;
   flex-shrink: 0;
 }
 
+.modal-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--gray-800, #1e293b);
+}
+
+/* Ícone como primeiro filho do h3 vira um quadrado colorido */
+.modal-header h3 > i:first-child,
+.modal-header h3 > span[aria-hidden="true"]:first-child {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
+  background: var(--primary-light, #eef4ff);
+  color: var(--primary, #0a66c2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-style: normal;
+  flex-shrink: 0;
+}
+
+/* ===== BODY ===== */
 .modal-body {
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.1rem;
   overflow-y: auto;
   flex: 1;
   color: var(--gray-700, #334155);
   font-size: 0.9rem;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 .modal-body > p:first-child { margin-top: 0; }
 .modal-body > p:last-child  { margin-bottom: 0; }
-.modal-body p { margin: 0 0 0.6rem; }
+.modal-body p { margin: 0 0 0.65rem; }
 
+/* ===== FOOTER ===== */
 .modal-footer {
-  padding: 0.75rem 1rem;
-  border-top: 1px solid var(--gray-200, #e2e8f0);
-  background: var(--gray-100, #f1f5f9);
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  background: #fff;
   display: flex;
   justify-content: flex-end;
   gap: 8px;
@@ -110,97 +126,117 @@
   flex-shrink: 0;
 }
 
-/* ===== BOTÕES ===== */
+/* ===== BOTÃO × ===== */
 .modal-close-btn {
   background: transparent;
-  border: 1px solid var(--gray-200, #e2e8f0);
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  border-radius: 50%;
+  border: none;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   line-height: 1;
   cursor: pointer;
-  color: var(--gray-600, #475569);
-  transition: var(--transition, all 0.2s ease);
+  color: var(--gray-500, #64748b);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
   flex-shrink: 0;
+  padding: 0;
 }
 .modal-close-btn:hover {
-  background: var(--gray-200, #e2e8f0);
+  background: var(--gray-100, #f1f5f9);
   color: var(--gray-800, #1e293b);
 }
+.modal-close-btn:active { transform: scale(0.92); }
 
+/* ===== BOTÕES DE AÇÃO ===== */
 .btn-modal-fechar,
 .btn-modal-primario,
 .btn-modal-secundario {
-  padding: 0.55rem 1.1rem;
+  padding: 0.65rem 1.15rem;
   border-radius: 2rem;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
-  transition: var(--transition, all 0.2s ease);
+  transition: background 0.15s ease, color 0.15s ease,
+              box-shadow 0.15s ease, transform 0.12s ease;
   border: 1px solid transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
   text-decoration: none;
   line-height: 1.2;
-  min-height: 40px;
+  min-height: 42px;
   white-space: nowrap;
 }
-.btn-modal-fechar {
-  background: var(--gray-200, #e2e8f0);
-  color: var(--gray-700, #334155);
-}
-.btn-modal-fechar:hover { background: #cbd5e1; }
 
 .btn-modal-primario {
   background: var(--primary, #0a66c2);
   color: #fff;
+  box-shadow:
+    0 1px 2px rgba(10, 102, 194, 0.25),
+    0 4px 12px -4px rgba(10, 102, 194, 0.35);
 }
-.btn-modal-primario:hover { background: var(--primary-dark, #084d94); }
+.btn-modal-primario:hover {
+  background: var(--primary-dark, #084d94);
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(10, 102, 194, 0.25),
+    0 8px 20px -4px rgba(10, 102, 194, 0.4);
+}
+.btn-modal-primario:active { transform: translateY(0); }
 
 .btn-modal-secundario {
   background: #fff;
-  color: var(--primary, #0a66c2);
-  border-color: var(--primary, #0a66c2);
+  color: var(--gray-700, #334155);
+  border-color: var(--gray-200, #e2e8f0);
 }
 .btn-modal-secundario:hover {
-  background: var(--primary-light, #eef4ff);
+  background: var(--gray-100, #f1f5f9);
+  border-color: #cbd5e1;
+}
+
+.btn-modal-fechar {
+  background: transparent;
+  color: var(--gray-600, #475569);
+}
+.btn-modal-fechar:hover {
+  background: var(--gray-100, #f1f5f9);
+  color: var(--gray-800, #1e293b);
 }
 
 /* ===== TAMANHOS ===== */
 .modal-conteudo.modal-sm { max-width: 360px; }
-.modal-conteudo.modal-lg { max-width: 640px; }
+.modal-conteudo.modal-lg { max-width: 620px; }
 .modal-conteudo.modal-xl { max-width: 860px; }
 
-/* ===== FAMÍLIA: CONFIRMAR =====
-   Avisos e confirmações curtas.
-   - Corpo com padding maior, texto centralizado opcional
-   - Rodapé com botões lado a lado
-   - Ícone opcional em destaque
-   ---------------------------------------------------------- */
+/* ===== FAMÍLIA: CONFIRMAR ===== */
 .modal-conteudo.modal-confirmar .modal-body {
-  padding: 1.25rem 1.25rem 1rem;
+  padding: 1.35rem 1.25rem 0.35rem;
   text-align: center;
 }
 .modal-conteudo.modal-confirmar .modal-body .icone-destaque {
-  font-size: 2.2rem;
+  font-size: 2.6rem;
   line-height: 1;
   margin-bottom: 0.6rem;
   display: block;
 }
 .modal-conteudo.modal-confirmar .modal-footer {
+  padding: 0.4rem 1.25rem 1.2rem;
+  border-top: none;
   justify-content: center;
 }
+.modal-conteudo.modal-confirmar .modal-footer .btn-modal-fechar,
+.modal-conteudo.modal-confirmar .modal-footer .btn-modal-secundario,
+.modal-conteudo.modal-confirmar .modal-footer .btn-modal-primario {
+  flex: 1 1 0;
+  min-width: 110px;
+}
 
-/* ===== FAMÍLIA: LISTA =====
-   Modais que listam opções clicáveis (filtros).
-   ---------------------------------------------------------- */
+/* ===== FAMÍLIA: LISTA ===== */
 .modal-conteudo.modal-lista .modal-body {
   padding: 0.6rem;
   display: flex;
@@ -208,14 +244,14 @@
   gap: 6px;
 }
 .modal-conteudo.modal-lista .item-opcao {
-  padding: 0.7rem 0.9rem;
+  padding: 0.75rem 0.9rem;
   border: 1px solid var(--gray-200, #e2e8f0);
-  border-radius: var(--radius-sm, 0.75rem);
+  border-radius: 12px;
   background: #fff;
   cursor: pointer;
   color: var(--gray-700, #334155);
-  font-size: 0.85rem;
-  transition: var(--transition, all 0.2s ease);
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
   text-align: center;
   text-decoration: none;
   display: block;
@@ -224,7 +260,7 @@
 }
 .modal-conteudo.modal-lista .item-opcao:hover {
   background: var(--primary-light, #eef4ff);
-  border-color: var(--primary, #0a66c2);
+  border-color: #bfdbfe;
   color: var(--primary, #0a66c2);
 }
 .modal-conteudo.modal-lista .item-opcao.selecionada {
@@ -234,20 +270,18 @@
   font-weight: 700;
 }
 
-/* ===== FAMÍLIA: MÍDIA =====
-   Modais com imagem em destaque (QR Code, ilustração).
-   ---------------------------------------------------------- */
+/* ===== FAMÍLIA: MÍDIA ===== */
 .modal-conteudo.modal-midia .modal-body {
-  padding: 1rem;
+  padding: 1.1rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 .modal-conteudo.modal-midia .midia-wrap {
   background: var(--gray-100, #f1f5f9);
-  border-radius: var(--radius, 1rem);
+  border-radius: 14px;
   padding: 0.85rem;
   display: flex;
   justify-content: center;
@@ -258,12 +292,13 @@
   display: block;
   max-width: 220px;
   width: 100%;
-  border-radius: var(--radius-sm, 0.75rem);
+  border-radius: 10px;
 }
 .modal-conteudo.modal-midia .midia-titulo {
   font-weight: 700;
   color: var(--gray-800, #1e293b);
   margin: 0;
+  font-size: 1rem;
 }
 .modal-conteudo.modal-midia .midia-acoes {
   display: flex;
@@ -279,74 +314,69 @@
 }
 
 /* ===== FAMÍLIA: MULTIS =====
-   Múltiplos valores do mesmo campo — o usuário escolhe UM item
-   e é levado para uma ação externa (abrir WhatsApp, ligar, ir pro site).
-   Usado em: WhatsApp, links de compra, reservas, contatos, redes sociais.
-
-   Estrutura de cada item:
+   Item:
      <a class="item-opcao item-{tipo}" href="…">
-       <span class="item-icone" aria-hidden="true">ícone</span>
+       <span class="item-icone" aria-hidden="true">…</span>
        <span class="item-texto">
-         <span class="item-label">Nome ou apelido</span>
-         <span class="item-sublabel">Detalhe (número, domínio, etc.)</span>
+         <span class="item-label">Nome</span>
+         <span class="item-sublabel">detalhe</span>
        </span>
        <span class="item-seta" aria-hidden="true">→</span>
      </a>
-
-   TIPOS (modificadores): item-whatsapp  item-telefone  item-email
-                          item-site  item-compra  item-reserva  item-social
    ---------------------------------------------------------- */
 .modal-conteudo.modal-multis .modal-body {
-  padding: 0.6rem;
+  padding: 0.65rem;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .modal-conteudo.modal-multis .item-opcao {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0.7rem 0.9rem;
+  gap: 12px;
+  padding: 0.7rem 0.85rem;
   border: 1px solid var(--gray-200, #e2e8f0);
-  border-left: 4px solid #cbd5e1;
-  border-radius: var(--radius-sm, 0.75rem);
+  border-radius: 14px;
   background: #fff;
   cursor: pointer;
   color: var(--gray-700, #334155);
   font-size: 0.875rem;
-  transition: var(--transition, all 0.2s ease);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
   text-decoration: none;
   text-align: left;
   width: 100%;
   box-sizing: border-box;
-  min-height: 52px;
+  min-height: 58px;
 }
 .modal-conteudo.modal-multis .item-opcao:hover {
-  background: var(--gray-100, #f1f5f9);
-  transform: translateX(2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+}
+.modal-conteudo.modal-multis .item-opcao:active {
+  transform: translateY(0);
 }
 
 .modal-conteudo.modal-multis .item-opcao .item-icone {
-  font-size: 1.1rem;
-  line-height: 1;
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  font-size: 1rem;
   background: var(--gray-100, #f1f5f9);
   color: var(--gray-600, #475569);
+  flex-shrink: 0;
 }
-
 .modal-conteudo.modal-multis .item-opcao .item-texto {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 .modal-conteudo.modal-multis .item-opcao .item-label {
   font-weight: 700;
@@ -354,6 +384,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 0.9rem;
 }
 .modal-conteudo.modal-multis .item-opcao .item-sublabel {
   font-size: 0.75rem;
@@ -362,67 +393,61 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .modal-conteudo.modal-multis .item-opcao .item-seta {
   flex-shrink: 0;
   color: #94a3b8;
   font-size: 0.9rem;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 .modal-conteudo.modal-multis .item-opcao:hover .item-seta {
   transform: translateX(3px);
+  color: var(--primary, #0a66c2);
 }
 
-/* --- Tipos (cor da borda esquerda + cor do ícone) --- */
-.modal-conteudo.modal-multis .item-opcao.item-whatsapp { border-left-color: #25d366; }
+/* Tipos — cor no ícone */
 .modal-conteudo.modal-multis .item-opcao.item-whatsapp .item-icone { background: #dcfce7; color: #166534; }
-
-.modal-conteudo.modal-multis .item-opcao.item-telefone { border-left-color: #0a66c2; }
 .modal-conteudo.modal-multis .item-opcao.item-telefone .item-icone { background: #dbeafe; color: #1e40af; }
-
-.modal-conteudo.modal-multis .item-opcao.item-email    { border-left-color: #64748b; }
 .modal-conteudo.modal-multis .item-opcao.item-email    .item-icone { background: #e2e8f0; color: #334155; }
-
-.modal-conteudo.modal-multis .item-opcao.item-site     { border-left-color: #0f766e; }
 .modal-conteudo.modal-multis .item-opcao.item-site     .item-icone { background: #ccfbf1; color: #115e59; }
-
-.modal-conteudo.modal-multis .item-opcao.item-compra   { border-left-color: #d97706; }
 .modal-conteudo.modal-multis .item-opcao.item-compra   .item-icone { background: #fef3c7; color: #92400e; }
-
-.modal-conteudo.modal-multis .item-opcao.item-reserva  { border-left-color: #9333ea; }
 .modal-conteudo.modal-multis .item-opcao.item-reserva  .item-icone { background: #f3e8ff; color: #6b21a8; }
-
-.modal-conteudo.modal-multis .item-opcao.item-social   { border-left-color: #e1306c; }
 .modal-conteudo.modal-multis .item-opcao.item-social   .item-icone { background: #fce7f3; color: #9d174d; }
 
-/* ===== TONS DO HEADER =====
-   Usar quando o contexto pede sinal visual (aviso, erro, sucesso).
-   Contraste verificado contra WCAG AA (>= 4.5:1 para texto normal).
-   ---------------------------------------------------------- */
+/* ===== TONS DO HEADER ===== */
 .modal-header.tom-aviso {
-  background: #fff3cd;
-  border-bottom-color: #ffe69c;
+  background: #fffbeb;
+  border-bottom-color: #fde68a;
 }
-.modal-header.tom-aviso h3 { color: #7a5900; }
-.modal-header.tom-aviso h3 [aria-hidden="true"] { color: #7a5900; }
+.modal-header.tom-aviso h3 { color: #78350f; }
+.modal-header.tom-aviso h3 > i:first-child,
+.modal-header.tom-aviso h3 > span[aria-hidden="true"]:first-child {
+  background: #fef3c7;
+  color: #92400e;
+}
 
 .modal-header.tom-erro {
-  background: #fee2e2;
+  background: #fef2f2;
   border-bottom-color: #fecaca;
 }
-.modal-header.tom-erro h3 { color: #991b1b; }
-.modal-header.tom-erro h3 [aria-hidden="true"] { color: #991b1b; }
+.modal-header.tom-erro h3 { color: #7f1d1d; }
+.modal-header.tom-erro h3 > i:first-child,
+.modal-header.tom-erro h3 > span[aria-hidden="true"]:first-child {
+  background: #fee2e2;
+  color: #991b1b;
+}
 
 .modal-header.tom-sucesso {
-  background: #d1fae5;
-  border-bottom-color: #a7f3d0;
+  background: #f0fdf4;
+  border-bottom-color: #bbf7d0;
 }
-.modal-header.tom-sucesso h3 { color: #065f46; }
-.modal-header.tom-sucesso h3 [aria-hidden="true"] { color: #065f46; }
+.modal-header.tom-sucesso h3 { color: #14532d; }
+.modal-header.tom-sucesso h3 > i:first-child,
+.modal-header.tom-sucesso h3 > span[aria-hidden="true"]:first-child {
+  background: #dcfce7;
+  color: #166534;
+}
 
 /* ===== ACESSIBILIDADE ===== */
-
-/* Foco visível reforçado — mais grosso que o padrão do site */
 .modal-conteudo button:focus-visible,
 .modal-conteudo a:focus-visible,
 .modal-conteudo input:focus-visible,
@@ -433,12 +458,9 @@
   outline-offset: 2px;
   border-radius: 4px;
 }
-
-/* O conteúdo em si não mostra outline quando recebe foco programático */
 .modal-conteudo:focus-visible,
 .modal-conteudo:focus { outline: none; }
 
-/* Texto escondido mas lido por leitor de tela */
 .modal-conteudo .sr-only,
 .modal-overlay .sr-only {
   position: absolute;
@@ -452,7 +474,6 @@
   border: 0;
 }
 
-/* Respeita preferência do usuário por menos movimento */
 @media (prefers-reduced-motion: reduce) {
   .modal-conteudo { animation: none; }
   .modal-conteudo *,
@@ -464,7 +485,6 @@
   }
 }
 
-/* Alvos de toque mínimos em dispositivos touch */
 @media (pointer: coarse) {
   .modal-close-btn,
   .btn-modal-fechar,
@@ -481,18 +501,15 @@
   }
 }
 
-/* Mobile: modal ocupa mais a tela e o rodapé empilha */
+/* Mobile: mantém centralizado, só encolhe um pouco pra não encostar na
+   barra nativa do app (que fica sobre o WebView). */
 @media (max-width: 520px) {
-  .modal-overlay { padding: 8px; align-items: flex-end; }
-  .modal-conteudo {
-    max-height: 92vh;
-    border-radius: 1.25rem 1.25rem 0 0;
-    max-width: 100%;
-  }
+  .modal-overlay { padding: 12px; }
+  .modal-conteudo { max-height: 78vh; }
   .modal-footer { justify-content: stretch; }
   .modal-footer .btn-modal-fechar,
-  .modal-footer .btn-modal-primario,
-  .modal-footer .btn-modal-secundario {
+  .modal-footer .btn-modal-secundario,
+  .modal-footer .btn-modal-primario {
     flex: 1 1 auto;
   }
 }
