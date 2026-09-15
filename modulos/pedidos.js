@@ -1,4 +1,12 @@
 Economizei.Pedido = (function () {
+  (function () {
+    if (document.getElementById('css-pedidos')) return;
+    var l = document.createElement('link');
+    l.id = 'css-pedidos';
+    l.rel = 'stylesheet';
+    l.href = 'https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/modulos/pedidos.css';
+    document.head.appendChild(l);
+  })();
   var EU = EconomizeiUtils;
   var Core = Economizei.Core;
   var UI = Economizei.UI;
