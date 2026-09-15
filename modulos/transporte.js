@@ -43,13 +43,57 @@
 
   var MAPBOX_TOKEN = (window.ECONOMIZEI_CONFIG && window.ECONOMIZEI_CONFIG.mapboxToken) || window.ECONOMIZEI_MAPBOX_TOKEN || '';
 
+  function statusSeguro(s) { return ['aberta', 'pausada', 'fechada'].indexOf(s) !== -1 ? s : 'aberta'; }
+  function gerarIniciais(nome) {
+    var p = String(nome || 'Transporte').trim().split(/\s+/).filter(Boolean);
+    return (p.slice(0, 2).map(function (x) { return x.charAt(0); }).join('') || 'T').toUpperCase();
+  }
+  function obterLogoDoCadastro(data) {
+    var cands = [data && data.logoUrl, data && data.logo, data && data.imagemLogo, data && data.imagem];
+    for (var i = 0; i < cands.length; i++) {
+      if (typeof cands[i] === 'string' && /^https?:\/\//i.test(cands[i].trim())) return cands[i].trim();
+    }
+    return '';
+  }
+
+  function atualizarIdentidadeTransporte(data, nomeEstab) {
+    var logoBox = document.getElementById('modalTransporteLogo');
+    var statusEl = document.getElementById('modalTransporteStatus');
+    if (logoBox) {
+      var url = obterLogoDoCadastro(data);
+      if (url && logoBox.getAttribute('data-logo-url') !== url) {
+        logoBox.setAttribute('data-logo-url', url);
+        logoBox.innerHTML = '';
+        var img = document.createElement('img');
+        img.src = url;
+        img.alt = 'Logo de ' + nomeEstab;
+        img.loading = 'eager';
+        img.referrerPolicy = 'no-referrer';
+        img.onerror = function () {
+          logoBox.removeAttribute('data-logo-url');
+          logoBox.innerHTML = '<span aria-hidden="true">' + gerarIniciais(nomeEstab) + '</span>';
+        };
+        logoBox.appendChild(img);
+      } else if (!url && !logoBox.querySelector('img')) {
+        logoBox.innerHTML = '<span aria-hidden="true">' + gerarIniciais(nomeEstab) + '</span>';
+      }
+    }
+    if (statusEl) {
+      var s = statusSeguro(data && data.statusLoja);
+      statusEl.className = 'modal-estabelecimento-status status-' + s;
+      statusEl.textContent = s === 'aberta' ? 'Disponível' : s === 'pausada' ? 'Serviço pausado' : 'Indisponível';
+    }
+  }
+
   window.abrirModalTransporte = function (idx) {
     var est = Cards.dadosProcessados[idx];
     if (!est) { UI.mostrarToast('Estabelecimento não encontrado.'); return; }
 
     var nomeEstab = est[COLUNAS.NOME];
     var estId = est[COLUNAS.ID_UNICO];
+    var logoEstab = est[COLUNAS.IMAGEM] || '';
     var currentLojistaId = null;
+    var unsubscribeStatusLoja = null;
     var mapboxMap = null;
     var currentMapboxOrigin = null;
     var currentMapboxDest = null;
@@ -96,6 +140,7 @@
         var lojistaDoc = snap.docs[0];
         currentLojistaId = lojistaDoc.id;
         var lojistaData = lojistaDoc.data();
+        logoEstab = obterLogoDoCadastro(lojistaData) || logoEstab;
         var statusLoja = lojistaData.statusLoja || 'aberta';
         var statusMessage = lojistaData.statusMessage || '';
         return Core.db.collection('lojistas').doc(currentLojistaId).collection('tarifas').get()
@@ -105,7 +150,7 @@
               var data = doc.data();
               tarifas.push({ localidade: data.localidade, taxa: parseFloat(data.valor) || 0 });
             });
-            return { statusLoja: statusLoja, statusMessage: statusMessage, tarifas: tarifas };
+            return { statusLoja: statusLoja, statusMessage: statusMessage, tarifas: tarifas, lojistaData: lojistaData };
           });
       })
       .then(function (result) {
@@ -114,11 +159,21 @@
         var statusMessage = result.statusMessage;
         var tarifas = result.tarifas;
 
+        var logoHtml = logoEstab
+          ? '<img src="' + Core.sanitize(logoEstab) + '" alt="Logo" loading="eager" referrerpolicy="no-referrer">'
+          : '<span aria-hidden="true">🚕</span>';
+
         var modalHtml =
           '<div class="modal-overlay" id="modalTransporte" role="dialog" aria-modal="true" aria-labelledby="modalTransporteTitulo">' +
             '<div class="modal-conteudo fullscreen">' +
               '<div class="modal-header">' +
-                '<h3 id="modalTransporteTitulo">🚕 ' + Core.sanitize(nomeEstab) + '</h3>' +
+                '<div class="modal-estabelecimento-brand">' +
+                  '<div class="modal-estabelecimento-logo" id="modalTransporteLogo">' + logoHtml + '</div>' +
+                  '<div class="modal-estabelecimento-meta">' +
+                    '<h3 id="modalTransporteTitulo">' + Core.sanitize(nomeEstab) + '</h3>' +
+                    '<span id="modalTransporteStatus" class="modal-estabelecimento-status status-aberta">Disponível</span>' +
+                  '</div>' +
+                '</div>' +
                 '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar">×</button>' +
               '</div>' +
               '<div class="modal-tabs">' +
@@ -154,8 +209,8 @@
                     '</div>' +
                   '</div>' +
                   '<button class="btn-acao btn-site-pedido" id="btnEnderecoManual" onclick="toggleEnderecoManualTransporte()" style="width:100%; margin-bottom:0.75rem;">Não encontrei meu endereço</button>' +
-                  '<div id="mapboxMap" style="height:250px; width:100%; margin-bottom:1rem; border-radius:1rem; position: relative;"></div>' +
-                  '<div id="infoRotaContainer" class="info-viagem" style="display:none; margin-bottom:10px;"></div>' +
+                  '<div id="mapboxMap" style="height:200px; width:100%; margin-bottom:0.75rem; border-radius:1rem; position: relative; overflow:hidden;"></div>' +
+                  '<div id="infoRotaContainer" class="info-viagem" style="display:none;"></div>' +
                   '<select id="selectTarifa" class="input-pedido" aria-label="Selecione a tarifa">' +
                     '<option value="">Selecione a tarifa (fixa)</option>' +
                     tarifas.map(function (f) {
@@ -164,10 +219,10 @@
                     '<option value="combinar">💬 Combinar com motorista</option>' +
                   '</select>' +
                   '<div class="form-row">' +
-                    '<div style="position:relative;"><input type="text" id="clienteNomeTransporte" class="input-pedido" placeholder="Nome*" value="' + Core.sanitize(Core.getUserDisplayName() || '') + '" required></div>' +
-                    '<div style="position:relative;"><input type="tel" id="clienteTelTransporte" class="input-pedido" placeholder="Telefone*" required></div>' +
+                    '<input type="text" id="clienteNomeTransporte" class="input-pedido" placeholder="Nome*" value="' + Core.sanitize(Core.getUserDisplayName() || '') + '" required aria-label="Seu nome">' +
+                    '<input type="tel" id="clienteTelTransporte" class="input-pedido" placeholder="Telefone*" required aria-label="Telefone">' +
                   '</div>' +
-                  '<textarea id="obsTransporte" class="input-pedido" placeholder="Observações"></textarea>' +
+                  '<textarea id="obsTransporte" class="input-pedido" placeholder="Observações" aria-label="Observações"></textarea>' +
                   '<button class="btn-pedido-cta" id="btnSolicitarCorrida" style="width:100%;">Solicitar corrida</button>' +
                 '</div>' +
                 '<div id="tabAcompanhar" class="modal-tab-content">' +
@@ -187,17 +242,45 @@
         var modalTransporteEl = document.getElementById('modalTransporte');
         _abrirModalLocal(modalTransporteEl);
 
+        /* Identidade inicial (logo/status do header) */
+        atualizarIdentidadeTransporte(result.lojistaData, nomeEstab);
+
+        /* Realtime de status/identidade */
+        unsubscribeStatusLoja = Core.db.collection('lojistas').doc(currentLojistaId).onSnapshot(function (d) {
+          if (!d.exists) return;
+          var dt = d.data();
+          atualizarIdentidadeTransporte(dt, nomeEstab);
+          var st = statusSeguro(dt.statusLoja);
+          var msg = dt.statusMessage || '';
+          aplicarBloqueioStatus(st, msg);
+        }, function (err) { console.warn('[transporte] onSnapshot status:', err); });
+
         var btnSolicitar = document.getElementById('btnSolicitarCorrida');
         var msgStatus = document.getElementById('statusLojaMsgTransporte');
-        if (statusLoja === 'fechada' || statusLoja === 'pausada') {
-          btnSolicitar.disabled = true;
-          btnSolicitar.style.opacity = '0.5';
-          btnSolicitar.style.pointerEvents = 'none';
-          msgStatus.style.display = 'block';
-          msgStatus.innerHTML = statusLoja === 'fechada'
-            ? '🔴 Serviço indisponível: ' + Core.sanitize(statusMessage || 'Indisponível no momento.')
-            : '🟡 Serviço pausado: ' + Core.sanitize(statusMessage || 'Indisponível no momento.');
+
+        function aplicarBloqueioStatus(st, m) {
+          statusLoja = st;
+          statusMessage = m || '';
+          var bloqueado = (st === 'fechada' || st === 'pausada');
+          if (btnSolicitar) {
+            btnSolicitar.disabled = bloqueado;
+            btnSolicitar.style.opacity = bloqueado ? '0.5' : '1';
+            btnSolicitar.style.pointerEvents = bloqueado ? 'none' : 'auto';
+          }
+          if (msgStatus) {
+            if (bloqueado || statusMessage) {
+              msgStatus.style.display = 'block';
+              msgStatus.innerHTML = st === 'fechada'
+                ? '🔴 Serviço indisponível: ' + Core.sanitize(statusMessage || 'Indisponível no momento.')
+                : st === 'pausada'
+                  ? '🟡 Serviço pausado: ' + Core.sanitize(statusMessage || 'Indisponível no momento.')
+                  : '🟢 Aviso: ' + Core.sanitize(statusMessage);
+            } else {
+              msgStatus.style.display = 'none';
+            }
+          }
         }
+        aplicarBloqueioStatus(statusLoja, statusMessage);
 
         if (!MAPBOX_TOKEN || !window.mapboxgl || !window.MapboxGeocoder) {
           var manualFallback = document.getElementById('camposManuais');
@@ -217,9 +300,10 @@
             zoom: 12,
             language: 'pt-BR',
             cooperativeGestures: true,
-            boxZoom: true
+            boxZoom: true,
+            attributionControl: false
           });
-          mapboxMap.addControl(new mapboxgl.NavigationControl());
+          mapboxMap.addControl(new mapboxgl.NavigationControl({ showCompass: false }));
 
           var BRASIL_BBOX = [-73.99, -33.75, -34.79, 5.27];
           var RIO_CLARO_PROXIMITY = [-44.135, -22.723];
@@ -312,7 +396,8 @@
               .then(function (data) {
                 if (data.features && data.features.length > 0) {
                   var endereco = data.features[0].place_name;
-                  var usandoManual = document.getElementById('camposManuais').style.display === 'flex' || document.getElementById('camposManuais').style.display === 'block';
+                  var camposManuais = document.getElementById('camposManuais');
+                  var usandoManual = camposManuais && (camposManuais.style.display === 'flex' || camposManuais.style.display === 'block');
                   if (usandoManual) {
                     document.getElementById('origemManual').value = endereco;
                   } else {
@@ -407,6 +492,7 @@
         }
 
         window.fecharModalTransporte = function () {
+          if (unsubscribeStatusLoja) { unsubscribeStatusLoja(); unsubscribeStatusLoja = null; }
           var modal = document.getElementById('modalTransporte');
           if (mapboxMap) { mapboxMap.remove(); mapboxMap = null; }
           _fecharModalLocal(modal);
@@ -437,7 +523,8 @@
           var telNumerico = tel.replace(/\D/g, '');
           if (!telNumerico || telNumerico.length < 10) { UI.mostrarToast('Telefone inválido. Informe DDD + número.', 'erro'); return; }
           var origem, destino, latOrigem, lngOrigem, latDestino, lngDestino;
-          var usandoManual = document.getElementById('camposManuais').style.display === 'flex' || document.getElementById('camposManuais').style.display === 'block';
+          var camposManuais = document.getElementById('camposManuais');
+          var usandoManual = camposManuais && (camposManuais.style.display === 'flex' || camposManuais.style.display === 'block');
           if (usandoManual) {
             origem = document.getElementById('origemManual').value.trim();
             destino = document.getElementById('destinoManual').value.trim();
