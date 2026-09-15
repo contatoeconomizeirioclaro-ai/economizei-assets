@@ -5,6 +5,24 @@ var CFG = window.GRUPO_CONFIG || {};
 var Economizei = window.Economizei = window.Economizei || {};
 var EU = window.EconomizeiUtils;
 
+  (function detectarModoApp() {
+  function isAppMode() {
+    var s = window.location.search || '';
+    if (s.indexOf('app=1') !== -1 || s.indexOf('app=true') !== -1) return true;
+    if (window.navigator.standalone === true) return true;
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+    var ua = (navigator.userAgent || '').toLowerCase();
+    if (ua.indexOf('wv') !== -1 || ua.indexOf('webview') !== -1) return true;
+    return false;
+  }
+  if (isAppMode()) {
+    document.documentElement.classList.add('modo-app-inicial');
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.classList.add('modo-app');
+    });
+  }
+})();
+
 if (!EU) console.error('[grupos.js] comum/utils.js não foi carregado antes deste script.');
 
 var CARDS_CFG = {
