@@ -43,6 +43,10 @@
 
   var MAPBOX_TOKEN = (window.ECONOMIZEI_CONFIG && window.ECONOMIZEI_CONFIG.mapboxToken) || window.ECONOMIZEI_MAPBOX_TOKEN || '';
 
+  /* Coordenadas de Rio Claro/SP — bias forte pro geocoder */
+  var RC_CENTER = [-47.5616, -22.4108];
+  var RC_BBOX   = [-47.75, -22.55, -47.35, -22.25];
+
   function statusSeguro(s) { return ['aberta', 'pausada', 'fechada'].indexOf(s) !== -1 ? s : 'aberta'; }
   function gerarIniciais(nome) {
     var p = String(nome || 'Transporte').trim().split(/\s+/).filter(Boolean);
@@ -183,48 +187,73 @@
               '</div>' +
               '<div class="modal-body">' +
                 '<div id="tabSolicitar" class="modal-tab-content active">' +
-                  '<div id="statusLojaMsgTransporte" style="display:none; background:#fef3c7; border:1px solid #f59e0b; border-radius:0.75rem; padding:0.75rem; margin-bottom:0.75rem; text-align:center; font-weight:600; color:#92400e;" role="alert"></div>' +
-                  '<div class="search-fields-wrapper">' +
-                    '<div id="geocoderContainer">' +
-                      '<div class="search-field-group">' +
-                        '<div class="search-field-container"><div id="origemGeocoder" style="flex:1;"></div>' +
-                        '<button class="clear-btn" id="clearOrigemMapa" onclick="limparCampoTransporte(\'origemMapa\')">&times;</button></div>' +
-                        '<button class="btn-location-modern" id="btnLocalizacaoMapa" onclick="usarLocalizacaoAtualTransporte()" title="Usar minha localização">📍</button>' +
+
+                  /* Banner de status */
+                  '<div id="statusLojaMsgTransporte" style="display:none;" role="alert"></div>' +
+
+                  /* Bloco: Rota */
+                  '<div class="tp-bloco">' +
+                    '<div class="tp-bloco-titulo"><i class="fa-solid fa-route"></i> Rota</div>' +
+                    '<div class="search-fields-wrapper">' +
+                      '<div id="geocoderContainer">' +
+                        '<div class="search-field-group tp-origem">' +
+                          '<div class="search-field-container"><div id="origemGeocoder" style="flex:1;"></div>' +
+                          '<button class="clear-btn" id="clearOrigemMapa" onclick="limparCampoTransporte(\'origemMapa\')" aria-label="Limpar origem">&times;</button></div>' +
+                          '<button class="btn-location-modern" id="btnLocalizacaoMapa" onclick="usarLocalizacaoAtualTransporte()" title="Usar minha localização" aria-label="Usar minha localização">📍</button>' +
+                        '</div>' +
+                        '<div class="search-field-group tp-destino">' +
+                          '<div class="search-field-container"><div id="destinoGeocoder" style="flex:1;"></div>' +
+                          '<button class="clear-btn" id="clearDestinoMapa" onclick="limparCampoTransporte(\'destinoMapa\')" aria-label="Limpar destino">&times;</button></div>' +
+                        '</div>' +
                       '</div>' +
-                      '<div class="search-field-group">' +
-                        '<div class="search-field-container"><div id="destinoGeocoder" style="flex:1;"></div>' +
-                        '<button class="clear-btn" id="clearDestinoMapa" onclick="limparCampoTransporte(\'destinoMapa\')">&times;</button></div>' +
+                      '<div id="camposManuais" style="display:none;">' +
+                        '<div class="search-field-group tp-origem">' +
+                          '<div class="search-field-container"><input type="text" id="origemManual" class="input-endereco-manual" placeholder="Descreva a origem" aria-label="Origem" />' +
+                          '<button class="clear-btn" id="clearOrigemManual" onclick="limparCampoTransporte(\'origemManual\')" aria-label="Limpar origem">&times;</button></div>' +
+                          '<button class="btn-location-modern" id="btnLocalizacaoManual" onclick="usarLocalizacaoAtualTransporte()" title="Usar minha localização" aria-label="Usar minha localização">📍</button>' +
+                        '</div>' +
+                        '<div class="search-field-group tp-destino">' +
+                          '<div class="search-field-container"><input type="text" id="destinoManual" class="input-endereco-manual" placeholder="Descreva o destino" aria-label="Destino" />' +
+                          '<button class="clear-btn" id="clearDestinoManual" onclick="limparCampoTransporte(\'destinoManual\')" aria-label="Limpar destino">&times;</button></div>' +
+                        '</div>' +
                       '</div>' +
                     '</div>' +
-                    '<div id="camposManuais" style="display:none;">' +
-                      '<div class="search-field-group">' +
-                        '<div class="search-field-container"><input type="text" id="origemManual" class="input-endereco-manual" placeholder="Descreva a origem" />' +
-                        '<button class="clear-btn" id="clearOrigemManual" onclick="limparCampoTransporte(\'origemManual\')">&times;</button></div>' +
-                        '<button class="btn-location-modern" id="btnLocalizacaoManual" onclick="usarLocalizacaoAtualTransporte()" title="Usar minha localização">📍</button>' +
-                      '</div>' +
-                      '<div class="search-field-group">' +
-                        '<div class="search-field-container"><input type="text" id="destinoManual" class="input-endereco-manual" placeholder="Descreva o destino" />' +
-                        '<button class="clear-btn" id="clearDestinoManual" onclick="limparCampoTransporte(\'destinoManual\')">&times;</button></div>' +
-                      '</div>' +
+                    '<button type="button" id="btnEnderecoManual" onclick="toggleEnderecoManualTransporte()">Não encontrei meu endereço</button>' +
+                  '</div>' +
+
+                  /* Bloco: Mapa */
+                  '<div class="tp-bloco tp-bloco-mapa">' +
+                    '<div id="mapboxMap"></div>' +
+                    '<div id="infoRotaContainer" class="info-viagem" style="display:none;"></div>' +
+                  '</div>' +
+
+                  /* Bloco: Tarifa */
+                  '<div class="tp-bloco">' +
+                    '<div class="tp-bloco-titulo"><i class="fa-solid fa-tag"></i> Tarifa</div>' +
+                    '<select id="selectTarifa" aria-label="Selecione a tarifa">' +
+                      '<option value="">Selecione a tarifa (fixa)</option>' +
+                      tarifas.map(function (f) {
+                        return '<option value="' + f.taxa + '">' + Core.sanitize(f.localidade) + ' - R$ ' + f.taxa.toFixed(2) + '</option>';
+                      }).join('') +
+                      '<option value="combinar">💬 Combinar com motorista</option>' +
+                    '</select>' +
+                  '</div>' +
+
+                  /* Bloco: Seus dados */
+                  '<div class="tp-bloco">' +
+                    '<div class="tp-bloco-titulo"><i class="fa-solid fa-user"></i> Seus dados</div>' +
+                    '<div class="form-row">' +
+                      '<input type="text" id="clienteNomeTransporte" class="input-pedido" placeholder="Nome*" value="' + Core.sanitize(Core.getUserDisplayName() || '') + '" required aria-label="Seu nome">' +
+                      '<input type="tel" id="clienteTelTransporte" class="input-pedido" placeholder="Telefone*" required aria-label="Telefone">' +
                     '</div>' +
+                    '<textarea id="obsTransporte" class="input-pedido" placeholder="Observações (opcional)" aria-label="Observações"></textarea>' +
                   '</div>' +
-                  '<button class="btn-acao btn-site-pedido" id="btnEnderecoManual" onclick="toggleEnderecoManualTransporte()" style="width:100%; margin-bottom:0.75rem;">Não encontrei meu endereço</button>' +
-                  '<div id="mapboxMap" style="height:200px; width:100%; margin-bottom:0.75rem; border-radius:1rem; position: relative; overflow:hidden;"></div>' +
-                  '<div id="infoRotaContainer" class="info-viagem" style="display:none;"></div>' +
-                  '<select id="selectTarifa" class="input-pedido" aria-label="Selecione a tarifa">' +
-                    '<option value="">Selecione a tarifa (fixa)</option>' +
-                    tarifas.map(function (f) {
-                      return '<option value="' + f.taxa + '">' + Core.sanitize(f.localidade) + ' - R$ ' + f.taxa.toFixed(2) + '</option>';
-                    }).join('') +
-                    '<option value="combinar">💬 Combinar com motorista</option>' +
-                  '</select>' +
-                  '<div class="form-row">' +
-                    '<input type="text" id="clienteNomeTransporte" class="input-pedido" placeholder="Nome*" value="' + Core.sanitize(Core.getUserDisplayName() || '') + '" required aria-label="Seu nome">' +
-                    '<input type="tel" id="clienteTelTransporte" class="input-pedido" placeholder="Telefone*" required aria-label="Telefone">' +
-                  '</div>' +
-                  '<textarea id="obsTransporte" class="input-pedido" placeholder="Observações" aria-label="Observações"></textarea>' +
+
+                  /* CTA */
                   '<button class="btn-pedido-cta" id="btnSolicitarCorrida" style="width:100%;">Solicitar corrida</button>' +
+
                 '</div>' +
+
                 '<div id="tabAcompanhar" class="modal-tab-content">' +
                   '<input type="text" id="consultaCodigoTransporte" class="input-pedido" placeholder="Código da corrida" aria-label="Código da corrida">' +
                   '<div style="display:flex; gap:0.5rem;">' +
@@ -242,17 +271,13 @@
         var modalTransporteEl = document.getElementById('modalTransporte');
         _abrirModalLocal(modalTransporteEl);
 
-        /* Identidade inicial (logo/status do header) */
         atualizarIdentidadeTransporte(result.lojistaData, nomeEstab);
 
-        /* Realtime de status/identidade */
         unsubscribeStatusLoja = Core.db.collection('lojistas').doc(currentLojistaId).onSnapshot(function (d) {
           if (!d.exists) return;
           var dt = d.data();
           atualizarIdentidadeTransporte(dt, nomeEstab);
-          var st = statusSeguro(dt.statusLoja);
-          var msg = dt.statusMessage || '';
-          aplicarBloqueioStatus(st, msg);
+          aplicarBloqueioStatus(statusSeguro(dt.statusLoja), dt.statusMessage || '');
         }, function (err) { console.warn('[transporte] onSnapshot status:', err); });
 
         var btnSolicitar = document.getElementById('btnSolicitarCorrida');
@@ -268,15 +293,21 @@
             btnSolicitar.style.pointerEvents = bloqueado ? 'none' : 'auto';
           }
           if (msgStatus) {
-            if (bloqueado || statusMessage) {
-              msgStatus.style.display = 'block';
-              msgStatus.innerHTML = st === 'fechada'
-                ? '🔴 Serviço indisponível: ' + Core.sanitize(statusMessage || 'Indisponível no momento.')
-                : st === 'pausada'
-                  ? '🟡 Serviço pausado: ' + Core.sanitize(statusMessage || 'Indisponível no momento.')
-                  : '🟢 Aviso: ' + Core.sanitize(statusMessage);
+            /* Banner aparece se bloqueado OU se tem mensagem do lojista */
+            var mostrar = bloqueado || statusMessage !== '';
+            if (mostrar) {
+              msgStatus.style.display = 'flex';
+              msgStatus.className = 'status-' + st;
+              if (st === 'fechada') {
+                msgStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + Core.sanitize(statusMessage || 'Serviço indisponível no momento.');
+              } else if (st === 'pausada') {
+                msgStatus.innerHTML = '<i class="fa-solid fa-circle-pause"></i> ' + Core.sanitize(statusMessage || 'Serviço pausado no momento.');
+              } else {
+                msgStatus.innerHTML = '<i class="fa-solid fa-circle-info"></i> ' + Core.sanitize(statusMessage);
+              }
             } else {
               msgStatus.style.display = 'none';
+              msgStatus.innerHTML = '';
             }
           }
         }
@@ -296,7 +327,7 @@
           mapboxMap = new mapboxgl.Map({
             container: 'mapboxMap',
             style: 'mapbox://styles/mapbox/streets-v12',
-            center: [-44.133, -22.847],
+            center: RC_CENTER,
             zoom: 12,
             language: 'pt-BR',
             cooperativeGestures: true,
@@ -305,17 +336,21 @@
           });
           mapboxMap.addControl(new mapboxgl.NavigationControl({ showCompass: false }));
 
-          var BRASIL_BBOX = [-73.99, -33.75, -34.79, 5.27];
-          var RIO_CLARO_PROXIMITY = [-44.135, -22.723];
+          var geocoderOpts = {
+            accessToken: MAPBOX_TOKEN,
+            language: 'pt-BR',
+            country: 'br',
+            bbox: RC_BBOX,
+            proximity: RC_CENTER,
+            marker: false,
+            fuzzyMatch: true,
+            limit: 6
+          };
 
           var origemContainer = document.getElementById('origemGeocoder');
           var destinoContainer = document.getElementById('destinoGeocoder');
 
-          var geocoderOrigem = new MapboxGeocoder({
-            accessToken: MAPBOX_TOKEN, language: 'pt-BR', country: 'br',
-            bbox: BRASIL_BBOX, proximity: RIO_CLARO_PROXIMITY, marker: false,
-            placeholder: 'Endereço de origem'
-          });
+          var geocoderOrigem = new MapboxGeocoder(Object.assign({}, geocoderOpts, { placeholder: 'Endereço de origem' }));
           geocoderOrigem.addTo(origemContainer);
           geocoderOrigem.on('result', function (e) {
             if (e.result && e.result.center) {
@@ -324,11 +359,7 @@
             }
           });
 
-          var geocoderDestino = new MapboxGeocoder({
-            accessToken: MAPBOX_TOKEN, language: 'pt-BR', country: 'br',
-            bbox: BRASIL_BBOX, proximity: RIO_CLARO_PROXIMITY, marker: false,
-            placeholder: 'Endereço de destino'
-          });
+          var geocoderDestino = new MapboxGeocoder(Object.assign({}, geocoderOpts, { placeholder: 'Endereço de destino' }));
           geocoderDestino.addTo(destinoContainer);
           geocoderDestino.on('result', function (e) {
             if (e.result && e.result.center) {
@@ -343,7 +374,7 @@
         function calcularRotaTransporte() {
           if (!currentMapboxOrigin || !currentMapboxDest) return;
           var info = document.getElementById('infoRotaContainer');
-          info.style.display = 'block';
+          info.style.display = 'flex';
           info.innerHTML = '🔄 Calculando rota...';
           var url = 'https://api.mapbox.com/directions/v5/mapbox/driving/' +
             currentMapboxOrigin.lng + ',' + currentMapboxOrigin.lat + ';' +
@@ -360,7 +391,7 @@
               var leg = route.legs[0];
               var distancia = (leg.distance / 1000).toFixed(1) + ' km';
               var duracao = Math.round(leg.duration / 60) + ' min';
-              info.innerHTML = '<strong>Distância:</strong> ' + distancia + ' | <strong>Tempo:</strong> ' + duracao;
+              info.innerHTML = '<strong>Distância:</strong> ' + distancia + ' &nbsp;·&nbsp; <strong>Tempo:</strong> ' + duracao;
               if (mapboxMap.getLayer(rotaCamadaId)) { mapboxMap.removeLayer(rotaCamadaId); mapboxMap.removeSource(rotaCamadaId); }
               var geojson = { type: 'Feature', geometry: route.geometry, properties: {} };
               mapboxMap.addSource(rotaCamadaId, { type: 'geojson', data: geojson });
