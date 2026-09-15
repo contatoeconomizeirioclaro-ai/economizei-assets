@@ -3,6 +3,15 @@
   if (!window.Economizei) window.Economizei = {};
   if (!Economizei.Cards) { console.error('[transporte] Core não carregado.'); return; }
 
+  (function () {
+    if (document.getElementById('css-transporte')) return;
+    var l = document.createElement('link');
+    l.id = 'css-transporte';
+    l.rel = 'stylesheet';
+    l.href = 'https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/modulos/transporte.css';
+    document.head.appendChild(l);
+  })();
+
   var EU = EconomizeiUtils;
   var Core = Economizei.Core;
   var UI = Economizei.UI;
