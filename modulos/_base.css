@@ -11,9 +11,7 @@ body.modo-app {
   max-height: 90vh;
 }
 @media (min-width: 769px) {
-  .modal-conteudo.modal-modulo.modal-modulo-wide {
-    max-width: 900px;
-  }
+  .modal-conteudo.modal-modulo.modal-modulo-wide { max-width: 900px; }
 }
 
 .modal-conteudo.modal-modulo-full,
@@ -68,19 +66,11 @@ body.modo-app .modal-conteudo.fullscreen .modal-footer {
 .modal-overlay {
   --economizei-modal-safe-bottom: max(1rem, var(--reserva-barra-app, 0px), env(safe-area-inset-bottom));
 }
-.modal-overlay > .modal-conteudo {
-  margin-bottom: var(--economizei-modal-safe-bottom);
-}
-.modal-overlay > .modal-conteudo.fullscreen {
-  margin-bottom: 0;
-}
-.modal-overlay > .modal-conteudo.fullscreen > .modal-body {
-  padding-bottom: var(--economizei-modal-safe-bottom) !important;
-}
+.modal-overlay > .modal-conteudo { margin-bottom: var(--economizei-modal-safe-bottom); }
+.modal-overlay > .modal-conteudo.fullscreen { margin-bottom: 0 !important; }
+.modal-overlay > .modal-conteudo.fullscreen > .modal-body { padding-bottom: var(--economizei-modal-safe-bottom) !important; }
 html.modo-app-inicial .modal-overlay > .modal-conteudo,
-body.modo-app .modal-overlay > .modal-conteudo {
-  max-height: calc(100dvh - var(--reserva-barra-app));
-}
+body.modo-app .modal-overlay > .modal-conteudo { max-height: calc(100dvh - var(--reserva-barra-app)); }
 html.modo-app-inicial .modal-overlay > .modal-conteudo.fullscreen,
 body.modo-app .modal-overlay > .modal-conteudo.fullscreen {
   height: calc(100dvh - var(--reserva-barra-app));
@@ -106,18 +96,9 @@ body.modo-app .modal-overlay > .modal-conteudo.fullscreen > .modal-body {
   box-sizing: border-box;
   padding-bottom: max(1rem, var(--reserva-barra-app, 0px), env(safe-area-inset-bottom)) !important;
 }
-
-.modal-overlay > .modal-conteudo.fullscreen {
-  margin-bottom: 0 !important;
-}
 html.modo-app-inicial .modal-overlay#modalPedidoRest,
-body.modo-app .modal-overlay#modalPedidoRest {
-  align-items: flex-start !important;
-}
-.modal-overlay#modalPedidoRest > .modal-conteudo.fullscreen {
-  height: 100% !important;
-  max-height: 100% !important;
-}
+body.modo-app .modal-overlay#modalPedidoRest { align-items: flex-start !important; }
+.modal-overlay#modalPedidoRest > .modal-conteudo.fullscreen { height: 100% !important; max-height: 100% !important; }
 html.modo-app-inicial .modal-overlay#modalPedidoRest > .modal-conteudo.fullscreen,
 body.modo-app .modal-overlay#modalPedidoRest > .modal-conteudo.fullscreen {
   height: calc(100dvh - var(--reserva-barra-app)) !important;
