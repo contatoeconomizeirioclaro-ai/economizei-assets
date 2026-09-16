@@ -1,7 +1,7 @@
 /* ============================================================
    MÓDULO TRANSPORTE — CSS específico
    Depende de: tokens.css, modais.css, componentes.css, _base.css
-   v8 — input próprio, sugestões sem plugin, botões sempre visíveis
+   v9 — modal marcar no mapa + botão de sugestão de correção
    ============================================================ */
 
 /* ===== HEADER ===== */
@@ -215,7 +215,7 @@
   box-shadow: none !important;
 }
 
-/* ===== SUGESTÕES (empurra conteúdo, não sobrepõe) ===== */
+/* ===== SUGESTÕES ===== */
 .rota-sugestoes {
   margin-top: .45rem;
   background: #fff;
@@ -227,30 +227,56 @@
   box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
 }
 .rota-sugestoes:empty { display: none; }
-.rota-sugestao {
-  display: block; width: 100%;
+.rota-sugestoes .rota-sugestao-linha {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--gray-100);
+}
+.rota-sugestoes .rota-sugestao-linha:last-child { border-bottom: none; }
+.rota-sugestoes .rota-sugestao {
+  display: block; flex: 1;
   padding: .6rem .85rem;
   background: transparent; border: none;
   text-align: left; cursor: pointer;
-  border-bottom: 1px solid var(--gray-100);
   font-family: inherit;
   transition: background .15s ease;
+  min-width: 0;
 }
-.rota-sugestao:last-child { border-bottom: none; }
-.rota-sugestao:hover,
-.rota-sugestao:focus { background: var(--primary-light); outline: none; }
-.rota-sugestao-titulo {
+.rota-sugestoes .rota-sugestao:hover,
+.rota-sugestoes .rota-sugestao:focus { background: var(--primary-light); outline: none; }
+.rota-sugestoes .rota-sugestao-titulo {
   display: block; font-size: .82rem; font-weight: 600;
   color: var(--gray-800); margin-bottom: .1rem;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.rota-sugestao-endereco {
+.rota-sugestoes .rota-sugestao-endereco {
   display: block; font-size: .72rem; color: var(--gray-500);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .rota-sugestao-vazio {
   padding: .75rem .85rem;
   text-align: center; font-size: .78rem; color: var(--gray-500);
+}
+
+.rota-sugestao-flag {
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--gray-100);
+  color: var(--gray-400, #94a3b8);
+  padding: 0 .75rem;
+  cursor: pointer;
+  font-size: .9rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease, color .15s ease;
+}
+.rota-sugestao-flag:hover,
+.rota-sugestao-flag:focus-visible {
+  background: #fef2f2;
+  color: #dc2626;
+  outline: none;
 }
 
 /* Botão "Não encontrei meu endereço" */
@@ -425,19 +451,82 @@
 }
 #modalTransporte #tabAcompanhar .btn-limpar-historico { padding: 0 .95rem; }
 
+/* ===== MODAL MARCAR NO MAPA ===== */
+#modalMarcarEndereco .marcar-instrucao {
+  margin: 0 0 .65rem 0;
+  font-size: .8rem;
+  color: var(--gray-600, #475569);
+  line-height: 1.4;
+}
+#modalMarcarEndereco .mapa-marcar {
+  width: 100%;
+  height: 260px;
+  border-radius: .85rem;
+  overflow: hidden;
+  background: var(--gray-100);
+  margin-bottom: .85rem;
+  position: relative;
+  border: 1px solid var(--gray-200);
+}
+#modalMarcarEndereco .mapa-marcar .mapboxgl-canvas { outline: none; }
+#modalMarcarEndereco .mapa-marcar .mapboxgl-ctrl-logo,
+#modalMarcarEndereco .mapa-marcar .mapboxgl-ctrl-attrib,
+#modalMarcarEndereco .mapa-marcar .mapboxgl-ctrl-cooperative-gestures { display: none !important; }
+#modalMarcarEndereco .mapa-marcar .mapboxgl-ctrl-group {
+  border-radius: .55rem !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, .15) !important;
+  overflow: hidden;
+}
+#modalMarcarEndereco .marcar-label {
+  display: block;
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--gray-600, #475569);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: .3rem;
+}
+#modalMarcarEndereco .input-pedido {
+  width: 100%;
+  height: 2.5rem;
+  padding: .55rem .95rem;
+  border-radius: 2rem;
+  border: 1px solid var(--gray-200);
+  font-size: .82rem;
+  color: var(--gray-800);
+  background: #fff;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+#modalMarcarEndereco .input-pedido:focus {
+  outline: none; border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, .1);
+}
+#modalMarcarEndereco .form-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+}
+@media (max-width: 480px) {
+  #modalMarcarEndereco .form-row { grid-template-columns: 1fr; gap: .45rem; }
+  #modalMarcarEndereco .mapa-marcar { height: 200px; }
+}
+
 /* ===== TOUCH ===== */
 @media (pointer: coarse) {
   #rotaInput,
   #modalTransporte #selectTarifa,
   #modalTransporte #clienteNomeTransporte,
   #modalTransporte #clienteTelTransporte,
-  #modalTransporte #tabAcompanhar .input-pedido {
+  #modalTransporte #tabAcompanhar .input-pedido,
+  #modalMarcarEndereco .input-pedido {
     height: 2.75rem !important;
   }
   .btn-location-modern,
   .btn-confirmar-rota { width: 2.75rem; min-width: 2.75rem; height: 2.75rem; }
   #modalTransporte #btnSolicitarCorrida { height: 3rem; }
   .rota-chip-remover { width: 2rem; height: 2rem; min-width: 2rem; }
+  .rota-sugestao-flag { padding: 0 1rem; }
 }
 
 /* ===== APP MODE ===== */
