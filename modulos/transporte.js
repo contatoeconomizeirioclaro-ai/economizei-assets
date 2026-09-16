@@ -101,12 +101,12 @@
     var mapboxMap = null;
     var currentUser = Core.getCurrentUser();
 
-    /* ===== Estado da rota ===== */
+    /* Estado da rota */
     var rotaState = {
-      origem: null,   // { lat, lng, address }
+      origem: null,    // { address, lat, lng }
       destino: null,
-      fase: 'origem', // 'origem' | 'destino' | 'completo'
-      manualMode: false
+      fase: 'origem',  // 'origem' | 'destino' | 'completo'
+      temp: null       // sugestão escolhida da lista (ainda não confirmada)
     };
 
     function getEnderecoCurto(endereco) {
@@ -196,39 +196,39 @@
 
                   '<div id="statusLojaMsgTransporte" style="display:none;" role="alert"></div>' +
 
-                  /* Bloco Rota — fluxo sequencial */
+                  /* Bloco Rota */
                   '<div class="tp-bloco">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-route"></i> Rota</div>' +
 
-                    '<div id="rotaEscolha">' +
-                      '<div class="search-field-group" id="rotaGeocoderWrap">' +
-                        '<div class="search-field-container" id="rotaIconeContainer">' +
-                          '<div id="rotaGeocoder" style="flex:1;"></div>' +
-                        '</div>' +
-                        '<button class="btn-location-modern" id="btnLocalizacaoRota" type="button" title="Usar minha localização" aria-label="Usar minha localização">📍</button>' +
-                      '</div>' +
-                      '<div class="search-field-group" id="rotaManualWrap" style="display:none;">' +
-                        '<div class="search-field-container" id="rotaManualIconeContainer">' +
-                          '<input type="text" id="inputManualRota" class="input-endereco-manual" placeholder="De onde você vai sair?" aria-label="Endereço">' +
-                        '</div>' +
-                        '<button class="btn-location-modern" id="btnLocalizacaoManual" type="button" title="Usar minha localização" aria-label="Usar minha localização">📍</button>' +
-                      '</div>' +
-                      '<button type="button" id="btnEnderecoManual">Não encontrei meu endereço</button>' +
+                    /* Chip origem */
+                    '<div class="rota-chip" id="chipOrigem" style="display:none;">' +
+                      '<span class="rota-chip-icone" aria-hidden="true"></span>' +
+                      '<span class="rota-chip-texto" id="chipOrigemTexto"></span>' +
+                      '<button type="button" class="rota-chip-remover" data-remover="origem" aria-label="Remover origem">×</button>' +
                     '</div>' +
 
-                    '<div id="rotaResumo" class="rota-resumo" style="display:none;">' +
-                      '<div class="rota-chip rota-chip-origem">' +
-                        '<span class="rota-chip-icone" aria-hidden="true"></span>' +
-                        '<span class="rota-chip-texto" id="rotaChipOrigemTexto"></span>' +
-                        '<button type="button" class="rota-chip-remover" id="btnRemoverOrigem" aria-label="Remover origem">×</button>' +
-                      '</div>' +
-                      '<div class="rota-chip rota-chip-destino">' +
-                        '<span class="rota-chip-icone" aria-hidden="true"></span>' +
-                        '<span class="rota-chip-texto" id="rotaChipDestinoTexto"></span>' +
-                        '<button type="button" class="rota-chip-remover" id="btnRemoverDestino" aria-label="Remover destino">×</button>' +
-                      '</div>' +
+                    /* Chip destino */
+                    '<div class="rota-chip rota-chip-destino" id="chipDestino" style="display:none;">' +
+                      '<span class="rota-chip-icone" aria-hidden="true"></span>' +
+                      '<span class="rota-chip-texto" id="chipDestinoTexto"></span>' +
+                      '<button type="button" class="rota-chip-remover" data-remover="destino" aria-label="Remover destino">×</button>' +
                     '</div>' +
 
+                    /* Input ativo (quando falta origem ou destino) */
+                    '<div class="rota-input-wrap" id="rotaInputWrap" style="display:none;">' +
+                      '<div class="rota-input-container" id="rotaInputContainer">' +
+                        '<span class="rota-input-icone" aria-hidden="true"></span>' +
+                        '<input type="text" id="rotaInput" autocomplete="off" placeholder="De onde você vai sair?" aria-label="Endereço">' +
+                      '</div>' +
+                      '<button type="button" class="btn-location-modern" id="btnLocalizacaoAtual" title="Usar minha localização" aria-label="Usar minha localização">📍</button>' +
+                      '<button type="button" class="btn-confirmar-rota" id="btnConfirmarRota" title="Confirmar endereço digitado" aria-label="Confirmar endereço" disabled>✓</button>' +
+                    '</div>' +
+
+                    /* Sugestões */
+                    '<div class="rota-sugestoes" id="rotaSugestoes"></div>' +
+
+                    /* Botão modo manual (esconde sugestões, libera texto livre) */
+                    '<button type="button" id="btnEnderecoManual">Não encontrei meu endereço</button>' +
                   '</div>' +
 
                   /* Bloco Mapa */
@@ -306,13 +306,9 @@
             if (mostrar) {
               msgStatus.style.display = 'flex';
               msgStatus.className = 'status-' + st;
-              if (st === 'fechada') {
-                msgStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + Core.sanitize(statusMessage || 'Serviço indisponível no momento.');
-              } else if (st === 'pausada') {
-                msgStatus.innerHTML = '<i class="fa-solid fa-circle-pause"></i> ' + Core.sanitize(statusMessage || 'Serviço pausado no momento.');
-              } else {
-                msgStatus.innerHTML = '<i class="fa-solid fa-circle-info"></i> ' + Core.sanitize(statusMessage);
-              }
+              if (st === 'fechada') msgStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + Core.sanitize(statusMessage || 'Serviço indisponível no momento.');
+              else if (st === 'pausada') msgStatus.innerHTML = '<i class="fa-solid fa-circle-pause"></i> ' + Core.sanitize(statusMessage || 'Serviço pausado no momento.');
+              else msgStatus.innerHTML = '<i class="fa-solid fa-circle-info"></i> ' + Core.sanitize(statusMessage);
             } else {
               msgStatus.style.display = 'none';
               msgStatus.innerHTML = '';
@@ -321,16 +317,10 @@
         }
         aplicarBloqueioStatus(statusLoja, statusMessage);
 
-        /* ===== Inicializar mapa (se token disponível) ===== */
-        if (!MAPBOX_TOKEN || !window.mapboxgl || !window.MapboxGeocoder) {
-          rotaState.manualMode = true;
-          var geocoderWrap = document.getElementById('rotaGeocoderWrap');
-          var manualWrap = document.getElementById('rotaManualWrap');
+        /* ===== Inicializar mapa ===== */
+        var hasMap = !!(MAPBOX_TOKEN && window.mapboxgl);
+        if (!hasMap) {
           var mapaFallback = document.getElementById('mapboxMap');
-          var botaoManualFallback = document.getElementById('btnEnderecoManual');
-          if (geocoderWrap) geocoderWrap.style.display = 'none';
-          if (manualWrap) manualWrap.style.display = 'flex';
-          if (botaoManualFallback) botaoManualFallback.style.display = 'none';
           if (mapaFallback) mapaFallback.innerHTML = '<div class="mapa-indisponivel"><strong>Mapa indisponível</strong><span>Informe origem e destino manualmente.</span></div>';
         } else {
           mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -345,169 +335,248 @@
             attributionControl: false
           });
           mapboxMap.addControl(new mapboxgl.NavigationControl({ showCompass: false }));
+        }
 
-          var geocoderOpts = {
-            accessToken: MAPBOX_TOKEN,
-            language: 'pt-BR',
-            country: 'br',
-            bbox: RC_BBOX,
-            proximity: RC_CENTER,
-            marker: false,
-            fuzzyMatch: true,
-            limit: 6,
-            placeholder: 'De onde você vai sair?'
-          };
+        /* ===== Elementos da rota ===== */
+        var elChipOrigem = document.getElementById('chipOrigem');
+        var elChipDestino = document.getElementById('chipDestino');
+        var elChipOrigemTxt = document.getElementById('chipOrigemTexto');
+        var elChipDestinoTxt = document.getElementById('chipDestinoTexto');
+        var elInputWrap = document.getElementById('rotaInputWrap');
+        var elInputContainer = document.getElementById('rotaInputContainer');
+        var elInput = document.getElementById('rotaInput');
+        var elBtnLoc = document.getElementById('btnLocalizacaoAtual');
+        var elBtnOk = document.getElementById('btnConfirmarRota');
+        var elSugestoes = document.getElementById('rotaSugestoes');
+        var elBtnManual = document.getElementById('btnEnderecoManual');
 
-          var geocoderRota = new MapboxGeocoder(geocoderOpts);
-          geocoderRota.addTo(document.getElementById('rotaGeocoder'));
-          geocoderRota.on('result', function (e) {
-            if (!e.result || !e.result.center) return;
-            processarSelecaoRota({
-              lat: e.result.center[1],
-              lng: e.result.center[0],
-              address: e.result.place_name
+        var modoManual = false;
+        var buscaTimer = null;
+
+        function esconderSugestoes() {
+          elSugestoes.innerHTML = '';
+        }
+
+        function mostrarSugestoes(lista) {
+          elSugestoes.innerHTML = '';
+          if (!lista.length) return;
+          lista.forEach(function (sug) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'rota-sugestao';
+            btn.innerHTML =
+              '<span class="rota-sugestao-titulo">' + Core.sanitize(sug.titulo) + '</span>' +
+              '<span class="rota-sugestao-endereco">' + Core.sanitize(sug.endereco) + '</span>';
+            btn.addEventListener('click', function () {
+              escolherSugestao(sug);
             });
+            elSugestoes.appendChild(btn);
           });
         }
 
-        /* ===== Estado da UI da rota ===== */
-        function atualizarRotaUI() {
-          var elEscolha = document.getElementById('rotaEscolha');
-          var elResumo = document.getElementById('rotaResumo');
-          var elIcone = document.getElementById('rotaIconeContainer');
-          var elIconeManual = document.getElementById('rotaManualIconeContainer');
-          var btnLoc = document.getElementById('btnLocalizacaoRota');
-          var inpManual = document.getElementById('inputManualRota');
+        function escolherSugestao(sug) {
+          rotaState.temp = { address: sug.enderecoCompleto, lat: sug.lat, lng: sug.lng };
+          elInput.value = sug.enderecoCompleto;
+          esconderSugestoes();
+          elBtnOk.disabled = false;
+        }
 
-          if (rotaState.fase === 'completo') {
-            if (elEscolha) elEscolha.style.display = 'none';
-            if (elResumo) elResumo.style.display = 'flex';
-            document.getElementById('rotaChipOrigemTexto').textContent = rotaState.origem.address;
-            document.getElementById('rotaChipDestinoTexto').textContent = rotaState.destino.address;
+        function atualizarUI() {
+          var fase = rotaState.fase;
+
+          /* Chips */
+          elChipOrigem.style.display = rotaState.origem ? 'flex' : 'none';
+          elChipDestino.style.display = rotaState.destino ? 'flex' : 'none';
+          if (rotaState.origem) elChipOrigemTxt.textContent = rotaState.origem.address;
+          if (rotaState.destino) elChipDestinoTxt.textContent = rotaState.destino.address;
+
+          /* Input ativo */
+          if (fase === 'completo') {
+            elInputWrap.style.display = 'none';
+            esconderSugestoes();
+            elBtnManual.hidden = true;
           } else {
-            if (elEscolha) elEscolha.style.display = 'block';
-            if (elResumo) elResumo.style.display = 'none';
-
-            /* Bolinha/quadrado da origem/destino */
-            var faseClass = rotaState.fase === 'destino' ? 'rota-fase-destino' : '';
-            if (elIcone) elIcone.className = 'search-field-container ' + faseClass;
-            if (elIconeManual) elIconeManual.className = 'search-field-container ' + faseClass;
-
-            /* Placeholder do geocoder */
-            var inpGeo = document.querySelector('#rotaGeocoder input');
-            if (inpGeo) {
-              inpGeo.value = '';
-              inpGeo.placeholder = rotaState.fase === 'origem' ? 'De onde você vai sair?' : 'Para onde você vai?';
-            }
-            /* Placeholder do manual */
-            if (inpManual) {
-              inpManual.value = '';
-              inpManual.placeholder = rotaState.fase === 'origem' ? 'Descreva a origem' : 'Descreva o destino';
-            }
-
-            /* Botão de localização só na fase origem */
-            if (btnLoc) btnLoc.style.display = rotaState.fase === 'origem' ? 'flex' : 'none';
-            var btnLocManual = document.getElementById('btnLocalizacaoManual');
-            if (btnLocManual) btnLocManual.style.display = rotaState.fase === 'origem' ? 'flex' : 'none';
+            elInputWrap.style.display = 'flex';
+            elInputContainer.className = 'rota-input-container ' + (fase === 'destino' ? 'fase-destino' : '');
+            elInput.placeholder = fase === 'origem' ? 'De onde você vai sair?' : 'Para onde você vai?';
+            elInput.value = '';
+            elBtnOk.disabled = true;
+            elBtnLoc.style.display = fase === 'origem' ? 'flex' : 'none';
+            elBtnManual.hidden = modoManual;
+            if (modoManual) elBtnManual.textContent = '← Voltar para busca com sugestões';
+            else elBtnManual.textContent = 'Não encontrei meu endereço';
           }
         }
 
-        function processarSelecaoRota(local) {
-          if (rotaState.fase === 'origem') {
-            rotaState.origem = local;
-            rotaState.fase = rotaState.destino ? 'completo' : 'destino';
-          } else if (rotaState.fase === 'destino') {
-            rotaState.destino = local;
+        function setFase(f) {
+          rotaState.fase = f;
+          rotaState.temp = null;
+          atualizarUI();
+          if (f !== 'completo') {
+            setTimeout(function () { elInput.focus(); }, 100);
+          }
+        }
+
+        /* ===== Buscar sugestões via API Mapbox Geocoding ===== */
+        function buscarSugestoes(query) {
+          if (!hasMap || !query || query.length < 3) { esconderSugestoes(); return; }
+          var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(query) + '.json' +
+            '?access_token=' + MAPBOX_TOKEN +
+            '&language=pt&country=br&limit=6' +
+            '&proximity=' + RC_CENTER.join(',') +
+            '&bbox=' + RC_BBOX.join(',');
+          fetch(url)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+              if (!data.features || !data.features.length) {
+                elSugestoes.innerHTML = '<div class="rota-sugestao-vazio">Nenhum endereço encontrado. Ajuste o texto ou clique em ✓ para usar como digitado.</div>';
+                return;
+              }
+              var lista = data.features.map(function (f) {
+                var titulo = f.text || f.place_name;
+                var endereco = f.place_name;
+                return {
+                  titulo: titulo,
+                  endereco: endereco,
+                  enderecoCompleto: f.place_name,
+                  lat: f.center[1],
+                  lng: f.center[0]
+                };
+              });
+              mostrarSugestoes(lista);
+            })
+            .catch(function () { esconderSugestoes(); });
+        }
+
+        /* ===== Eventos do input ===== */
+        elInput.addEventListener('input', function () {
+          elBtnOk.disabled = elInput.value.trim().length < 3;
+          rotaState.temp = null;
+          if (modoManual) return;
+          if (buscaTimer) clearTimeout(buscaTimer);
+          var q = elInput.value.trim();
+          buscaTimer = setTimeout(function () { buscarSugestoes(q); }, 250);
+        });
+
+        elInput.addEventListener('keydown', function (e) {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+          if (elBtnOk.disabled) return;
+          confirmar();
+        });
+
+        /* ===== Confirmar endereço ===== */
+        function confirmar() {
+          var texto = elInput.value.trim();
+          if (texto.length < 3) return;
+
+          /* Se já tem sugestão escolhida, usa direto */
+          if (rotaState.temp) {
+            aplicarEscolha(rotaState.temp);
+            return;
+          }
+
+          /* Senão, tenta geocodificar. Se falhar, usa texto literal */
+          if (hasMap) {
+            var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(texto) + '.json' +
+              '?access_token=' + MAPBOX_TOKEN +
+              '&language=pt&country=br&limit=1' +
+              '&proximity=' + RC_CENTER.join(',') +
+              '&bbox=' + RC_BBOX.join(',');
+            elBtnOk.disabled = true;
+            fetch(url)
+              .then(function (r) { return r.json(); })
+              .then(function (data) {
+                elBtnOk.disabled = false;
+                if (data.features && data.features.length) {
+                  var f = data.features[0];
+                  aplicarEscolha({ address: f.place_name, lat: f.center[1], lng: f.center[0] });
+                } else {
+                  aplicarEscolha({ address: texto, lat: 0, lng: 0 });
+                }
+              })
+              .catch(function () {
+                elBtnOk.disabled = false;
+                aplicarEscolha({ address: texto, lat: 0, lng: 0 });
+              });
+          } else {
+            aplicarEscolha({ address: texto, lat: 0, lng: 0 });
+          }
+        }
+        elBtnOk.addEventListener('click', confirmar);
+
+        function aplicarEscolha(local) {
+          var fase = rotaState.fase;
+          if (fase === 'origem') rotaState.origem = local;
+          else if (fase === 'destino') rotaState.destino = local;
+
+          rotaState.temp = null;
+          esconderSugestoes();
+
+          /* Define próxima fase */
+          if (rotaState.origem && rotaState.destino) {
             rotaState.fase = 'completo';
+          } else if (rotaState.origem) {
+            rotaState.fase = 'destino';
+          } else {
+            rotaState.fase = 'origem';
           }
-          atualizarRotaUI();
-          if (rotaState.fase === 'completo') {
-            if (mapboxMap) calcularRotaTransporte();
-          }
+
+          atualizarUI();
+
+          if (rotaState.fase === 'completo') calcularRota();
+          else setTimeout(function () { elInput.focus(); }, 100);
         }
 
-        /* ===== Chip remover ===== */
-        document.getElementById('btnRemoverOrigem').addEventListener('click', function () {
-          rotaState.origem = null;
-          rotaState.fase = 'origem';
-          atualizarRotaUI();
-          limparRotaDoMapa();
-        });
-        document.getElementById('btnRemoverDestino').addEventListener('click', function () {
-          rotaState.destino = null;
-          rotaState.fase = 'destino';
-          atualizarRotaUI();
-          limparRotaDoMapa();
-        });
-
-        /* ===== Toggle manual ===== */
-        var btnManualToggle = document.getElementById('btnEnderecoManual');
-        if (btnManualToggle) {
-          btnManualToggle.addEventListener('click', function () {
-            var geoWrap = document.getElementById('rotaGeocoderWrap');
-            var manWrap = document.getElementById('rotaManualWrap');
-            var estaManual = manWrap.style.display === 'flex';
-            if (estaManual) {
-              manWrap.style.display = 'none';
-              geoWrap.style.display = 'flex';
-              btnManualToggle.textContent = 'Não encontrei meu endereço';
+        /* ===== Remover chip ===== */
+        document.querySelectorAll('[data-remover]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var tipo = btn.dataset.remover;
+            if (tipo === 'origem') {
+              rotaState.origem = null;
+              setFase('origem');
             } else {
-              manWrap.style.display = 'flex';
-              geoWrap.style.display = 'none';
-              btnManualToggle.textContent = '← Voltar para busca no mapa';
-              var inp = document.getElementById('inputManualRota');
-              if (inp) setTimeout(function () { inp.focus(); }, 100);
+              rotaState.destino = null;
+              setFase('destino');
             }
+            limparRotaDoMapa();
           });
-        }
-
-        /* ===== Manual: Enter processa ===== */
-        var inputManualRota = document.getElementById('inputManualRota');
-        if (inputManualRota) {
-          inputManualRota.addEventListener('keydown', function (e) {
-            if (e.key !== 'Enter') return;
-            e.preventDefault();
-            var txt = inputManualRota.value.trim();
-            if (!txt || txt.length < 3) return;
-            if (MAPBOX_TOKEN) {
-              fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(txt) + '.json?access_token=' + MAPBOX_TOKEN + '&language=pt&country=br&limit=1&proximity=' + RC_CENTER.join(',') + '&bbox=' + RC_BBOX.join(','))
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                  if (data.features && data.features.length > 0) {
-                    var f = data.features[0];
-                    processarSelecaoRota({ lat: f.center[1], lng: f.center[0], address: f.place_name });
-                  } else {
-                    processarSelecaoRota({ lat: 0, lng: 0, address: txt });
-                  }
-                })
-                .catch(function () {
-                  processarSelecaoRota({ lat: 0, lng: 0, address: txt });
-                });
-            } else {
-              processarSelecaoRota({ lat: 0, lng: 0, address: txt });
-            }
-          });
-        }
+        });
 
         /* ===== Localização atual ===== */
-        function usarLocalizacaoAtual() {
-          if (!MAPBOX_TOKEN) { UI.mostrarToast('A localização automática está indisponível. Informe a origem manualmente.', 'erro'); return; }
+        elBtnLoc.addEventListener('click', function () {
+          if (!hasMap) { UI.mostrarToast('Localização indisponível.', 'erro'); return; }
           if (!navigator.geolocation) { UI.mostrarToast('Geolocalização não suportada.', 'erro'); return; }
+          elBtnLoc.disabled = true;
           navigator.geolocation.getCurrentPosition(function (pos) {
+            elBtnLoc.disabled = false;
             var lat = pos.coords.latitude, lng = pos.coords.longitude;
             fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + lng + ',' + lat + '.json?access_token=' + MAPBOX_TOKEN + '&language=pt&country=br')
-              .then(function (res) { return res.json(); })
+              .then(function (r) { return r.json(); })
               .then(function (data) {
                 var endereco = (data.features && data.features.length) ? data.features[0].place_name : (lat.toFixed(5) + ', ' + lng.toFixed(5));
-                processarSelecaoRota({ lat: lat, lng: lng, address: endereco });
+                aplicarEscolha({ address: endereco, lat: lat, lng: lng });
                 UI.mostrarToast('Localização inserida!');
+              })
+              .catch(function () {
+                aplicarEscolha({ address: lat.toFixed(5) + ', ' + lng.toFixed(5), lat: lat, lng: lng });
               });
-          }, function (err) { UI.mostrarToast('Erro ao obter localização: ' + err.message, 'erro'); }, { enableHighAccuracy: true, timeout: 10000 });
-        }
-        var b1 = document.getElementById('btnLocalizacaoRota');
-        if (b1) b1.addEventListener('click', usarLocalizacaoAtual);
-        var b2 = document.getElementById('btnLocalizacaoManual');
-        if (b2) b2.addEventListener('click', usarLocalizacaoAtual);
+          }, function (err) {
+            elBtnLoc.disabled = false;
+            UI.mostrarToast('Erro ao obter localização: ' + err.message, 'erro');
+          }, { enableHighAccuracy: true, timeout: 10000 });
+        });
+
+        /* ===== Modo manual ===== */
+        elBtnManual.addEventListener('click', function () {
+          modoManual = !modoManual;
+          if (modoManual) {
+            esconderSugestoes();
+            elBtnManual.textContent = '← Voltar para busca com sugestões';
+          } else {
+            elBtnManual.textContent = 'Não encontrei meu endereço';
+          }
+        });
 
         /* ===== Calcular rota ===== */
         var rotaCamadaId = 'rota-direcao-' + Date.now();
@@ -521,15 +590,15 @@
           }
         }
 
-        function calcularRotaTransporte() {
+        function calcularRota() {
+          var info = document.getElementById('infoRotaContainer');
           if (!rotaState.origem || !rotaState.destino) return;
           if (!rotaState.origem.lat || !rotaState.destino.lat) {
-            var info = document.getElementById('infoRotaContainer');
             info.style.display = 'flex';
             info.innerHTML = 'Endereços informados manualmente — rota não calculada.';
             return;
           }
-          var info = document.getElementById('infoRotaContainer');
+          if (!hasMap) return;
           info.style.display = 'flex';
           info.innerHTML = '🔄 Calculando rota...';
           var url = 'https://api.mapbox.com/directions/v5/mapbox/driving/' +
@@ -562,7 +631,7 @@
             .catch(function (err) { info.innerHTML = '❌ Erro ao calcular rota: ' + err.message; });
         }
 
-        /* ===== Consultar corrida ===== */
+        /* ===== Consultar ===== */
         window.consultarCorridaTransporte = function () {
           var cod = document.getElementById('consultaCodigoTransporte').value.trim().toUpperCase();
           var resDiv = document.getElementById('resultadoAcompanhamentoTransporte');
@@ -722,8 +791,7 @@
         }
         EU.aplicarMascaraTelefone(document.getElementById('clienteTelTransporte'));
 
-        /* Estado inicial da UI da rota */
-        atualizarRotaUI();
+        atualizarUI();
       })
       .catch(function (err) {
         UI.mostrarToast('Erro ao carregar dados: ' + err.message, 'erro');
