@@ -8,7 +8,7 @@
     var l = document.createElement('link');
     l.id = 'css-transporte';
     l.rel = 'stylesheet';
-    l.href = 'https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/modulos/transporte.css';
+    l.href = 'https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/modulos/transporte.css?v=7';
     document.head.appendChild(l);
   })();
 
@@ -188,9 +188,9 @@
               '<div class="modal-body">' +
                 '<div id="tabSolicitar" class="modal-tab-content active">' +
 
-                  '<div id="statusLojaMsgTransporte" role="alert"></div>' +
+                  '<div id="statusLojaMsgTransporte" style="display:none;" role="alert"></div>' +
 
-                  '<div class="tp-bloco">' +
+                  '<div class="tp-bloco tp-bloco-rota">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-route"></i> Rota</div>' +
                     '<div class="search-fields-wrapper">' +
                       '<div id="geocoderContainer">' +
@@ -287,14 +287,22 @@
             btnSolicitar.style.pointerEvents = bloqueado ? 'none' : 'auto';
           }
           if (msgStatus) {
-            /* Banner SEMPRE visível — muda a cor e o texto conforme o status */
-            msgStatus.className = 'status-' + st;
-            if (st === 'fechada') {
-              msgStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + Core.sanitize(statusMessage || 'Serviço indisponível no momento.');
-            } else if (st === 'pausada') {
-              msgStatus.innerHTML = '<i class="fa-solid fa-circle-pause"></i> ' + Core.sanitize(statusMessage || 'Serviço pausado no momento.');
+            /* Mesma regra do loja.js e pedidos.js:
+               só mostra se bloqueado OU se tem mensagem do lojista */
+            var mostrar = bloqueado || statusMessage !== '';
+            if (mostrar) {
+              msgStatus.style.display = 'flex';
+              msgStatus.className = 'status-' + st;
+              if (st === 'fechada') {
+                msgStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + Core.sanitize(statusMessage || 'Serviço indisponível no momento.');
+              } else if (st === 'pausada') {
+                msgStatus.innerHTML = '<i class="fa-solid fa-circle-pause"></i> ' + Core.sanitize(statusMessage || 'Serviço pausado no momento.');
+              } else {
+                msgStatus.innerHTML = '<i class="fa-solid fa-circle-info"></i> ' + Core.sanitize(statusMessage);
+              }
             } else {
-              msgStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + Core.sanitize(statusMessage || 'Disponível para solicitar corridas.');
+              msgStatus.style.display = 'none';
+              msgStatus.innerHTML = '';
             }
           }
         }
