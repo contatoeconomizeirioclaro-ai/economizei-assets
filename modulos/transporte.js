@@ -103,10 +103,10 @@
 
     /* Estado da rota */
     var rotaState = {
-      origem: null,    // { address, lat, lng }
+      origem: null,
       destino: null,
-      fase: 'origem',  // 'origem' | 'destino' | 'completo'
-      temp: null       // sugestão escolhida da lista (ainda não confirmada)
+      fase: 'origem',
+      temp: null
     };
 
     function getEnderecoCurto(endereco) {
@@ -196,25 +196,21 @@
 
                   '<div id="statusLojaMsgTransporte" style="display:none;" role="alert"></div>' +
 
-                  /* Bloco Rota */
                   '<div class="tp-bloco">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-route"></i> Rota</div>' +
 
-                    /* Chip origem */
                     '<div class="rota-chip" id="chipOrigem" style="display:none;">' +
                       '<span class="rota-chip-icone" aria-hidden="true"></span>' +
                       '<span class="rota-chip-texto" id="chipOrigemTexto"></span>' +
                       '<button type="button" class="rota-chip-remover" data-remover="origem" aria-label="Remover origem">×</button>' +
                     '</div>' +
 
-                    /* Chip destino */
                     '<div class="rota-chip rota-chip-destino" id="chipDestino" style="display:none;">' +
                       '<span class="rota-chip-icone" aria-hidden="true"></span>' +
                       '<span class="rota-chip-texto" id="chipDestinoTexto"></span>' +
                       '<button type="button" class="rota-chip-remover" data-remover="destino" aria-label="Remover destino">×</button>' +
                     '</div>' +
 
-                    /* Input ativo (quando falta origem ou destino) */
                     '<div class="rota-input-wrap" id="rotaInputWrap" style="display:none;">' +
                       '<div class="rota-input-container" id="rotaInputContainer">' +
                         '<span class="rota-input-icone" aria-hidden="true"></span>' +
@@ -224,20 +220,16 @@
                       '<button type="button" class="btn-confirmar-rota" id="btnConfirmarRota" title="Confirmar endereço digitado" aria-label="Confirmar endereço" disabled>✓</button>' +
                     '</div>' +
 
-                    /* Sugestões */
                     '<div class="rota-sugestoes" id="rotaSugestoes"></div>' +
 
-                    /* Botão modo manual (esconde sugestões, libera texto livre) */
                     '<button type="button" id="btnEnderecoManual">Não encontrei meu endereço</button>' +
                   '</div>' +
 
-                  /* Bloco Mapa */
                   '<div class="tp-bloco tp-bloco-mapa">' +
                     '<div id="mapboxMap"></div>' +
                     '<div id="infoRotaContainer" class="info-viagem" style="display:none;"></div>' +
                   '</div>' +
 
-                  /* Bloco Tarifa */
                   '<div class="tp-bloco">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-tag"></i> Tarifa</div>' +
                     '<select id="selectTarifa" aria-label="Selecione a tarifa">' +
@@ -249,7 +241,6 @@
                     '</select>' +
                   '</div>' +
 
-                  /* Bloco Seus dados */
                   '<div class="tp-bloco">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-user"></i> Seus dados</div>' +
                     '<div class="form-row">' +
@@ -337,6 +328,30 @@
           mapboxMap.addControl(new mapboxgl.NavigationControl({ showCompass: false }));
         }
 
+        /* ===== Estado do cache de endereços ===== */
+        var cacheEstado = 'carregando'; // 'carregando' | 'pronto' | 'falhou'
+        var cachePronto = false;
+
+        if (window.EnderecosCache && typeof window.EnderecosCache.carregar === 'function') {
+          window.EnderecosCache.carregar()
+            .then(function (lista) {
+              cacheEstado = 'pronto';
+              cachePronto = true;
+              console.log('[transporte] Endereços carregados:', lista.length);
+              /* Se o usuário já está digitando, atualiza as sugestões */
+              if (elInput && elInput.value.trim().length >= 3) {
+                atualizarSugestoes();
+              }
+            })
+            .catch(function (err) {
+              cacheEstado = 'falhou';
+              console.warn('[transporte] Falha ao carregar endereços:', err);
+            });
+        } else {
+          cacheEstado = 'falhou';
+          console.warn('[transporte] EnderecosCache não disponível.');
+        }
+
         /* ===== Elementos da rota ===== */
         var elChipOrigem = document.getElementById('chipOrigem');
         var elChipDestino = document.getElementById('chipDestino');
@@ -353,8 +368,10 @@
         var modoManual = false;
         var buscaTimer = null;
 
-        function esconderSugestoes() {
-          elSugestoes.innerHTML = '';
+        function esconderSugestoes() { elSugestoes.innerHTML = ''; }
+
+        function mostrarMensagemSugestoes(texto) {
+          elSugestoes.innerHTML = '<div class="rota-sugestao-vazio">' + texto + '</div>';
         }
 
         function mostrarSugestoes(lista) {
@@ -364,33 +381,37 @@
             var btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'rota-sugestao';
+            var titulo = sug.logradouro + (sug.numero && sug.numero !== 'SN' ? ', ' + sug.numero : '');
+            var endereco = titulo + (sug.bairro ? ' - ' + sug.bairro : '');
+            var display = titulo;
             btn.innerHTML =
-              '<span class="rota-sugestao-titulo">' + Core.sanitize(sug.titulo) + '</span>' +
-              '<span class="rota-sugestao-endereco">' + Core.sanitize(sug.endereco) + '</span>';
+              '<span class="rota-sugestao-titulo">' + Core.sanitize(display) + '</span>' +
+              '<span class="rota-sugestao-endereco">' + Core.sanitize(endereco) + (sug.cep ? ' · CEP ' + Core.sanitize(sug.cep) : '') + '</span>';
             btn.addEventListener('click', function () {
-              escolherSugestao(sug);
+              escolherSugestao({
+                address: endereco,
+                lat: sug.lat,
+                lng: sug.lng
+              });
             });
             elSugestoes.appendChild(btn);
           });
         }
 
-        function escolherSugestao(sug) {
-          rotaState.temp = { address: sug.enderecoCompleto, lat: sug.lat, lng: sug.lng };
-          elInput.value = sug.enderecoCompleto;
+        function escolherSugestao(local) {
+          rotaState.temp = local;
+          elInput.value = local.address;
           esconderSugestoes();
           elBtnOk.disabled = false;
         }
 
         function atualizarUI() {
           var fase = rotaState.fase;
-
-          /* Chips */
           elChipOrigem.style.display = rotaState.origem ? 'flex' : 'none';
           elChipDestino.style.display = rotaState.destino ? 'flex' : 'none';
           if (rotaState.origem) elChipOrigemTxt.textContent = rotaState.origem.address;
           if (rotaState.destino) elChipDestinoTxt.textContent = rotaState.destino.address;
 
-          /* Input ativo */
           if (fase === 'completo') {
             elInputWrap.style.display = 'none';
             esconderSugestoes();
@@ -412,40 +433,32 @@
           rotaState.fase = f;
           rotaState.temp = null;
           atualizarUI();
-          if (f !== 'completo') {
-            setTimeout(function () { elInput.focus(); }, 100);
-          }
+          if (f !== 'completo') setTimeout(function () { elInput.focus(); }, 100);
         }
 
-        /* ===== Buscar sugestões via API Mapbox Geocoding ===== */
-        function buscarSugestoes(query) {
-          if (!hasMap || !query || query.length < 3) { esconderSugestoes(); return; }
-          var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(query) + '.json' +
-            '?access_token=' + MAPBOX_TOKEN +
-            '&language=pt&country=br&limit=6' +
-            '&proximity=' + RC_CENTER.join(',') +
-            '&bbox=' + RC_BBOX.join(',');
-          fetch(url)
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-              if (!data.features || !data.features.length) {
-                elSugestoes.innerHTML = '<div class="rota-sugestao-vazio">Nenhum endereço encontrado. Ajuste o texto ou clique em ✓ para usar como digitado.</div>';
-                return;
-              }
-              var lista = data.features.map(function (f) {
-                var titulo = f.text || f.place_name;
-                var endereco = f.place_name;
-                return {
-                  titulo: titulo,
-                  endereco: endereco,
-                  enderecoCompleto: f.place_name,
-                  lat: f.center[1],
-                  lng: f.center[0]
-                };
-              });
-              mostrarSugestoes(lista);
-            })
-            .catch(function () { esconderSugestoes(); });
+        /* ===== Busca local ===== */
+        function atualizarSugestoes() {
+          if (modoManual) return;
+          var q = elInput.value.trim();
+
+          if (q.length < 3) { esconderSugestoes(); return; }
+
+          if (cacheEstado === 'carregando') {
+            mostrarMensagemSugestoes('Carregando base de endereços...');
+            return;
+          }
+
+          if (cacheEstado === 'falhou') {
+            esconderSugestoes();
+            return;
+          }
+
+          var resultado = window.EnderecosCache.buscar(q, 8);
+          if (!resultado.length) {
+            mostrarMensagemSugestoes('Nenhum endereço encontrado. Clique em ✓ para usar o texto digitado.');
+            return;
+          }
+          mostrarSugestoes(resultado);
         }
 
         /* ===== Eventos do input ===== */
@@ -454,8 +467,7 @@
           rotaState.temp = null;
           if (modoManual) return;
           if (buscaTimer) clearTimeout(buscaTimer);
-          var q = elInput.value.trim();
-          buscaTimer = setTimeout(function () { buscarSugestoes(q); }, 250);
+          buscaTimer = setTimeout(atualizarSugestoes, 150);
         });
 
         elInput.addEventListener('keydown', function (e) {
@@ -465,43 +477,18 @@
           confirmar();
         });
 
-        /* ===== Confirmar endereço ===== */
+        /* ===== Confirmar ===== */
         function confirmar() {
           var texto = elInput.value.trim();
           if (texto.length < 3) return;
 
-          /* Se já tem sugestão escolhida, usa direto */
           if (rotaState.temp) {
             aplicarEscolha(rotaState.temp);
             return;
           }
 
-          /* Senão, tenta geocodificar. Se falhar, usa texto literal */
-          if (hasMap) {
-            var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(texto) + '.json' +
-              '?access_token=' + MAPBOX_TOKEN +
-              '&language=pt&country=br&limit=1' +
-              '&proximity=' + RC_CENTER.join(',') +
-              '&bbox=' + RC_BBOX.join(',');
-            elBtnOk.disabled = true;
-            fetch(url)
-              .then(function (r) { return r.json(); })
-              .then(function (data) {
-                elBtnOk.disabled = false;
-                if (data.features && data.features.length) {
-                  var f = data.features[0];
-                  aplicarEscolha({ address: f.place_name, lat: f.center[1], lng: f.center[0] });
-                } else {
-                  aplicarEscolha({ address: texto, lat: 0, lng: 0 });
-                }
-              })
-              .catch(function () {
-                elBtnOk.disabled = false;
-                aplicarEscolha({ address: texto, lat: 0, lng: 0 });
-              });
-          } else {
-            aplicarEscolha({ address: texto, lat: 0, lng: 0 });
-          }
+          /* Sem sugestão escolhida: usa o texto literal com coordenada 0 */
+          aplicarEscolha({ address: texto, lat: 0, lng: 0 });
         }
         elBtnOk.addEventListener('click', confirmar);
 
@@ -513,14 +500,9 @@
           rotaState.temp = null;
           esconderSugestoes();
 
-          /* Define próxima fase */
-          if (rotaState.origem && rotaState.destino) {
-            rotaState.fase = 'completo';
-          } else if (rotaState.origem) {
-            rotaState.fase = 'destino';
-          } else {
-            rotaState.fase = 'origem';
-          }
+          if (rotaState.origem && rotaState.destino) rotaState.fase = 'completo';
+          else if (rotaState.origem) rotaState.fase = 'destino';
+          else rotaState.fase = 'origem';
 
           atualizarUI();
 
@@ -532,18 +514,13 @@
         document.querySelectorAll('[data-remover]').forEach(function (btn) {
           btn.addEventListener('click', function () {
             var tipo = btn.dataset.remover;
-            if (tipo === 'origem') {
-              rotaState.origem = null;
-              setFase('origem');
-            } else {
-              rotaState.destino = null;
-              setFase('destino');
-            }
+            if (tipo === 'origem') { rotaState.origem = null; setFase('origem'); }
+            else { rotaState.destino = null; setFase('destino'); }
             limparRotaDoMapa();
           });
         });
 
-        /* ===== Localização atual ===== */
+        /* ===== Localização atual (ainda usa Mapbox) ===== */
         elBtnLoc.addEventListener('click', function () {
           if (!hasMap) { UI.mostrarToast('Localização indisponível.', 'erro'); return; }
           if (!navigator.geolocation) { UI.mostrarToast('Geolocalização não suportada.', 'erro'); return; }
@@ -575,6 +552,7 @@
             elBtnManual.textContent = '← Voltar para busca com sugestões';
           } else {
             elBtnManual.textContent = 'Não encontrei meu endereço';
+            atualizarSugestoes();
           }
         });
 
