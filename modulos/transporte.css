@@ -1,7 +1,7 @@
 /* ============================================================
    MÓDULO TRANSPORTE — CSS específico
    Depende de: tokens.css, modais.css, componentes.css, _base.css
-   v5 — fix dropdown, status sempre visível
+   v7 — fluxo sequencial origem → destino, com chips de resumo
    ============================================================ */
 
 /* ===== HEADER (padrão pedidos/loja) ===== */
@@ -60,7 +60,8 @@
 
 /* ===== BANNER DE STATUS ===== */
 #modalTransporte #statusLojaMsgTransporte {
-  display: flex; align-items: center; justify-content: center; gap: .4rem;
+  display: none;
+  align-items: center; justify-content: center; gap: .4rem;
   box-sizing: border-box;
   border-radius: .75rem;
   padding: .6rem .85rem;
@@ -73,6 +74,7 @@
   background: var(--gray-100);
   color: var(--gray-700);
 }
+#modalTransporte #statusLojaMsgTransporte[style*="flex"] { display: flex !important; }
 #modalTransporte #statusLojaMsgTransporte i { font-size: .85rem; }
 #modalTransporte #statusLojaMsgTransporte.status-aberta {
   background: #f0fdf4; border-color: #86efac; color: #166534;
@@ -103,11 +105,7 @@
 }
 #modalTransporte .tp-bloco-titulo i { color: var(--primary); font-size: .8rem; }
 
-/* ===== BUSCA DE ENDEREÇOS ===== */
-.search-fields-wrapper {
-  display: flex; flex-direction: column; gap: .45rem;
-  position: relative;
-}
+/* ===== BUSCA SEQUENCIAL (origem → destino) ===== */
 .search-field-group {
   display: flex; gap: .45rem; align-items: center;
   position: relative;
@@ -125,16 +123,17 @@
   box-shadow: 0 0 0 3px rgba(10, 102, 194, .15);
   z-index: 6;
   pointer-events: none;
+  transition: background .2s ease, box-shadow .2s ease, border-radius .2s ease;
 }
-.search-field-group.tp-destino .search-field-container::before {
+.search-field-container.rota-fase-destino::before {
   background: #ef4444;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, .15);
   border-radius: 2px;
 }
 
-/* Geocoder — sem brigar com o plugin */
-#origemGeocoder .mapboxgl-ctrl-geocoder,
-#destinoGeocoder .mapboxgl-ctrl-geocoder {
+/* Geocoder */
+#rotaGeocoder { position: relative; z-index: 10; width: 100%; }
+#rotaGeocoder .mapboxgl-ctrl-geocoder {
   width: 100%;
   background: transparent;
   border: none;
@@ -142,9 +141,10 @@
   min-width: 0;
   font-family: inherit;
   max-width: 100%;
+  position: relative;
+  z-index: 10;
 }
-#origemGeocoder .mapboxgl-ctrl-geocoder input[type="text"],
-#destinoGeocoder .mapboxgl-ctrl-geocoder input[type="text"] {
+#rotaGeocoder .mapboxgl-ctrl-geocoder input[type="text"] {
   border-radius: 2rem !important;
   padding: .55rem 2.2rem .55rem 1.9rem !important;
   font-size: .82rem !important;
@@ -158,12 +158,10 @@
   width: 100% !important;
   font-family: inherit !important;
 }
-#origemGeocoder .mapboxgl-ctrl-geocoder input[type="text"]::placeholder,
-#destinoGeocoder .mapboxgl-ctrl-geocoder input[type="text"]::placeholder {
+#rotaGeocoder .mapboxgl-ctrl-geocoder input[type="text"]::placeholder {
   color: var(--gray-500) !important;
 }
-#origemGeocoder .mapboxgl-ctrl-geocoder input[type="text"]:focus,
-#destinoGeocoder .mapboxgl-ctrl-geocoder input[type="text"]:focus {
+#rotaGeocoder .mapboxgl-ctrl-geocoder input[type="text"]:focus {
   border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px rgba(10, 102, 194, .1) !important;
   outline: none !important;
@@ -171,14 +169,20 @@
 .mapboxgl-ctrl-geocoder--icon { display: none !important; }
 .mapboxgl-ctrl-geocoder--button { display: none !important; }
 
-/* Dropdown — deixa o plugin posicionar, só estiliza */
+/* Dropdown de sugestões */
 .mapboxgl-ctrl-geocoder--suggestions,
 .mapboxgl-ctrl-geocoder .suggestions {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 100 !important;
   border-radius: .85rem !important;
-  box-shadow: 0 8px 24px -6px rgba(15, 23, 42, .2) !important;
+  box-shadow: 0 8px 24px -6px rgba(15, 23, 42, .25) !important;
   border: 1px solid var(--gray-200) !important;
   overflow: hidden;
   background: #fff !important;
+  margin-top: .25rem !important;
 }
 .mapboxgl-ctrl-geocoder--suggestion {
   padding: .55rem .75rem !important;
@@ -191,7 +195,7 @@
 .mapboxgl-ctrl-geocoder--suggestion-title { color: var(--gray-800) !important; }
 .mapboxgl-ctrl-geocoder--suggestion-address { color: var(--gray-500) !important; }
 
-/* Botão localização atual */
+/* Botão localização */
 .btn-location-modern {
   display: flex; align-items: center; justify-content: center;
   width: 2.4rem; min-width: 2.4rem; height: 2.4rem;
@@ -207,20 +211,7 @@
 }
 .btn-location-modern:active { transform: translateY(0) scale(.96); }
 
-/* Botão limpar campo */
-.clear-btn {
-  position: absolute; right: .5rem; top: 50%;
-  transform: translateY(-50%);
-  width: 1.35rem; height: 1.35rem;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--gray-100); border: none;
-  border-radius: 50%; font-size: .8rem;
-  color: var(--gray-500); cursor: pointer; padding: 0;
-  line-height: 1; z-index: 7;
-  transition: background .15s ease, color .15s ease;
-}
-.clear-btn:hover { background: var(--gray-200); color: var(--gray-700); }
-
+/* Input manual */
 .input-endereco-manual {
   width: 100%; padding: .55rem .85rem .55rem 1.9rem;
   border: 1px solid var(--gray-200); border-radius: 2rem;
@@ -256,6 +247,67 @@
   background: var(--primary-light) !important;
   border-color: var(--primary) !important;
   transform: none !important;
+}
+
+/* ===== RESUMO (chips origem/destino) ===== */
+.rota-resumo {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+.rota-chip {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .6rem .85rem;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: 1rem;
+  min-width: 0;
+  transition: border-color .15s ease, background .15s ease;
+}
+.rota-chip:hover { background: #fff; border-color: #cbd5e1; }
+.rota-chip-icone {
+  width: 10px; height: 10px;
+  min-width: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, .15);
+}
+.rota-chip-destino .rota-chip-icone {
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, .15);
+  border-radius: 2px;
+}
+.rota-chip-texto {
+  flex: 1;
+  min-width: 0;
+  font-size: .82rem;
+  color: var(--gray-700);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rota-chip-remover {
+  width: 1.5rem; height: 1.5rem;
+  min-width: 1.5rem;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: .85rem;
+  line-height: 1;
+  padding: 0;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.rota-chip-remover:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
 }
 
 /* ===== MAPA ===== */
@@ -305,7 +357,6 @@
   font-weight: 600;
 }
 .info-viagem strong { color: var(--primary); }
-#modalTransporte .tp-bloco-mapa .info-viagem { margin-bottom: 0; }
 
 /* ===== TARIFA ===== */
 #modalTransporte #selectTarifa {
@@ -427,8 +478,7 @@
 
 /* ===== TOUCH ===== */
 @media (pointer: coarse) {
-  #origemGeocoder .mapboxgl-ctrl-geocoder input[type="text"],
-  #destinoGeocoder .mapboxgl-ctrl-geocoder input[type="text"],
+  #rotaGeocoder .mapboxgl-ctrl-geocoder input[type="text"],
   .input-endereco-manual,
   #modalTransporte #selectTarifa,
   #modalTransporte #clienteNomeTransporte,
@@ -438,6 +488,7 @@
   }
   .btn-location-modern { width: 2.75rem; min-width: 2.75rem; height: 2.75rem; }
   #modalTransporte #btnSolicitarCorrida { height: 3rem; }
+  .rota-chip-remover { width: 2rem; height: 2rem; min-width: 2rem; }
 }
 
 /* ===== APP MODE ===== */
