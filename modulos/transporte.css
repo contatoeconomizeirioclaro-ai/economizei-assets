@@ -144,78 +144,75 @@
 }
 
 /* ===== INPUT ATIVO (fase origem ou destino) ===== */
-.rota-input-wrap {
-  display: flex; gap: .45rem; align-items: center;
+#modalTransporte .rota-input-wrap {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: .45rem !important;
+  width: 100% !important;
 }
-.rota-input-container {
-  flex: 1; position: relative; min-width: 0;
+#modalTransporte .rota-input-container {
+  flex: 1 1 auto !important;
+  position: relative !important;
+  min-width: 0 !important;
 }
-.rota-input-icone {
-  position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
-  width: 9px; height: 9px;
-  border-radius: 50%;
-  background: var(--primary);
-  box-shadow: 0 0 0 3px rgba(10, 102, 194, .15);
-  pointer-events: none; z-index: 2;
-  transition: background .15s ease, box-shadow .15s ease, border-radius .15s ease;
+#modalTransporte .rota-input-icone {
+  position: absolute !important;
+  left: .85rem !important; top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 9px !important; height: 9px !important;
+  border-radius: 50% !important;
+  background: var(--primary, #0a66c2) !important;
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, .15) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+  transition: background .15s ease, box-shadow .15s ease, border-radius .15s ease !important;
 }
-.rota-input-container.fase-destino .rota-input-icone {
-  background: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, .15);
-  border-radius: 2px;
+#modalTransporte .rota-input-container.fase-destino .rota-input-icone {
+  background: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, .15) !important;
+  border-radius: 2px !important;
 }
-#rotaInput {
-  width: 100%;
-  padding: .7rem .95rem .7rem 2rem;
-  border: 1px solid var(--gray-200);
-  border-radius: 2rem;
-  font-size: .85rem;
-  height: 2.75rem;
-  background: #fff;
-  font-family: inherit;
-  color: var(--gray-800);
-  box-sizing: border-box;
-  transition: border-color .15s ease, box-shadow .15s ease;
+#modalTransporte #rotaInput {
+  width: 100% !important;
+  height: 2.75rem !important;
+  padding: .7rem .95rem .7rem 2rem !important;
+  border: 1px solid var(--gray-200, #e2e8f0) !important;
+  border-radius: 2rem !important;
+  font-size: .85rem !important;
+  background: #fff !important;
+  background-image: none !important;
+  font-family: inherit !important;
+  color: var(--gray-800, #1e293b) !important;
+  box-sizing: border-box !important;
+  transition: border-color .15s ease, box-shadow .15s ease !important;
 }
-#rotaInput::placeholder { color: var(--gray-500); }
-#rotaInput:focus {
-  outline: none; border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(10, 102, 194, .1);
+#modalTransporte #rotaInput::placeholder { color: var(--gray-500, #64748b) !important; }
+#modalTransporte #rotaInput:focus {
+  outline: none !important;
+  border-color: var(--primary, #0a66c2) !important;
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, .1) !important;
 }
-
-.btn-location-modern {
-  display: flex; align-items: center; justify-content: center;
-  width: 2.75rem; min-width: 2.75rem; height: 2.75rem;
-  background: var(--primary); color: #fff; border: none;
-  border-radius: 50%; cursor: pointer; font-size: 1rem;
-  transition: all .2s ease; flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(10, 102, 194, .3);
+#modalTransporte .btn-location-modern {
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  width: 2.75rem !important; min-width: 2.75rem !important; height: 2.75rem !important;
+  background: var(--primary, #0a66c2) !important; color: #fff !important; border: none !important;
+  border-radius: 50% !important; cursor: pointer !important; font-size: 1rem !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 2px 6px rgba(10, 102, 194, .3) !important;
 }
-.btn-location-modern:hover {
-  background: var(--primary-dark);
-  box-shadow: 0 4px 10px rgba(10, 102, 194, .35);
-  transform: translateY(-1px);
+#modalTransporte .btn-confirmar-rota {
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  width: 2.75rem !important; min-width: 2.75rem !important; height: 2.75rem !important;
+  background: #10b981 !important; color: #fff !important;
+  border: none !important; border-radius: 50% !important;
+  font-size: 1.1rem !important; cursor: pointer !important; flex-shrink: 0 !important;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, .3) !important;
 }
-.btn-location-modern:active { transform: translateY(0) scale(.96); }
-
-.btn-confirmar-rota {
-  display: flex; align-items: center; justify-content: center;
-  width: 2.75rem; min-width: 2.75rem; height: 2.75rem;
-  background: #10b981; color: #fff;
-  border: none; border-radius: 50%;
-  font-size: 1.1rem; cursor: pointer; flex-shrink: 0;
-  transition: all .2s ease;
-  box-shadow: 0 2px 6px rgba(16, 185, 129, .3);
-}
-.btn-confirmar-rota:hover {
-  background: #059669;
-  box-shadow: 0 4px 10px rgba(16, 185, 129, .35);
-  transform: translateY(-1px);
-}
-.btn-confirmar-rota:active { transform: translateY(0) scale(.96); }
-.btn-confirmar-rota:disabled {
-  background: #cbd5e1; cursor: not-allowed; box-shadow: none;
-  transform: none;
+#modalTransporte .btn-confirmar-rota:disabled {
+  background: #cbd5e1 !important; cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
 /* ===== SUGESTÕES (empurra conteúdo, não sobrepõe) ===== */
