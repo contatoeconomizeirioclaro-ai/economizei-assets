@@ -8,7 +8,7 @@
     var l = document.createElement('link');
     l.id = 'css-transporte';
     l.rel = 'stylesheet';
-    l.href = 'https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/modulos/transporte.css?v=7';
+    l.href = 'https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/modulos/transporte.css';
     document.head.appendChild(l);
   })();
 
@@ -43,7 +43,7 @@
 
   var MAPBOX_TOKEN = (window.ECONOMIZEI_CONFIG && window.ECONOMIZEI_CONFIG.mapboxToken) || window.ECONOMIZEI_MAPBOX_TOKEN || '';
 
-  /* Rio Claro — RIO DE JANEIRO */
+  /* Rio Claro — RJ */
   var RC_CENTER = [-44.135, -22.723];
   var RC_BBOX   = [-44.30, -22.90, -43.95, -22.55];
 
@@ -99,9 +99,15 @@
     var currentLojistaId = null;
     var unsubscribeStatusLoja = null;
     var mapboxMap = null;
-    var currentMapboxOrigin = null;
-    var currentMapboxDest = null;
     var currentUser = Core.getCurrentUser();
+
+    /* ===== Estado da rota ===== */
+    var rotaState = {
+      origem: null,   // { lat, lng, address }
+      destino: null,
+      fase: 'origem', // 'origem' | 'destino' | 'completo'
+      manualMode: false
+    };
 
     function getEnderecoCurto(endereco) {
       if (!endereco) return 'Não informado';
@@ -190,40 +196,48 @@
 
                   '<div id="statusLojaMsgTransporte" style="display:none;" role="alert"></div>' +
 
-                  '<div class="tp-bloco tp-bloco-rota">' +
+                  /* Bloco Rota — fluxo sequencial */
+                  '<div class="tp-bloco">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-route"></i> Rota</div>' +
-                    '<div class="search-fields-wrapper">' +
-                      '<div id="geocoderContainer">' +
-                        '<div class="search-field-group tp-origem">' +
-                          '<div class="search-field-container"><div id="origemGeocoder" style="flex:1;"></div>' +
-                          '<button class="clear-btn" id="clearOrigemMapa" onclick="limparCampoTransporte(\'origemMapa\')" aria-label="Limpar origem">&times;</button></div>' +
-                          '<button class="btn-location-modern" id="btnLocalizacaoMapa" onclick="usarLocalizacaoAtualTransporte()" title="Usar minha localização" aria-label="Usar minha localização">📍</button>' +
+
+                    '<div id="rotaEscolha">' +
+                      '<div class="search-field-group" id="rotaGeocoderWrap">' +
+                        '<div class="search-field-container" id="rotaIconeContainer">' +
+                          '<div id="rotaGeocoder" style="flex:1;"></div>' +
                         '</div>' +
-                        '<div class="search-field-group tp-destino">' +
-                          '<div class="search-field-container"><div id="destinoGeocoder" style="flex:1;"></div>' +
-                          '<button class="clear-btn" id="clearDestinoMapa" onclick="limparCampoTransporte(\'destinoMapa\')" aria-label="Limpar destino">&times;</button></div>' +
-                        '</div>' +
+                        '<button class="btn-location-modern" id="btnLocalizacaoRota" type="button" title="Usar minha localização" aria-label="Usar minha localização">📍</button>' +
                       '</div>' +
-                      '<div id="camposManuais" style="display:none;">' +
-                        '<div class="search-field-group tp-origem">' +
-                          '<div class="search-field-container"><input type="text" id="origemManual" class="input-endereco-manual" placeholder="Descreva a origem" aria-label="Origem" />' +
-                          '<button class="clear-btn" id="clearOrigemManual" onclick="limparCampoTransporte(\'origemManual\')" aria-label="Limpar origem">&times;</button></div>' +
-                          '<button class="btn-location-modern" id="btnLocalizacaoManual" onclick="usarLocalizacaoAtualTransporte()" title="Usar minha localização" aria-label="Usar minha localização">📍</button>' +
+                      '<div class="search-field-group" id="rotaManualWrap" style="display:none;">' +
+                        '<div class="search-field-container" id="rotaManualIconeContainer">' +
+                          '<input type="text" id="inputManualRota" class="input-endereco-manual" placeholder="De onde você vai sair?" aria-label="Endereço">' +
                         '</div>' +
-                        '<div class="search-field-group tp-destino">' +
-                          '<div class="search-field-container"><input type="text" id="destinoManual" class="input-endereco-manual" placeholder="Descreva o destino" aria-label="Destino" />' +
-                          '<button class="clear-btn" id="clearDestinoManual" onclick="limparCampoTransporte(\'destinoManual\')" aria-label="Limpar destino">&times;</button></div>' +
-                        '</div>' +
+                        '<button class="btn-location-modern" id="btnLocalizacaoManual" type="button" title="Usar minha localização" aria-label="Usar minha localização">📍</button>' +
+                      '</div>' +
+                      '<button type="button" id="btnEnderecoManual">Não encontrei meu endereço</button>' +
+                    '</div>' +
+
+                    '<div id="rotaResumo" class="rota-resumo" style="display:none;">' +
+                      '<div class="rota-chip rota-chip-origem">' +
+                        '<span class="rota-chip-icone" aria-hidden="true"></span>' +
+                        '<span class="rota-chip-texto" id="rotaChipOrigemTexto"></span>' +
+                        '<button type="button" class="rota-chip-remover" id="btnRemoverOrigem" aria-label="Remover origem">×</button>' +
+                      '</div>' +
+                      '<div class="rota-chip rota-chip-destino">' +
+                        '<span class="rota-chip-icone" aria-hidden="true"></span>' +
+                        '<span class="rota-chip-texto" id="rotaChipDestinoTexto"></span>' +
+                        '<button type="button" class="rota-chip-remover" id="btnRemoverDestino" aria-label="Remover destino">×</button>' +
                       '</div>' +
                     '</div>' +
-                    '<button type="button" id="btnEnderecoManual" onclick="toggleEnderecoManualTransporte()">Não encontrei meu endereço</button>' +
+
                   '</div>' +
 
+                  /* Bloco Mapa */
                   '<div class="tp-bloco tp-bloco-mapa">' +
                     '<div id="mapboxMap"></div>' +
                     '<div id="infoRotaContainer" class="info-viagem" style="display:none;"></div>' +
                   '</div>' +
 
+                  /* Bloco Tarifa */
                   '<div class="tp-bloco">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-tag"></i> Tarifa</div>' +
                     '<select id="selectTarifa" aria-label="Selecione a tarifa">' +
@@ -235,6 +249,7 @@
                     '</select>' +
                   '</div>' +
 
+                  /* Bloco Seus dados */
                   '<div class="tp-bloco">' +
                     '<div class="tp-bloco-titulo"><i class="fa-solid fa-user"></i> Seus dados</div>' +
                     '<div class="form-row">' +
@@ -287,8 +302,6 @@
             btnSolicitar.style.pointerEvents = bloqueado ? 'none' : 'auto';
           }
           if (msgStatus) {
-            /* Mesma regra do loja.js e pedidos.js:
-               só mostra se bloqueado OU se tem mensagem do lojista */
             var mostrar = bloqueado || statusMessage !== '';
             if (mostrar) {
               msgStatus.style.display = 'flex';
@@ -308,14 +321,16 @@
         }
         aplicarBloqueioStatus(statusLoja, statusMessage);
 
+        /* ===== Inicializar mapa (se token disponível) ===== */
         if (!MAPBOX_TOKEN || !window.mapboxgl || !window.MapboxGeocoder) {
-          var manualFallback = document.getElementById('camposManuais');
-          var geocoderFallback = document.getElementById('geocoderContainer');
+          rotaState.manualMode = true;
+          var geocoderWrap = document.getElementById('rotaGeocoderWrap');
+          var manualWrap = document.getElementById('rotaManualWrap');
           var mapaFallback = document.getElementById('mapboxMap');
           var botaoManualFallback = document.getElementById('btnEnderecoManual');
-          if (manualFallback) manualFallback.style.display = 'block';
-          if (geocoderFallback) geocoderFallback.style.display = 'none';
-          if (botaoManualFallback) { botaoManualFallback.style.display = 'none'; botaoManualFallback.setAttribute('aria-hidden', 'true'); }
+          if (geocoderWrap) geocoderWrap.style.display = 'none';
+          if (manualWrap) manualWrap.style.display = 'flex';
+          if (botaoManualFallback) botaoManualFallback.style.display = 'none';
           if (mapaFallback) mapaFallback.innerHTML = '<div class="mapa-indisponivel"><strong>Mapa indisponível</strong><span>Informe origem e destino manualmente.</span></div>';
         } else {
           mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -339,46 +354,192 @@
             proximity: RC_CENTER,
             marker: false,
             fuzzyMatch: true,
-            limit: 6
+            limit: 6,
+            placeholder: 'De onde você vai sair?'
           };
 
-          var origemContainer = document.getElementById('origemGeocoder');
-          var destinoContainer = document.getElementById('destinoGeocoder');
-
-          var geocoderOrigem = new MapboxGeocoder(Object.assign({}, geocoderOpts, { placeholder: 'Endereço de origem' }));
-          geocoderOrigem.addTo(origemContainer);
-          geocoderOrigem.on('result', function (e) {
-            if (e.result && e.result.center) {
-              currentMapboxOrigin = { lat: e.result.center[1], lng: e.result.center[0], address: e.result.place_name };
-              if (currentMapboxOrigin && currentMapboxDest) calcularRotaTransporte();
-            }
+          var geocoderRota = new MapboxGeocoder(geocoderOpts);
+          geocoderRota.addTo(document.getElementById('rotaGeocoder'));
+          geocoderRota.on('result', function (e) {
+            if (!e.result || !e.result.center) return;
+            processarSelecaoRota({
+              lat: e.result.center[1],
+              lng: e.result.center[0],
+              address: e.result.place_name
+            });
           });
+        }
 
-          var geocoderDestino = new MapboxGeocoder(Object.assign({}, geocoderOpts, { placeholder: 'Endereço de destino' }));
-          geocoderDestino.addTo(destinoContainer);
-          geocoderDestino.on('result', function (e) {
-            if (e.result && e.result.center) {
-              currentMapboxDest = { lat: e.result.center[1], lng: e.result.center[0], address: e.result.place_name };
-              if (currentMapboxOrigin && currentMapboxDest) calcularRotaTransporte();
+        /* ===== Estado da UI da rota ===== */
+        function atualizarRotaUI() {
+          var elEscolha = document.getElementById('rotaEscolha');
+          var elResumo = document.getElementById('rotaResumo');
+          var elIcone = document.getElementById('rotaIconeContainer');
+          var elIconeManual = document.getElementById('rotaManualIconeContainer');
+          var btnLoc = document.getElementById('btnLocalizacaoRota');
+          var inpManual = document.getElementById('inputManualRota');
+
+          if (rotaState.fase === 'completo') {
+            if (elEscolha) elEscolha.style.display = 'none';
+            if (elResumo) elResumo.style.display = 'flex';
+            document.getElementById('rotaChipOrigemTexto').textContent = rotaState.origem.address;
+            document.getElementById('rotaChipDestinoTexto').textContent = rotaState.destino.address;
+          } else {
+            if (elEscolha) elEscolha.style.display = 'block';
+            if (elResumo) elResumo.style.display = 'none';
+
+            /* Bolinha/quadrado da origem/destino */
+            var faseClass = rotaState.fase === 'destino' ? 'rota-fase-destino' : '';
+            if (elIcone) elIcone.className = 'search-field-container ' + faseClass;
+            if (elIconeManual) elIconeManual.className = 'search-field-container ' + faseClass;
+
+            /* Placeholder do geocoder */
+            var inpGeo = document.querySelector('#rotaGeocoder input');
+            if (inpGeo) {
+              inpGeo.value = '';
+              inpGeo.placeholder = rotaState.fase === 'origem' ? 'De onde você vai sair?' : 'Para onde você vai?';
+            }
+            /* Placeholder do manual */
+            if (inpManual) {
+              inpManual.value = '';
+              inpManual.placeholder = rotaState.fase === 'origem' ? 'Descreva a origem' : 'Descreva o destino';
+            }
+
+            /* Botão de localização só na fase origem */
+            if (btnLoc) btnLoc.style.display = rotaState.fase === 'origem' ? 'flex' : 'none';
+            var btnLocManual = document.getElementById('btnLocalizacaoManual');
+            if (btnLocManual) btnLocManual.style.display = rotaState.fase === 'origem' ? 'flex' : 'none';
+          }
+        }
+
+        function processarSelecaoRota(local) {
+          if (rotaState.fase === 'origem') {
+            rotaState.origem = local;
+            rotaState.fase = rotaState.destino ? 'completo' : 'destino';
+          } else if (rotaState.fase === 'destino') {
+            rotaState.destino = local;
+            rotaState.fase = 'completo';
+          }
+          atualizarRotaUI();
+          if (rotaState.fase === 'completo') {
+            if (mapboxMap) calcularRotaTransporte();
+          }
+        }
+
+        /* ===== Chip remover ===== */
+        document.getElementById('btnRemoverOrigem').addEventListener('click', function () {
+          rotaState.origem = null;
+          rotaState.fase = 'origem';
+          atualizarRotaUI();
+          limparRotaDoMapa();
+        });
+        document.getElementById('btnRemoverDestino').addEventListener('click', function () {
+          rotaState.destino = null;
+          rotaState.fase = 'destino';
+          atualizarRotaUI();
+          limparRotaDoMapa();
+        });
+
+        /* ===== Toggle manual ===== */
+        var btnManualToggle = document.getElementById('btnEnderecoManual');
+        if (btnManualToggle) {
+          btnManualToggle.addEventListener('click', function () {
+            var geoWrap = document.getElementById('rotaGeocoderWrap');
+            var manWrap = document.getElementById('rotaManualWrap');
+            var estaManual = manWrap.style.display === 'flex';
+            if (estaManual) {
+              manWrap.style.display = 'none';
+              geoWrap.style.display = 'flex';
+              btnManualToggle.textContent = 'Não encontrei meu endereço';
+            } else {
+              manWrap.style.display = 'flex';
+              geoWrap.style.display = 'none';
+              btnManualToggle.textContent = '← Voltar para busca no mapa';
+              var inp = document.getElementById('inputManualRota');
+              if (inp) setTimeout(function () { inp.focus(); }, 100);
             }
           });
         }
 
+        /* ===== Manual: Enter processa ===== */
+        var inputManualRota = document.getElementById('inputManualRota');
+        if (inputManualRota) {
+          inputManualRota.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            var txt = inputManualRota.value.trim();
+            if (!txt || txt.length < 3) return;
+            if (MAPBOX_TOKEN) {
+              fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(txt) + '.json?access_token=' + MAPBOX_TOKEN + '&language=pt&country=br&limit=1&proximity=' + RC_CENTER.join(',') + '&bbox=' + RC_BBOX.join(','))
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                  if (data.features && data.features.length > 0) {
+                    var f = data.features[0];
+                    processarSelecaoRota({ lat: f.center[1], lng: f.center[0], address: f.place_name });
+                  } else {
+                    processarSelecaoRota({ lat: 0, lng: 0, address: txt });
+                  }
+                })
+                .catch(function () {
+                  processarSelecaoRota({ lat: 0, lng: 0, address: txt });
+                });
+            } else {
+              processarSelecaoRota({ lat: 0, lng: 0, address: txt });
+            }
+          });
+        }
+
+        /* ===== Localização atual ===== */
+        function usarLocalizacaoAtual() {
+          if (!MAPBOX_TOKEN) { UI.mostrarToast('A localização automática está indisponível. Informe a origem manualmente.', 'erro'); return; }
+          if (!navigator.geolocation) { UI.mostrarToast('Geolocalização não suportada.', 'erro'); return; }
+          navigator.geolocation.getCurrentPosition(function (pos) {
+            var lat = pos.coords.latitude, lng = pos.coords.longitude;
+            fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + lng + ',' + lat + '.json?access_token=' + MAPBOX_TOKEN + '&language=pt&country=br')
+              .then(function (res) { return res.json(); })
+              .then(function (data) {
+                var endereco = (data.features && data.features.length) ? data.features[0].place_name : (lat.toFixed(5) + ', ' + lng.toFixed(5));
+                processarSelecaoRota({ lat: lat, lng: lng, address: endereco });
+                UI.mostrarToast('Localização inserida!');
+              });
+          }, function (err) { UI.mostrarToast('Erro ao obter localização: ' + err.message, 'erro'); }, { enableHighAccuracy: true, timeout: 10000 });
+        }
+        var b1 = document.getElementById('btnLocalizacaoRota');
+        if (b1) b1.addEventListener('click', usarLocalizacaoAtual);
+        var b2 = document.getElementById('btnLocalizacaoManual');
+        if (b2) b2.addEventListener('click', usarLocalizacaoAtual);
+
+        /* ===== Calcular rota ===== */
         var rotaCamadaId = 'rota-direcao-' + Date.now();
 
+        function limparRotaDoMapa() {
+          var info = document.getElementById('infoRotaContainer');
+          if (info) info.style.display = 'none';
+          if (mapboxMap && mapboxMap.getLayer(rotaCamadaId)) {
+            mapboxMap.removeLayer(rotaCamadaId);
+            mapboxMap.removeSource(rotaCamadaId);
+          }
+        }
+
         function calcularRotaTransporte() {
-          if (!currentMapboxOrigin || !currentMapboxDest) return;
+          if (!rotaState.origem || !rotaState.destino) return;
+          if (!rotaState.origem.lat || !rotaState.destino.lat) {
+            var info = document.getElementById('infoRotaContainer');
+            info.style.display = 'flex';
+            info.innerHTML = 'Endereços informados manualmente — rota não calculada.';
+            return;
+          }
           var info = document.getElementById('infoRotaContainer');
           info.style.display = 'flex';
           info.innerHTML = '🔄 Calculando rota...';
           var url = 'https://api.mapbox.com/directions/v5/mapbox/driving/' +
-            currentMapboxOrigin.lng + ',' + currentMapboxOrigin.lat + ';' +
-            currentMapboxDest.lng + ',' + currentMapboxDest.lat +
-            '?access_token=' + MAPBOX_TOKEN + '&geometries=geojson&overview=full&steps=true';
+            rotaState.origem.lng + ',' + rotaState.origem.lat + ';' +
+            rotaState.destino.lng + ',' + rotaState.destino.lat +
+            '?access_token=' + MAPBOX_TOKEN + '&geometries=geojson&overview=full';
           fetch(url)
-            .then(function (response) { return response.json(); })
+            .then(function (r) { return r.json(); })
             .then(function (data) {
-              if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
+              if (data.code !== 'Ok' || !data.routes || !data.routes.length) {
                 info.innerHTML = '❌ Não foi possível calcular a rota.';
                 return;
               }
@@ -388,69 +549,20 @@
               var duracao = Math.round(leg.duration / 60) + ' min';
               info.innerHTML = '<strong>Distância:</strong> ' + distancia + ' &nbsp;·&nbsp; <strong>Tempo:</strong> ' + duracao;
               if (mapboxMap.getLayer(rotaCamadaId)) { mapboxMap.removeLayer(rotaCamadaId); mapboxMap.removeSource(rotaCamadaId); }
-              var geojson = { type: 'Feature', geometry: route.geometry, properties: {} };
-              mapboxMap.addSource(rotaCamadaId, { type: 'geojson', data: geojson });
+              mapboxMap.addSource(rotaCamadaId, { type: 'geojson', data: { type: 'Feature', geometry: route.geometry, properties: {} } });
               mapboxMap.addLayer({
                 id: rotaCamadaId, type: 'line', source: rotaCamadaId,
                 layout: { 'line-join': 'round', 'line-cap': 'round' },
                 paint: { 'line-color': '#0a66c2', 'line-width': 5 }
               });
               var bounds = new mapboxgl.LngLatBounds();
-              route.geometry.coordinates.forEach(function (coord) { bounds.extend(coord); });
+              route.geometry.coordinates.forEach(function (c) { bounds.extend(c); });
               mapboxMap.fitBounds(bounds, { padding: 40 });
             })
-            .catch(function (err) { info.innerHTML = '❌ Erro ao calcular rota: ' + err.message; console.error(err); });
+            .catch(function (err) { info.innerHTML = '❌ Erro ao calcular rota: ' + err.message; });
         }
 
-        window.limparCampoTransporte = function (tipo) {
-          if (tipo === 'origemMapa') { var inp = document.querySelector('#origemGeocoder input'); if (inp) inp.value = ''; currentMapboxOrigin = null; }
-          else if (tipo === 'destinoMapa') { var inp2 = document.querySelector('#destinoGeocoder input'); if (inp2) inp2.value = ''; currentMapboxDest = null; }
-          else if (tipo === 'origemManual') { var inp3 = document.getElementById('origemManual'); if (inp3) inp3.value = ''; }
-          else if (tipo === 'destinoManual') { var inp4 = document.getElementById('destinoManual'); if (inp4) inp4.value = ''; }
-          var info = document.getElementById('infoRotaContainer'); if (info) info.style.display = 'none';
-          if (mapboxMap && mapboxMap.getLayer(rotaCamadaId)) { mapboxMap.removeLayer(rotaCamadaId); mapboxMap.removeSource(rotaCamadaId); }
-        };
-
-        window.usarLocalizacaoAtualTransporte = function () {
-          if (!MAPBOX_TOKEN) { UI.mostrarToast('A localização automática está indisponível. Informe a origem manualmente.', 'erro'); return; }
-          if (!navigator.geolocation) { UI.mostrarToast('Geolocalização não suportada.', 'erro'); return; }
-          navigator.geolocation.getCurrentPosition(function (pos) {
-            var lat = pos.coords.latitude;
-            var lng = pos.coords.longitude;
-            fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + lng + ',' + lat + '.json?access_token=' + MAPBOX_TOKEN + '&language=pt&country=br')
-              .then(function (res) { return res.json(); })
-              .then(function (data) {
-                if (data.features && data.features.length > 0) {
-                  var endereco = data.features[0].place_name;
-                  var camposManuais = document.getElementById('camposManuais');
-                  var usandoManual = camposManuais && (camposManuais.style.display === 'flex' || camposManuais.style.display === 'block');
-                  if (usandoManual) {
-                    document.getElementById('origemManual').value = endereco;
-                  } else {
-                    var inp = document.querySelector('#origemGeocoder input');
-                    if (inp) inp.value = endereco;
-                    currentMapboxOrigin = { lat: lat, lng: lng, address: endereco };
-                  }
-                  if (currentMapboxOrigin && currentMapboxDest) calcularRotaTransporte();
-                  UI.mostrarToast('Localização inserida!', 'sucesso');
-                }
-              });
-          }, function (err) { UI.mostrarToast('Erro ao obter localização: ' + err.message, 'erro'); }, { enableHighAccuracy: true, timeout: 10000 });
-        };
-
-        window.toggleEnderecoManualTransporte = function () {
-          var manual = document.getElementById('camposManuais');
-          var geocoder = document.getElementById('geocoderContainer');
-          var btn = document.getElementById('btnEnderecoManual');
-          if (manual.style.display === 'none' || manual.style.display === '') {
-            manual.style.display = 'block'; geocoder.style.display = 'none';
-            btn.textContent = '← Voltar para busca no mapa';
-          } else {
-            manual.style.display = 'none'; geocoder.style.display = 'block';
-            btn.textContent = 'Não encontrei meu endereço';
-          }
-        };
-
+        /* ===== Consultar corrida ===== */
         window.consultarCorridaTransporte = function () {
           var cod = document.getElementById('consultaCodigoTransporte').value.trim().toUpperCase();
           var resDiv = document.getElementById('resultadoAcompanhamentoTransporte');
@@ -477,6 +589,7 @@
             });
         };
 
+        /* ===== Histórico ===== */
         function carregarHistoricoTransporte(estIdLocal) {
           if (!Core.getCurrentUser()) return;
           var container = document.getElementById('listaHistoricoTransporte');
@@ -524,6 +637,7 @@
           _fecharModalLocal(modal);
         };
 
+        /* ===== Abas ===== */
         document.querySelectorAll('#modalTransporte .modal-tab').forEach(function (tab) {
           tab.onclick = function () {
             document.querySelectorAll('#modalTransporte .modal-tab').forEach(function (t) { t.classList.remove('active'); });
@@ -536,8 +650,13 @@
           };
         });
 
+        /* ===== Solicitar corrida ===== */
         document.getElementById('btnSolicitarCorrida').onclick = function () {
           if (statusLoja !== 'aberta') { UI.mostrarToast('Serviço indisponível no momento.', 'erro'); return; }
+          if (!rotaState.origem || !rotaState.destino) {
+            UI.mostrarToast('Escolha origem e destino.', 'erro');
+            return;
+          }
           var nome = document.getElementById('clienteNomeTransporte').value.trim();
           var tel = document.getElementById('clienteTelTransporte').value.trim();
           var tarifaSelect = document.getElementById('selectTarifa');
@@ -548,23 +667,14 @@
           if (!nome || nome.length < 2) { UI.mostrarToast('Informe seu nome completo.', 'erro'); return; }
           var telNumerico = tel.replace(/\D/g, '');
           if (!telNumerico || telNumerico.length < 10) { UI.mostrarToast('Telefone inválido. Informe DDD + número.', 'erro'); return; }
-          var origem, destino, latOrigem, lngOrigem, latDestino, lngDestino;
-          var camposManuais = document.getElementById('camposManuais');
-          var usandoManual = camposManuais && (camposManuais.style.display === 'flex' || camposManuais.style.display === 'block');
-          if (usandoManual) {
-            origem = document.getElementById('origemManual').value.trim();
-            destino = document.getElementById('destinoManual').value.trim();
-            if (!origem || !destino) { UI.mostrarToast('Descreva a origem e o destino.', 'erro'); return; }
-            latOrigem = lngOrigem = latDestino = lngDestino = 0;
-          } else {
-            if (!currentMapboxOrigin || !currentMapboxDest) { UI.mostrarToast('Selecione os endereços no mapa.', 'erro'); return; }
-            origem = currentMapboxOrigin.address;
-            destino = currentMapboxDest.address;
-            latOrigem = currentMapboxOrigin.lat;
-            lngOrigem = currentMapboxOrigin.lng;
-            latDestino = currentMapboxDest.lat;
-            lngDestino = currentMapboxDest.lng;
-          }
+
+          var origem = rotaState.origem.address;
+          var destino = rotaState.destino.address;
+          var latOrigem = rotaState.origem.lat || 0;
+          var lngOrigem = rotaState.origem.lng || 0;
+          var latDestino = rotaState.destino.lat || 0;
+          var lngDestino = rotaState.destino.lng || 0;
+
           EU.salvarDadosClienteLocal(nome, telNumerico, origem + ' → ' + destino);
 
           var codigoCurto = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -610,8 +720,10 @@
           if (saved.nome && document.getElementById('clienteNomeTransporte')) document.getElementById('clienteNomeTransporte').value = saved.nome;
           if (saved.telefone && document.getElementById('clienteTelTransporte')) document.getElementById('clienteTelTransporte').value = saved.telefone;
         }
-
         EU.aplicarMascaraTelefone(document.getElementById('clienteTelTransporte'));
+
+        /* Estado inicial da UI da rota */
+        atualizarRotaUI();
       })
       .catch(function (err) {
         UI.mostrarToast('Erro ao carregar dados: ' + err.message, 'erro');
