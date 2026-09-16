@@ -43,9 +43,7 @@
 
   var MAPBOX_TOKEN = (window.ECONOMIZEI_CONFIG && window.ECONOMIZEI_CONFIG.mapboxToken) || window.ECONOMIZEI_MAPBOX_TOKEN || '';
 
-  /* Rio Claro — RJ */
   var RC_CENTER = [-44.135, -22.723];
-  var RC_BBOX   = [-44.30, -22.90, -43.95, -22.55];
 
   function statusSeguro(s) { return ['aberta', 'pausada', 'fechada'].indexOf(s) !== -1 ? s : 'aberta'; }
   function gerarIniciais(nome) {
@@ -101,7 +99,6 @@
     var mapboxMap = null;
     var currentUser = Core.getCurrentUser();
 
-    /* Estado da rota */
     var rotaState = {
       origem: null,
       destino: null,
@@ -308,7 +305,7 @@
         }
         aplicarBloqueioStatus(statusLoja, statusMessage);
 
-        /* ===== Inicializar mapa ===== */
+        /* ===== Mapa ===== */
         var hasMap = !!(MAPBOX_TOKEN && window.mapboxgl);
         if (!hasMap) {
           var mapaFallback = document.getElementById('mapboxMap');
@@ -328,20 +325,14 @@
           mapboxMap.addControl(new mapboxgl.NavigationControl({ showCompass: false }));
         }
 
-        /* ===== Estado do cache de endereços ===== */
-        var cacheEstado = 'carregando'; // 'carregando' | 'pronto' | 'falhou'
-        var cachePronto = false;
-
+        /* ===== Cache de endereços ===== */
+        var cacheEstado = 'carregando';
         if (window.EnderecosCache && typeof window.EnderecosCache.carregar === 'function') {
           window.EnderecosCache.carregar()
             .then(function (lista) {
               cacheEstado = 'pronto';
-              cachePronto = true;
               console.log('[transporte] Endereços carregados:', lista.length);
-              /* Se o usuário já está digitando, atualiza as sugestões */
-              if (elInput && elInput.value.trim().length >= 3) {
-                atualizarSugestoes();
-              }
+              if (elInput && elInput.value.trim().length >= 3) atualizarSugestoes();
             })
             .catch(function (err) {
               cacheEstado = 'falhou';
@@ -352,7 +343,7 @@
           console.warn('[transporte] EnderecosCache não disponível.');
         }
 
-        /* ===== Elementos da rota ===== */
+        /* ===== Elementos ===== */
         var elChipOrigem = document.getElementById('chipOrigem');
         var elChipDestino = document.getElementById('chipDestino');
         var elChipOrigemTxt = document.getElementById('chipOrigemTexto');
@@ -365,7 +356,6 @@
         var elSugestoes = document.getElementById('rotaSugestoes');
         var elBtnManual = document.getElementById('btnEnderecoManual');
 
-        var modoManual = false;
         var buscaTimer = null;
 
         function esconderSugestoes() { elSugestoes.innerHTML = ''; }
@@ -378,23 +368,42 @@
           elSugestoes.innerHTML = '';
           if (!lista.length) return;
           lista.forEach(function (sug) {
+            var linha = document.createElement('div');
+            linha.className = 'rota-sugestao-linha';
+
             var btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'rota-sugestao';
             var titulo = sug.logradouro + (sug.numero && sug.numero !== 'SN' ? ', ' + sug.numero : '');
             var endereco = titulo + (sug.bairro ? ' - ' + sug.bairro : '');
-            var display = titulo;
             btn.innerHTML =
-              '<span class="rota-sugestao-titulo">' + Core.sanitize(display) + '</span>' +
+              '<span class="rota-sugestao-titulo">' + Core.sanitize(titulo) + '</span>' +
               '<span class="rota-sugestao-endereco">' + Core.sanitize(endereco) + (sug.cep ? ' · CEP ' + Core.sanitize(sug.cep) : '') + '</span>';
             btn.addEventListener('click', function () {
               escolherSugestao({
                 address: endereco,
                 lat: sug.lat,
-                lng: sug.lng
+                lng: sug.lng,
+                fonte: sug.fonte
               });
             });
-            elSugestoes.appendChild(btn);
+            linha.appendChild(btn);
+
+            var flag = document.createElement('button');
+            flag.type = 'button';
+            flag.className = 'rota-sugestao-flag';
+            flag.setAttribute('aria-label', 'Algo errado? Sugerir correção');
+            flag.setAttribute('title', 'Algo errado?');
+            flag.innerHTML = '<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>';
+            flag.addEventListener('click', function (e) {
+              e.stopPropagation();
+              if (window.Economizei && Economizei.TransporteEnderecos) {
+                Economizei.TransporteEnderecos.abrirSugerir(sug);
+              }
+            });
+            linha.appendChild(flag);
+
+            elSugestoes.appendChild(linha);
           });
         }
 
@@ -423,9 +432,8 @@
             elInput.value = '';
             elBtnOk.disabled = true;
             elBtnLoc.style.display = fase === 'origem' ? 'flex' : 'none';
-            elBtnManual.hidden = modoManual;
-            if (modoManual) elBtnManual.textContent = '← Voltar para busca com sugestões';
-            else elBtnManual.textContent = 'Não encontrei meu endereço';
+            elBtnManual.hidden = false;
+            elBtnManual.textContent = 'Não encontrei meu endereço';
           }
         }
 
@@ -436,18 +444,14 @@
           if (f !== 'completo') setTimeout(function () { elInput.focus(); }, 100);
         }
 
-        /* ===== Busca local ===== */
         function atualizarSugestoes() {
-          if (modoManual) return;
           var q = elInput.value.trim();
-
           if (q.length < 3) { esconderSugestoes(); return; }
 
           if (cacheEstado === 'carregando') {
             mostrarMensagemSugestoes('Carregando base de endereços...');
             return;
           }
-
           if (cacheEstado === 'falhou') {
             esconderSugestoes();
             return;
@@ -461,11 +465,9 @@
           mostrarSugestoes(resultado);
         }
 
-        /* ===== Eventos do input ===== */
         elInput.addEventListener('input', function () {
           elBtnOk.disabled = elInput.value.trim().length < 3;
           rotaState.temp = null;
-          if (modoManual) return;
           if (buscaTimer) clearTimeout(buscaTimer);
           buscaTimer = setTimeout(atualizarSugestoes, 150);
         });
@@ -477,17 +479,10 @@
           confirmar();
         });
 
-        /* ===== Confirmar ===== */
         function confirmar() {
           var texto = elInput.value.trim();
           if (texto.length < 3) return;
-
-          if (rotaState.temp) {
-            aplicarEscolha(rotaState.temp);
-            return;
-          }
-
-          /* Sem sugestão escolhida: usa o texto literal com coordenada 0 */
+          if (rotaState.temp) { aplicarEscolha(rotaState.temp); return; }
           aplicarEscolha({ address: texto, lat: 0, lng: 0 });
         }
         elBtnOk.addEventListener('click', confirmar);
@@ -510,7 +505,6 @@
           else setTimeout(function () { elInput.focus(); }, 100);
         }
 
-        /* ===== Remover chip ===== */
         document.querySelectorAll('[data-remover]').forEach(function (btn) {
           btn.addEventListener('click', function () {
             var tipo = btn.dataset.remover;
@@ -520,7 +514,6 @@
           });
         });
 
-        /* ===== Localização atual (ainda usa Mapbox) ===== */
         elBtnLoc.addEventListener('click', function () {
           if (!hasMap) { UI.mostrarToast('Localização indisponível.', 'erro'); return; }
           if (!navigator.geolocation) { UI.mostrarToast('Geolocalização não suportada.', 'erro'); return; }
@@ -544,19 +537,18 @@
           }, { enableHighAccuracy: true, timeout: 10000 });
         });
 
-        /* ===== Modo manual ===== */
+        /* ===== NÃO ACHEI MEU ENDEREÇO → abre modal de marcar no mapa ===== */
         elBtnManual.addEventListener('click', function () {
-          modoManual = !modoManual;
-          if (modoManual) {
-            esconderSugestoes();
-            elBtnManual.textContent = '← Voltar para busca com sugestões';
-          } else {
-            elBtnManual.textContent = 'Não encontrei meu endereço';
-            atualizarSugestoes();
+          if (!window.Economizei || !Economizei.TransporteEnderecos) {
+            UI.mostrarToast('Recurso indisponível no momento.', 'erro');
+            return;
           }
+          Economizei.TransporteEnderecos.abrirMarcar(function (novoEnd) {
+            aplicarEscolha(novoEnd);
+          });
         });
 
-        /* ===== Calcular rota ===== */
+        /* ===== Rota ===== */
         var rotaCamadaId = 'rota-direcao-' + Date.now();
 
         function limparRotaDoMapa() {
@@ -609,7 +601,6 @@
             .catch(function (err) { info.innerHTML = '❌ Erro ao calcular rota: ' + err.message; });
         }
 
-        /* ===== Consultar ===== */
         window.consultarCorridaTransporte = function () {
           var cod = document.getElementById('consultaCodigoTransporte').value.trim().toUpperCase();
           var resDiv = document.getElementById('resultadoAcompanhamentoTransporte');
@@ -636,7 +627,6 @@
             });
         };
 
-        /* ===== Histórico ===== */
         function carregarHistoricoTransporte(estIdLocal) {
           if (!Core.getCurrentUser()) return;
           var container = document.getElementById('listaHistoricoTransporte');
@@ -684,7 +674,6 @@
           _fecharModalLocal(modal);
         };
 
-        /* ===== Abas ===== */
         document.querySelectorAll('#modalTransporte .modal-tab').forEach(function (tab) {
           tab.onclick = function () {
             document.querySelectorAll('#modalTransporte .modal-tab').forEach(function (t) { t.classList.remove('active'); });
@@ -697,7 +686,6 @@
           };
         });
 
-        /* ===== Solicitar corrida ===== */
         document.getElementById('btnSolicitarCorrida').onclick = function () {
           if (statusLoja !== 'aberta') { UI.mostrarToast('Serviço indisponível no momento.', 'erro'); return; }
           if (!rotaState.origem || !rotaState.destino) {
