@@ -1,7 +1,7 @@
 /* ============================================================
-   ECONOMIZEI! RIO CLARO — CACHE DE ENDEREÇOS (CNEFE)
-   Baixa uma vez do Firestore, guarda em localStorage por 24h,
-   oferece busca local instantânea com filtro por termos.
+   ECONOMIZEI! RIO CLARO — CACHE DE ENDEREÇOS
+   Baixa 3 coleções em paralelo, mescla em um índice único,
+   guarda em localStorage por 24h, oferece busca local.
 
    Depende de: window.EconomizeiFirebase.db (comum/firebase.js)
    Expõe: window.EnderecosCache
@@ -9,12 +9,15 @@
 (function (global) {
   'use strict';
 
-  var CHAVE_CACHE = 'enderecosRioClaroV1';
-  var TTL = 24 * 60 * 60 * 1000; // 24h
-  var COLECAO = 'enderecos_chunks';
+  var CHAVE_CACHE = 'enderecosRioClaroV2';
+  var TTL = 24 * 60 * 60 * 1000;
+  var COL_BASE = 'enderecos_chunks';
+  var COL_USER = 'enderecos_usuario';
+  var COL_SUG = 'enderecos_sugestoes';
+  var SCORE_MIN = 0.3;
 
-  var indice = null;      // array de endereços em memória
-  var carregando = null;  // Promise enquanto baixa
+  var indice = null;
+  var carregando = null;
 
   /* ---------- Normalização ---------- */
   function norm(s) {
@@ -25,7 +28,7 @@
       .trim();
   }
 
-  /* ---------- Cache local (localStorage) ---------- */
+  /* ---------- Cache local ---------- */
   function lerCache() {
     try {
       var bruto = localStorage.getItem(CHAVE_CACHE);
@@ -36,6 +39,7 @@
       return obj.dados;
     } catch (e) {
       console.warn('[EnderecosCache] Cache corrompido, ignorando.', e);
+      try { localStorage.removeItem(CHAVE_CACHE); } catch (e2) {}
       return null;
     }
   }
@@ -47,7 +51,6 @@
         dados: lista
       }));
     } catch (e) {
-      // localStorage cheio ou bloqueado — segue sem cache
       console.warn('[EnderecosCache] Não foi possível salvar cache.', e);
     }
   }
@@ -57,27 +60,77 @@
     indice = null;
   }
 
-  /* ---------- Download do Firestore ---------- */
-  function baixarFirestore() {
+  /* ---------- Download ---------- */
+  function baixarTudo() {
     if (!global.EconomizeiFirebase || !global.EconomizeiFirebase.db) {
       return Promise.reject(new Error('Firebase não inicializado.'));
     }
     var db = global.EconomizeiFirebase.db;
-    return db.collection(COLECAO).get().then(function (snap) {
-      var todos = [];
-      snap.forEach(function (doc) {
-        var dados = doc.data();
-        if (dados && Array.isArray(dados.enderecos)) {
-          for (var i = 0; i < dados.enderecos.length; i++) {
-            todos.push(dados.enderecos[i]);
+
+    var promessas = [
+      db.collection(COL_BASE).get(),
+      db.collection(COL_USER).get().catch(function () { return null; }),
+      db.collection(COL_SUG).get().catch(function () { return null; })
+    ];
+
+    return Promise.all(promessas).then(function (results) {
+      var base = [];
+      var usuarios = [];
+
+      /* Chunks do CNEFE */
+      if (results[0]) {
+        results[0].forEach(function (doc) {
+          var d = doc.data();
+          if (d && Array.isArray(d.enderecos)) {
+            for (var i = 0; i < d.enderecos.length; i++) {
+              var e = d.enderecos[i];
+              e.fonte = 'cnefe';
+              base.push(e);
+            }
           }
-        }
-      });
-      return todos;
+        });
+      }
+
+      /* Endereços criados por usuários */
+      if (results[1]) {
+        results[1].forEach(function (doc) {
+          var d = doc.data();
+          if (!d) return;
+          if (d.status === 'removido') return;
+          var score = typeof d.score === 'number' ? d.score : 0.3;
+          if (score < SCORE_MIN) return;
+
+          var logradouro = d.logradouro || '';
+          var numero = d.numero || 'SN';
+          var bairro = d.bairro || '';
+          var cep = d.cep || '';
+          var busca = d.busca || norm([logradouro, numero !== 'SN' ? numero : '', bairro, cep].filter(Boolean).join(' '));
+
+          usuarios.push({
+            id: 'usr_' + doc.id,
+            logradouro: logradouro,
+            numero: numero,
+            bairro: bairro,
+            cep: cep,
+            lat: d.lat,
+            lng: d.lng,
+            estabelecimento: null,
+            especie: null,
+            busca: busca,
+            fonte: 'usuario',
+            uid: d.uid || null,
+            nome_usuario: d.nome_usuario || '',
+            score: score
+          });
+        });
+      }
+
+      /* Usuário primeiro (prioridade), depois CNEFE */
+      return usuarios.concat(base);
     });
   }
 
-  /* ---------- Carregar (com cache em memória, localStorage e rede) ---------- */
+  /* ---------- Carregar ---------- */
   function carregar() {
     if (indice) return Promise.resolve(indice);
     if (carregando) return carregando;
@@ -88,7 +141,7 @@
       return Promise.resolve(indice);
     }
 
-    carregando = baixarFirestore()
+    carregando = baixarTudo()
       .then(function (lista) {
         indice = lista;
         salvarCache(lista);
@@ -103,6 +156,11 @@
     return carregando;
   }
 
+  function recarregar() {
+    limparCache();
+    return carregar();
+  }
+
   /* ---------- Busca local ---------- */
   function buscar(query, limite) {
     if (!indice || !indice.length) return [];
@@ -112,7 +170,7 @@
 
     var termos = q.split(' ').filter(Boolean);
     var resultado = [];
-    var TETO_INTERNO = limite * 5; // pega mais pra depois ordenar
+    var TETO_INTERNO = limite * 8;
 
     for (var i = 0; i < indice.length; i++) {
       var e = indice[i];
@@ -127,17 +185,25 @@
       }
     }
 
-    // Ordena por relevância:
-    //   1. busca começa com a query completa
-    //   2. logradouro começa com o primeiro termo
-    //   3. alfabético
     resultado.sort(function (a, b) {
+      /* Usuário > CNEFE */
+      var aFonte = a.fonte === 'usuario' ? 0 : 1;
+      var bFonte = b.fonte === 'usuario' ? 0 : 1;
+      if (aFonte !== bFonte) return aFonte - bFonte;
+
+      /* Score maior primeiro (entre usuários) */
+      var aScore = typeof a.score === 'number' ? a.score : 0;
+      var bScore = typeof b.score === 'number' ? b.score : 0;
+      if (aScore !== bScore) return bScore - aScore;
+
+      /* Busca começa com a query */
       var aBusca = a.busca || '';
       var bBusca = b.busca || '';
       var aComeca = aBusca.indexOf(q) === 0 ? 0 : 1;
       var bComeca = bBusca.indexOf(q) === 0 ? 0 : 1;
       if (aComeca !== bComeca) return aComeca - bComeca;
 
+      /* Logradouro começa com o primeiro termo */
       var aLog = norm(a.logradouro || '');
       var bLog = norm(b.logradouro || '');
       var aPri = aLog.indexOf(termos[0]) === 0 ? 0 : 1;
@@ -150,7 +216,6 @@
     return resultado.slice(0, limite);
   }
 
-  /* ---------- Consulta por ID (opcional, pra debug) ---------- */
   function porId(id) {
     if (!indice) return null;
     for (var i = 0; i < indice.length; i++) {
@@ -162,9 +227,11 @@
   /* ---------- Exportação ---------- */
   global.EnderecosCache = {
     carregar: carregar,
+    recarregar: recarregar,
     buscar: buscar,
     porId: porId,
     limparCache: limparCache,
+    norm: norm,
     get pronto() { return !!indice; },
     get total() { return indice ? indice.length : 0; }
   };
