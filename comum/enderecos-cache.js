@@ -2,9 +2,7 @@
    ECONOMIZEI! RIO CLARO — CACHE DE ENDEREÇOS
    Baixa 3 coleções em paralelo, mescla em um índice único,
    guarda em localStorage por 24h, oferece busca local.
-
-   Depende de: window.EconomizeiFirebase.db (comum/firebase.js)
-   Expõe: window.EnderecosCache
+   v3 — adicionarLocal() pra refletir marcações em tempo real
    ============================================================ */
 (function (global) {
   'use strict';
@@ -19,7 +17,6 @@
   var indice = null;
   var carregando = null;
 
-  /* ---------- Normalização ---------- */
   function norm(s) {
     return String(s || '')
       .toLowerCase()
@@ -28,7 +25,6 @@
       .trim();
   }
 
-  /* ---------- Cache local ---------- */
   function lerCache() {
     try {
       var bruto = localStorage.getItem(CHAVE_CACHE);
@@ -60,7 +56,6 @@
     indice = null;
   }
 
-  /* ---------- Download ---------- */
   function baixarTudo() {
     if (!global.EconomizeiFirebase || !global.EconomizeiFirebase.db) {
       return Promise.reject(new Error('Firebase não inicializado.'));
@@ -77,7 +72,6 @@
       var base = [];
       var usuarios = [];
 
-      /* Chunks do CNEFE */
       if (results[0]) {
         results[0].forEach(function (doc) {
           var d = doc.data();
@@ -91,7 +85,6 @@
         });
       }
 
-      /* Endereços criados por usuários */
       if (results[1]) {
         results[1].forEach(function (doc) {
           var d = doc.data();
@@ -125,12 +118,10 @@
         });
       }
 
-      /* Usuário primeiro (prioridade), depois CNEFE */
       return usuarios.concat(base);
     });
   }
 
-  /* ---------- Carregar ---------- */
   function carregar() {
     if (indice) return Promise.resolve(indice);
     if (carregando) return carregando;
@@ -161,7 +152,66 @@
     return carregar();
   }
 
-  /* ---------- Busca local ---------- */
+  /* ============================================================
+     adicionarLocal(objeto)
+     Injeta um endereço novo no índice em memória E atualiza o
+     localStorage, pra aparecer imediatamente nas buscas (mesma
+     sessão e próximas até 24h).
+     Formato esperado:
+     { logradouro, numero, bairro, cep, lat, lng, busca?, uid?, nome_usuario?, score?, id? }
+     ============================================================ */
+  function adicionarLocal(endereco) {
+    if (!endereco || !endereco.logradouro) return;
+
+    var logradouro = endereco.logradouro;
+    var numero = endereco.numero || 'SN';
+    var bairro = endereco.bairro || '';
+    var cep = endereco.cep || '';
+    var busca = endereco.busca || norm([logradouro, numero !== 'SN' ? numero : '', bairro, cep].filter(Boolean).join(' '));
+
+    var novo = {
+      id: endereco.id || ('usr_local_' + Date.now()),
+      logradouro: logradouro,
+      numero: numero,
+      bairro: bairro,
+      cep: cep,
+      lat: endereco.lat,
+      lng: endereco.lng,
+      estabelecimento: null,
+      especie: null,
+      busca: busca,
+      fonte: 'usuario',
+      uid: endereco.uid || null,
+      nome_usuario: endereco.nome_usuario || '',
+      score: typeof endereco.score === 'number' ? endereco.score : 0.6
+    };
+
+    if (!indice) {
+      /* Cache ainda não foi carregado. Força carregar e depois adiciona. */
+      carregar().then(function () {
+        indice.unshift(novo);
+        salvarCache(indice);
+      }).catch(function (err) {
+        console.warn('[EnderecosCache] adicionarLocal antes de carregar falhou:', err);
+      });
+      return;
+    }
+
+    /* Evita duplicata exata (mesmo logradouro + número + bairro) */
+    for (var i = 0; i < indice.length; i++) {
+      var e = indice[i];
+      if (norm(e.logradouro) === norm(logradouro) &&
+          String(e.numero) === String(numero) &&
+          norm(e.bairro) === norm(bairro)) {
+        /* Já existe, não duplica */
+        return;
+      }
+    }
+
+    indice.unshift(novo);
+    salvarCache(indice);
+  }
+
   function buscar(query, limite) {
     if (!indice || !indice.length) return [];
     limite = limite || 8;
@@ -186,24 +236,20 @@
     }
 
     resultado.sort(function (a, b) {
-      /* Usuário > CNEFE */
       var aFonte = a.fonte === 'usuario' ? 0 : 1;
       var bFonte = b.fonte === 'usuario' ? 0 : 1;
       if (aFonte !== bFonte) return aFonte - bFonte;
 
-      /* Score maior primeiro (entre usuários) */
       var aScore = typeof a.score === 'number' ? a.score : 0;
       var bScore = typeof b.score === 'number' ? b.score : 0;
       if (aScore !== bScore) return bScore - aScore;
 
-      /* Busca começa com a query */
       var aBusca = a.busca || '';
       var bBusca = b.busca || '';
       var aComeca = aBusca.indexOf(q) === 0 ? 0 : 1;
       var bComeca = bBusca.indexOf(q) === 0 ? 0 : 1;
       if (aComeca !== bComeca) return aComeca - bComeca;
 
-      /* Logradouro começa com o primeiro termo */
       var aLog = norm(a.logradouro || '');
       var bLog = norm(b.logradouro || '');
       var aPri = aLog.indexOf(termos[0]) === 0 ? 0 : 1;
@@ -224,10 +270,10 @@
     return null;
   }
 
-  /* ---------- Exportação ---------- */
   global.EnderecosCache = {
     carregar: carregar,
     recarregar: recarregar,
+    adicionarLocal: adicionarLocal,
     buscar: buscar,
     porId: porId,
     limparCache: limparCache,
