@@ -574,3 +574,53 @@ html.modo-app-inicial #modalTransporte .modal-body,
 body.modo-app #modalTransporte .modal-body {
   padding-bottom: max(.85rem, var(--reserva-barra-app)) !important;
 }
+
+/* ===== ESTRELA DE FAVORITO ===== */
+.rota-sugestoes .rota-sugestao-star {
+  background: #fff;
+  border: none;
+  border-left: 1px solid var(--gray-100);
+  color: #cbd5e1;
+  padding: 0 .75rem;
+  cursor: pointer;
+  font-size: 1rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease, color .15s ease;
+  font-family: inherit;
+}
+.rota-sugestoes .rota-sugestao-star:hover,
+.rota-sugestoes .rota-sugestao-star:focus-visible {
+  background: #fffbeb;
+  color: #f59e0b;
+  outline: none;
+}
+.rota-sugestoes .rota-sugestao-star.ativo {
+  color: #f59e0b;
+  background: #fffbeb;
+}
+
+/* ===== LISTA DE FAVORITOS (input vazio) ===== */
+.rota-favoritos-titulo {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .55rem .85rem;
+  font-size: .68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--gray-500);
+  background: var(--gray-100);
+  border-bottom: 1px solid var(--gray-200);
+}
+.rota-favoritos-titulo i {
+  color: #f59e0b;
+  font-size: .8rem;
+}
+
+@media (pointer: coarse) {
+  .rota-sugestoes .rota-sugestao-star { padding: 0 1rem; }
+}
