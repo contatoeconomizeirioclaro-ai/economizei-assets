@@ -304,6 +304,48 @@
 .popup-confirmacao-codigo .valor {
   font-size: 1.5rem; font-weight: 700; color: var(--primary, #0a66c2);
 }
+
+/* Botão de copiar código dentro da caixa */
+.popup-confirmacao-codigo button,
+.popup-confirmacao-codigo .btn-adicionar-filtro,
+.popup-confirmacao-codigo .btn-copiar {
+  background: #fff;
+  color: var(--primary, #0a66c2);
+  border: 1px solid var(--primary, #0a66c2);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 2.4rem;
+  min-width: 0;
+  width: auto;
+  margin-top: 0.5rem;
+  box-shadow: none;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.popup-confirmacao-codigo button:hover,
+.popup-confirmacao-codigo .btn-adicionar-filtro:hover,
+.popup-confirmacao-codigo .btn-copiar:hover {
+  background: var(--primary-light, #eef4ff);
+  border-color: var(--primary-dark, #084d94);
+  transform: translateY(-1px);
+}
+
+@media (pointer: coarse) {
+  .popup-confirmacao-codigo button,
+  .popup-confirmacao-codigo .btn-adicionar-filtro,
+  .popup-confirmacao-codigo .btn-copiar {
+    min-height: 44px;
+    height: 44px;
+    padding: 0 1.1rem;
+  }
+}
 .popup-confirmacao-botoes {
   display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
 }
