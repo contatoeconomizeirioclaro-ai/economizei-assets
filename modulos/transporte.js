@@ -42,7 +42,6 @@
   });
 
   var MAPBOX_TOKEN = (window.ECONOMIZEI_CONFIG && window.ECONOMIZEI_CONFIG.mapboxToken) || window.ECONOMIZEI_MAPBOX_TOKEN || '';
-
   var RC_CENTER = [-44.135, -22.723];
 
   function statusSeguro(s) { return ['aberta', 'pausada', 'fechada'].indexOf(s) !== -1 ? s : 'aberta'; }
@@ -305,7 +304,6 @@
         }
         aplicarBloqueioStatus(statusLoja, statusMessage);
 
-        /* ===== Mapa ===== */
         var hasMap = !!(MAPBOX_TOKEN && window.mapboxgl);
         if (!hasMap) {
           var mapaFallback = document.getElementById('mapboxMap');
@@ -325,7 +323,6 @@
           mapboxMap.addControl(new mapboxgl.NavigationControl({ showCompass: false }));
         }
 
-        /* ===== Cache de endereços ===== */
         var cacheEstado = 'carregando';
         if (window.EnderecosCache && typeof window.EnderecosCache.carregar === 'function') {
           window.EnderecosCache.carregar()
@@ -343,7 +340,6 @@
           console.warn('[transporte] EnderecosCache não disponível.');
         }
 
-        /* ===== Elementos ===== */
         var elChipOrigem = document.getElementById('chipOrigem');
         var elChipDestino = document.getElementById('chipDestino');
         var elChipOrigemTxt = document.getElementById('chipOrigemTexto');
@@ -364,46 +360,103 @@
           elSugestoes.innerHTML = '<div class="rota-sugestao-vazio">' + texto + '</div>';
         }
 
+        /* ===== Renderização unificada (sugestão | favorito) ===== */
+        function renderizarLinha(endereco, opts) {
+          opts = opts || {};
+          var linha = document.createElement('div');
+          linha.className = 'rota-sugestao-linha';
+
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'rota-sugestao';
+
+          var titulo = (endereco.logradouro || '') +
+            (endereco.numero && endereco.numero !== 'SN' ? ', ' + endereco.numero : '');
+          var sub = (endereco.bairro ? endereco.bairro : '') +
+            (endereco.cep ? ' · CEP ' + endereco.cep : '');
+          var address = titulo + (endereco.bairro ? ' - ' + endereco.bairro : '');
+
+          btn.innerHTML =
+            '<span class="rota-sugestao-titulo">' + Core.sanitize(titulo) + '</span>' +
+            '<span class="rota-sugestao-endereco">' + Core.sanitize(sub) + '</span>';
+
+          btn.addEventListener('click', function () {
+            escolherSugestao({
+              address: address,
+              lat: endereco.lat,
+              lng: endereco.lng,
+              id: endereco.id,
+              logradouro: endereco.logradouro,
+              numero: endereco.numero,
+              bairro: endereco.bairro,
+              cep: endereco.cep,
+              fonte: endereco.fonte
+            });
+          });
+          linha.appendChild(btn);
+
+          /* Estrela */
+          if (window.EnderecosFavoritos && !opts.semEstrela) {
+            var ativo = EnderecosFavoritos.tem(endereco);
+            var star = document.createElement('button');
+            star.type = 'button';
+            star.className = 'rota-sugestao-star' + (ativo ? ' ativo' : '');
+            star.setAttribute('aria-label', ativo ? 'Remover dos favoritos' : 'Salvar nos favoritos');
+            star.setAttribute('title', ativo ? 'Remover dos favoritos' : 'Salvar nos favoritos');
+            star.innerHTML = '<i class="' + (ativo ? 'fa-solid' : 'fa-regular') + ' fa-star" aria-hidden="true"></i>';
+            star.addEventListener('click', function (e) {
+              e.stopPropagation();
+              var agora = EnderecosFavoritos.toggle(endereco);
+              star.className = 'rota-sugestao-star' + (agora ? ' ativo' : '');
+              star.innerHTML = '<i class="' + (agora ? 'fa-solid' : 'fa-regular') + ' fa-star" aria-hidden="true"></i>';
+              star.setAttribute('aria-label', agora ? 'Remover dos favoritos' : 'Salvar nos favoritos');
+              star.setAttribute('title', agora ? 'Remover dos favoritos' : 'Salvar nos favoritos');
+              UI.mostrarToast(agora ? 'Salvo nos favoritos' : 'Removido dos favoritos');
+            });
+            linha.appendChild(star);
+          }
+
+          /* Lápis */
+          if (!opts.semLapis) {
+            var flag = document.createElement('button');
+            flag.type = 'button';
+            flag.className = 'rota-sugestao-flag';
+            flag.setAttribute('aria-label', 'Corrigir este endereço');
+            flag.setAttribute('title', 'Endereço errado? Toque para corrigir');
+            flag.innerHTML = '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span class="flag-texto">Corrigir</span>';
+            flag.addEventListener('click', function (e) {
+              e.stopPropagation();
+              if (window.Economizei && Economizei.TransporteEnderecos) {
+                Economizei.TransporteEnderecos.abrirSugerir(endereco);
+              }
+            });
+            linha.appendChild(flag);
+          }
+
+          return linha;
+        }
+
         function mostrarSugestoes(lista) {
           elSugestoes.innerHTML = '';
           if (!lista.length) return;
           lista.forEach(function (sug) {
-            var linha = document.createElement('div');
-            linha.className = 'rota-sugestao-linha';
+            elSugestoes.appendChild(renderizarLinha(sug, { semLapis: false }));
+          });
+        }
 
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'rota-sugestao';
-            var titulo = sug.logradouro + (sug.numero && sug.numero !== 'SN' ? ', ' + sug.numero : '');
-            var endereco = titulo + (sug.bairro ? ' - ' + sug.bairro : '');
-            btn.innerHTML =
-              '<span class="rota-sugestao-titulo">' + Core.sanitize(titulo) + '</span>' +
-              '<span class="rota-sugestao-endereco">' + Core.sanitize(endereco) + (sug.cep ? ' · CEP ' + Core.sanitize(sug.cep) : '') + '</span>';
-            btn.addEventListener('click', function () {
-              escolherSugestao({
-                address: endereco,
-                lat: sug.lat,
-                lng: sug.lng,
-                fonte: sug.fonte
-              });
-            });
-            linha.appendChild(btn);
+        function mostrarFavoritos() {
+          if (!window.EnderecosFavoritos) { elSugestoes.innerHTML = ''; return; }
+          var lista = EnderecosFavoritos.listar();
+          if (!lista.length) { elSugestoes.innerHTML = ''; return; }
 
-            var flag = document.createElement('button');
-            flag.type = 'button';
-            flag.className = 'rota-sugestao-flag';
-            flag.setAttribute('aria-label', 'Algo errado? Sugerir correção');
-            flag.setAttribute('title', 'Algo errado?');
-            flag.innerHTML = '<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>';
-            flag.addEventListener('click', function (e) {
-              e.stopPropagation();
-              if (window.Economizei && Economizei.TransporteEnderecos) {
-                Economizei.TransporteEnderecos.abrirSugerir(sug);
-              }
-            });
-            linha.appendChild(flag);
+          elSugestoes.innerHTML = '';
+          var titulo = document.createElement('div');
+          titulo.className = 'rota-favoritos-titulo';
+          titulo.innerHTML = '<i class="fa-solid fa-star" aria-hidden="true"></i> Favoritos';
+          elSugestoes.appendChild(titulo);
 
-            elSugestoes.appendChild(linha);
+          lista.forEach(function (fav) {
+            elSugestoes.appendChild(renderizarLinha(fav, { semLapis: true }));
           });
         }
 
@@ -434,6 +487,10 @@
             elBtnLoc.style.display = fase === 'origem' ? 'flex' : 'none';
             elBtnManual.hidden = false;
             elBtnManual.textContent = 'Não encontrei meu endereço';
+            /* Ao entrar em fase, mostra favoritos se tiver */
+            if (window.EnderecosFavoritos && EnderecosFavoritos.listar().length) {
+              mostrarFavoritos();
+            }
           }
         }
 
@@ -446,6 +503,13 @@
 
         function atualizarSugestoes() {
           var q = elInput.value.trim();
+
+          /* Vazio → favoritos */
+          if (q.length === 0) {
+            mostrarFavoritos();
+            return;
+          }
+
           if (q.length < 3) { esconderSugestoes(); return; }
 
           if (cacheEstado === 'carregando') {
@@ -470,6 +534,10 @@
           rotaState.temp = null;
           if (buscaTimer) clearTimeout(buscaTimer);
           buscaTimer = setTimeout(atualizarSugestoes, 150);
+        });
+
+        elInput.addEventListener('focus', function () {
+          if (elInput.value.trim().length === 0) mostrarFavoritos();
         });
 
         elInput.addEventListener('keydown', function (e) {
@@ -537,7 +605,6 @@
           }, { enableHighAccuracy: true, timeout: 10000 });
         });
 
-        /* ===== NÃO ACHEI MEU ENDEREÇO → abre modal de marcar no mapa ===== */
         elBtnManual.addEventListener('click', function () {
           if (!window.Economizei || !Economizei.TransporteEnderecos) {
             UI.mostrarToast('Recurso indisponível no momento.', 'erro');
@@ -548,7 +615,6 @@
           });
         });
 
-        /* ===== Rota ===== */
         var rotaCamadaId = 'rota-direcao-' + Date.now();
 
         function limparRotaDoMapa() {
@@ -756,6 +822,14 @@
           if (saved.telefone && document.getElementById('clienteTelTransporte')) document.getElementById('clienteTelTransporte').value = saved.telefone;
         }
         EU.aplicarMascaraTelefone(document.getElementById('clienteTelTransporte'));
+
+        /* Favoritos mudam em outra aba / outro modal → re-renderiza */
+        if (window.EnderecosFavoritos) {
+          EnderecosFavoritos.onChange(function () {
+            if (!elInput) return;
+            if (elInput.value.trim().length === 0) mostrarFavoritos();
+          });
+        }
 
         atualizarUI();
       })
