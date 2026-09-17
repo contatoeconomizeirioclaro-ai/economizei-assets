@@ -313,6 +313,75 @@
   background: var(--gray-100, #f1f5f9);
 }
 
+/* Botões dentro do popup — genérico pra qualquer módulo.
+   Cobre os casos em que o módulo passa .btn-adicionar-filtro (que vive
+   em grupos.css e não necessariamente é carregado em toda página). */
+.popup-confirmacao-botoes button,
+.popup-confirmacao-botoes a.btn-acao,
+.popup-confirmacao-botoes .btn-adicionar-filtro,
+.popup-confirmacao-botoes .btn-pedido-cta,
+.popup-confirmacao-botoes .btn-modal-primario,
+.popup-confirmacao-botoes .btn-modal-secundario {
+  flex: 1 1 auto;
+  min-width: 130px;
+  height: 2.75rem;
+  padding: 0 1rem;
+  border-radius: 2rem;
+  border: none;
+  background: var(--primary, #0a66c2);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(10, 102, 194, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+}
+.popup-confirmacao-botoes button:hover,
+.popup-confirmacao-botoes a.btn-acao:hover,
+.popup-confirmacao-botoes .btn-adicionar-filtro:hover,
+.popup-confirmacao-botoes .btn-pedido-cta:hover,
+.popup-confirmacao-botoes .btn-modal-primario:hover,
+.popup-confirmacao-botoes .btn-modal-secundario:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(10, 102, 194, 0.3);
+  filter: brightness(1.05);
+}
+
+/* Botão de fechar do footer */
+.popup-confirmacao-footer .btn-modal-fechar,
+.popup-confirmacao-footer button {
+  background: #fff;
+  color: var(--gray-700, #334155);
+  border: 1px solid var(--gray-200, #e2e8f0);
+  padding: 0.6rem 1.2rem;
+  border-radius: 2rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  min-width: 130px;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.popup-confirmacao-footer .btn-modal-fechar:hover,
+.popup-confirmacao-footer button:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
 /* ===== BADGE DE MÓDULO NO CARD ===== */
 .badge-modulo-slot {
   display: flex; justify-content: center; align-items: center;
@@ -339,7 +408,18 @@
   .item-carrinho-imagem { width: 1.6rem; height: 1.6rem; }
   .qtd-item { width: 3rem; font-size: 0.7rem; }
   .input-pedido { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
+
+  .popup-confirmacao-botoes button,
+  .popup-confirmacao-botoes a.btn-acao,
+  .popup-confirmacao-botoes .btn-adicionar-filtro,
+  .popup-confirmacao-botoes .btn-pedido-cta,
+  .popup-confirmacao-botoes .btn-modal-primario,
+  .popup-confirmacao-botoes .btn-modal-secundario {
+    width: 100%;
+    min-width: 0;
+  }
 }
+
 @media (pointer: coarse) {
   .btn-pedido-cta,
   .btn-escolher,
@@ -353,5 +433,16 @@
     min-height: 44px;
     display: inline-flex; align-items: center; justify-content: center;
     padding: 0.4rem 0.7rem;
+  }
+  .popup-confirmacao-botoes button,
+  .popup-confirmacao-botoes a.btn-acao,
+  .popup-confirmacao-botoes .btn-adicionar-filtro,
+  .popup-confirmacao-botoes .btn-pedido-cta,
+  .popup-confirmacao-botoes .btn-modal-primario,
+  .popup-confirmacao-botoes .btn-modal-secundario,
+  .popup-confirmacao-footer .btn-modal-fechar,
+  .popup-confirmacao-footer button {
+    min-height: 44px;
+    height: 44px;
   }
 }
