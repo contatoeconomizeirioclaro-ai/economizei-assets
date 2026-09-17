@@ -1,11 +1,20 @@
 /* ============================================================
-   ECONOMIZEI! RIO CLARO — CACHE DE ENDEREÇOS
-   Baixa 3 coleções em paralelo, mescla em um índice único,
-   guarda em localStorage por 24h, oferece busca local.
-   v3 — adicionarLocal() pra refletir marcações em tempo real
+   ECONOMIZEI! RIO CLARO — ENDEREÇOS
+   Duas APIs no mesmo arquivo:
+
+   - EnderecosCache: baixa CNEFE + usuários, cacheia em localStorage,
+     busca local instantânea.
+   - EnderecosFavoritos: salva endereços favoritos no localStorage
+     do usuário. Sem login, sem Firestore.
+
+   Depende de: window.EconomizeiFirebase.db (comum/firebase.js)
    ============================================================ */
 (function (global) {
   'use strict';
+
+  /* ==========================================================
+     PARTE 1 — ENDEREÇOS (download, cache, busca)
+     ========================================================== */
 
   var CHAVE_CACHE = 'enderecosRioClaroV2';
   var TTL = 24 * 60 * 60 * 1000;
@@ -152,14 +161,6 @@
     return carregar();
   }
 
-  /* ============================================================
-     adicionarLocal(objeto)
-     Injeta um endereço novo no índice em memória E atualiza o
-     localStorage, pra aparecer imediatamente nas buscas (mesma
-     sessão e próximas até 24h).
-     Formato esperado:
-     { logradouro, numero, bairro, cep, lat, lng, busca?, uid?, nome_usuario?, score?, id? }
-     ============================================================ */
   function adicionarLocal(endereco) {
     if (!endereco || !endereco.logradouro) return;
 
@@ -187,7 +188,6 @@
     };
 
     if (!indice) {
-      /* Cache ainda não foi carregado. Força carregar e depois adiciona. */
       carregar().then(function () {
         indice.unshift(novo);
         salvarCache(indice);
@@ -197,13 +197,11 @@
       return;
     }
 
-    /* Evita duplicata exata (mesmo logradouro + número + bairro) */
     for (var i = 0; i < indice.length; i++) {
       var e = indice[i];
       if (norm(e.logradouro) === norm(logradouro) &&
           String(e.numero) === String(numero) &&
           norm(e.bairro) === norm(bairro)) {
-        /* Já existe, não duplica */
         return;
       }
     }
@@ -280,6 +278,115 @@
     norm: norm,
     get pronto() { return !!indice; },
     get total() { return indice ? indice.length : 0; }
+  };
+
+  /* ==========================================================
+     PARTE 2 — FAVORITOS (localStorage, só no navegador)
+     ========================================================== */
+
+  var CHAVE_FAV = 'enderecosFavoritosV1';
+  var ouvintesFav = [];
+
+  function chaveDe(e) {
+    if (!e) return '';
+    if (e.id) return 'id:' + String(e.id);
+    return 'txt:' + norm(e.logradouro || '') + '|' + String(e.numero || 'SN') + '|' + norm(e.bairro || '');
+  }
+
+  function lerFav() {
+    try {
+      var bruto = localStorage.getItem(CHAVE_FAV);
+      if (!bruto) return [];
+      var obj = JSON.parse(bruto);
+      return Array.isArray(obj) ? obj : [];
+    } catch (e) {
+      console.warn('[EnderecosFavoritos] Storage corrompido, ignorando.', e);
+      try { localStorage.removeItem(CHAVE_FAV); } catch (e2) {}
+      return [];
+    }
+  }
+
+  function persistirFav(lista) {
+    try {
+      localStorage.setItem(CHAVE_FAV, JSON.stringify(lista));
+    } catch (e) {
+      console.warn('[EnderecosFavoritos] Não foi possível salvar.', e);
+    }
+  }
+
+  function emitirFav() {
+    var lista = lerFav();
+    ouvintesFav.forEach(function (fn) {
+      try { fn(lista); } catch (e) { console.warn(e); }
+    });
+  }
+
+  function favTem(endereco) {
+    var ch = chaveDe(endereco);
+    if (!ch) return false;
+    return lerFav().some(function (e) { return chaveDe(e) === ch; });
+  }
+
+  function favToggle(endereco) {
+    if (!endereco || !endereco.logradouro) return false;
+    var ch = chaveDe(endereco);
+    var lista = lerFav();
+    var idx = -1;
+    for (var i = 0; i < lista.length; i++) {
+      if (chaveDe(lista[i]) === ch) { idx = i; break; }
+    }
+
+    if (idx >= 0) {
+      lista.splice(idx, 1);
+      persistirFav(lista);
+      emitirFav();
+      return false;
+    }
+
+    lista.unshift({
+      id: endereco.id || null,
+      logradouro: endereco.logradouro || '',
+      numero: endereco.numero || 'SN',
+      bairro: endereco.bairro || '',
+      cep: endereco.cep || '',
+      lat: endereco.lat,
+      lng: endereco.lng,
+      address: endereco.address || endereco.logradouro || '',
+      salvo_em: Date.now()
+    });
+    persistirFav(lista);
+    emitirFav();
+    return true;
+  }
+
+  function favListar() {
+    return lerFav();
+  }
+
+  function favRemover(endereco) {
+    var ch = chaveDe(endereco);
+    if (!ch) return;
+    var lista = lerFav().filter(function (e) { return chaveDe(e) !== ch; });
+    persistirFav(lista);
+    emitirFav();
+  }
+
+  function favLimpar() {
+    try { localStorage.removeItem(CHAVE_FAV); } catch (e) {}
+    emitirFav();
+  }
+
+  function favOnChange(fn) {
+    if (typeof fn === 'function') ouvintesFav.push(fn);
+  }
+
+  global.EnderecosFavoritos = {
+    tem: favTem,
+    toggle: favToggle,
+    listar: favListar,
+    remover: favRemover,
+    limpar: favLimpar,
+    onChange: favOnChange
   };
 
 })(window);
