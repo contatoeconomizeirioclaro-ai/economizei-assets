@@ -1,7 +1,7 @@
 /* ============================================================
    MÓDULO TRANSPORTE — CSS específico
    Depende de: tokens.css, modais.css, componentes.css, _base.css
-   v9 — modal marcar no mapa + botão de sugestão de correção
+   v10 — força estilo dos inputs sobre o tema do Blogger
    ============================================================ */
 
 /* ===== HEADER ===== */
@@ -156,6 +156,8 @@
   flex: 1 1 auto !important;
   position: relative !important;
   min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
 }
 #modalTransporte .rota-input-icone {
   position: absolute !important;
@@ -174,45 +176,106 @@
   box-shadow: 0 0 0 3px rgba(239, 68, 68, .15) !important;
   border-radius: 2px !important;
 }
-#modalTransporte #rotaInput {
-  width: 100% !important;
-  height: 2.75rem !important;
-  padding: .7rem .95rem .7rem 2rem !important;
-  border: 1px solid var(--gray-200, #e2e8f0) !important;
-  border-radius: 2rem !important;
-  font-size: .85rem !important;
-  background: #fff !important;
-  background-image: none !important;
+
+/* ===== FORÇA ESTILO DE TODOS OS INPUTS (sobrescreve tema do Blogger) ===== */
+#modalTransporte input[type="text"],
+#modalTransporte input[type="tel"],
+#modalTransporte input[type="number"],
+#modalTransporte textarea,
+#modalTransporte select,
+#modalMarcarEndereco input[type="text"],
+#modalDetalheSugestao input[type="text"] {
+  box-sizing: border-box !important;
   font-family: inherit !important;
   color: var(--gray-800, #1e293b) !important;
-  box-sizing: border-box !important;
-  transition: border-color .15s ease, box-shadow .15s ease !important;
-}
-#modalTransporte #rotaInput::placeholder { color: var(--gray-500, #64748b) !important; }
-#modalTransporte #rotaInput:focus {
+  background: #fff !important;
+  border: 1px solid var(--gray-200, #e2e8f0) !important;
+  border-radius: 2rem !important;
   outline: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  height: 2.75rem !important;
+  padding: .7rem .95rem !important;
+  font-size: .85rem !important;
+  line-height: 1.2 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+#modalTransporte #rotaInput {
+  padding-left: 2rem !important;
+  height: 2.75rem !important;
+  border-radius: 2rem !important;
+}
+#modalTransporte textarea {
+  border-radius: 1rem !important;
+  min-height: 3rem !important;
+  height: auto !important;
+  resize: vertical !important;
+  padding: .7rem .95rem !important;
+}
+#modalTransporte input:focus,
+#modalTransporte textarea:focus,
+#modalTransporte select:focus,
+#modalMarcarEndereco input:focus,
+#modalDetalheSugestao input:focus {
   border-color: var(--primary, #0a66c2) !important;
   box-shadow: 0 0 0 3px rgba(10, 102, 194, .1) !important;
 }
+#modalTransporte input::placeholder,
+#modalTransporte textarea::placeholder {
+  color: var(--gray-500, #64748b) !important;
+  opacity: 1 !important;
+}
+
+/* ===== BOTÕES REDONDOS ===== */
+#modalTransporte .btn-location-modern,
+#modalTransporte .btn-confirmar-rota {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.75rem !important;
+  min-width: 2.75rem !important;
+  max-width: 2.75rem !important;
+  height: 2.75rem !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  border: none !important;
+  font-size: 1rem !important;
+  transition: background .15s ease, box-shadow .15s ease, transform .12s ease !important;
+}
 #modalTransporte .btn-location-modern {
-  display: flex !important; align-items: center !important; justify-content: center !important;
-  width: 2.75rem !important; min-width: 2.75rem !important; height: 2.75rem !important;
-  background: var(--primary, #0a66c2) !important; color: #fff !important; border: none !important;
-  border-radius: 50% !important; cursor: pointer !important; font-size: 1rem !important;
-  flex-shrink: 0 !important;
+  background: var(--primary, #0a66c2) !important;
+  color: #fff !important;
   box-shadow: 0 2px 6px rgba(10, 102, 194, .3) !important;
 }
+#modalTransporte .btn-location-modern:hover {
+  background: var(--primary-dark, #084d94) !important;
+  box-shadow: 0 4px 10px rgba(10, 102, 194, .35) !important;
+  transform: translateY(-1px) !important;
+}
 #modalTransporte .btn-confirmar-rota {
-  display: flex !important; align-items: center !important; justify-content: center !important;
-  width: 2.75rem !important; min-width: 2.75rem !important; height: 2.75rem !important;
-  background: #10b981 !important; color: #fff !important;
-  border: none !important; border-radius: 50% !important;
-  font-size: 1.1rem !important; cursor: pointer !important; flex-shrink: 0 !important;
+  background: #10b981 !important;
+  color: #fff !important;
   box-shadow: 0 2px 6px rgba(16, 185, 129, .3) !important;
+  font-size: 1.1rem !important;
+}
+#modalTransporte .btn-confirmar-rota:hover:not(:disabled) {
+  background: #059669 !important;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, .35) !important;
+  transform: translateY(-1px) !important;
 }
 #modalTransporte .btn-confirmar-rota:disabled {
-  background: #cbd5e1 !important; cursor: not-allowed !important;
+  background: #cbd5e1 !important;
+  cursor: not-allowed !important;
   box-shadow: none !important;
+  transform: none !important;
+  opacity: 1 !important;
 }
 
 /* ===== SUGESTÕES ===== */
@@ -258,11 +321,11 @@
   text-align: center; font-size: .78rem; color: var(--gray-500);
 }
 
-.rota-sugestao-flag {
-  background: transparent;
+.rota-sugestoes .rota-sugestao-flag {
+  background: #fff7ed;
   border: none;
-  border-left: 1px solid var(--gray-100);
-  color: var(--gray-400, #94a3b8);
+  border-left: 1px solid #fed7aa;
+  color: #ea580c;
   padding: 0 .75rem;
   cursor: pointer;
   font-size: .9rem;
@@ -270,13 +333,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: .35rem;
+  font-weight: 600;
+  font-family: inherit;
   transition: background .15s ease, color .15s ease;
 }
-.rota-sugestao-flag:hover,
-.rota-sugestao-flag:focus-visible {
-  background: #fef2f2;
-  color: #dc2626;
+.rota-sugestoes .rota-sugestao-flag:hover,
+.rota-sugestoes .rota-sugestao-flag:focus-visible {
+  background: #ffedd5;
+  color: #c2410c;
   outline: none;
+}
+.rota-sugestoes .rota-sugestao-flag .flag-texto {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  display: none;
+}
+@media (min-width: 521px) {
+  .rota-sugestoes .rota-sugestao-flag .flag-texto { display: inline; }
 }
 
 /* Botão "Não encontrei meu endereço" */
@@ -294,6 +369,7 @@
   transition: background .15s ease, border-color .15s ease;
   box-shadow: none !important;
   min-height: 2rem;
+  font-family: inherit;
 }
 #modalTransporte #btnEnderecoManual:hover {
   background: var(--primary-light) !important;
@@ -350,27 +426,30 @@
 
 /* ===== TARIFA ===== */
 #modalTransporte #selectTarifa {
-  width: 100%; height: 2.5rem;
-  padding: .55rem 2.2rem .55rem .95rem;
-  border-radius: 2rem;
-  border: 1px solid var(--gray-200);
-  font-size: .82rem;
-  background-color: #fff;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'><path fill='%2364748b' d='M5.5 7 0 0h11z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  appearance: none; -webkit-appearance: none;
-  color: var(--gray-800);
-  cursor: pointer;
-  transition: border-color .15s ease, box-shadow .15s ease;
-  font-family: inherit;
+  width: 100%;
+  height: 2.75rem !important;
+  padding: .7rem 2.4rem .7rem 1rem !important;
+  border-radius: 2rem !important;
+  border: 1px solid var(--gray-200, #e2e8f0) !important;
+  font-size: .85rem !important;
+  background-color: #fff !important;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'><path fill='%2364748b' d='M5.5 7 0 0h11z'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 1rem center !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  color: var(--gray-800, #1e293b) !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  box-sizing: border-box !important;
 }
 #modalTransporte #selectTarifa:focus {
-  outline: none; border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(10, 102, 194, .1);
+  outline: none !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(10, 102, 194, .1) !important;
 }
 
-/* ===== FORM ===== */
+/* ===== FORM (nome/tel) ===== */
 #modalTransporte .form-row {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: .5rem; margin-bottom: .5rem;
@@ -378,39 +457,9 @@
 @media (max-width: 480px) {
   #modalTransporte .form-row { grid-template-columns: 1fr; gap: .45rem; }
 }
-
-#modalTransporte #clienteNomeTransporte,
-#modalTransporte #clienteTelTransporte,
 #modalTransporte #obsTransporte {
-  height: 2.5rem;
-  padding: .55rem .95rem;
-  border-radius: 2rem;
-  border: 1px solid var(--gray-200);
-  font-size: .82rem;
-  color: var(--gray-800);
-  transition: border-color .15s ease, box-shadow .15s ease;
-  width: 100%;
-  font-family: inherit;
-  background: #fff;
-  box-sizing: border-box;
-}
-#modalTransporte #obsTransporte {
-  height: auto;
-  min-height: 3rem;
-  resize: vertical;
-  padding: .6rem .95rem;
   margin-bottom: 0;
-  border-radius: 1rem;
 }
-#modalTransporte #clienteNomeTransporte:focus,
-#modalTransporte #clienteTelTransporte:focus,
-#modalTransporte #obsTransporte:focus {
-  outline: none; border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(10, 102, 194, .1);
-}
-#modalTransporte #clienteNomeTransporte::placeholder,
-#modalTransporte #clienteTelTransporte::placeholder,
-#modalTransporte #obsTransporte::placeholder { color: var(--gray-500); }
 
 /* ===== CTA ===== */
 #modalTransporte #btnSolicitarCorrida {
@@ -420,6 +469,7 @@
   box-shadow: 0 2px 8px rgba(10, 102, 194, .22);
   margin-top: .35rem;
   letter-spacing: .01em;
+  font-family: inherit;
 }
 #modalTransporte #btnSolicitarCorrida:hover {
   box-shadow: 0 4px 12px rgba(10, 102, 194, .3);
@@ -435,19 +485,20 @@
   box-shadow: 0 1px 2px rgba(15, 23, 42, .03);
 }
 #modalTransporte #tabAcompanhar .input-pedido {
-  height: 2.5rem;
-  padding: .55rem .95rem;
-  border-radius: 2rem;
-  border: 1px solid var(--gray-200);
-  font-size: .82rem;
+  height: 2.75rem !important;
+  padding: .7rem .95rem !important;
+  border-radius: 2rem !important;
+  border: 1px solid var(--gray-200) !important;
+  font-size: .85rem !important;
   margin-bottom: .5rem;
   width: 100%; background: #fff;
   box-sizing: border-box;
 }
 #modalTransporte #tabAcompanhar .btn-consultar-pedido,
 #modalTransporte #tabAcompanhar .btn-limpar-historico {
-  height: 2.5rem; border-radius: 2rem;
+  height: 2.75rem; border-radius: 2rem;
   font-size: .8rem; font-weight: 700;
+  font-family: inherit;
 }
 #modalTransporte #tabAcompanhar .btn-limpar-historico { padding: 0 .95rem; }
 
@@ -486,23 +537,6 @@
   letter-spacing: .04em;
   margin-bottom: .3rem;
 }
-#modalMarcarEndereco .input-pedido {
-  width: 100%;
-  height: 2.5rem;
-  padding: .55rem .95rem;
-  border-radius: 2rem;
-  border: 1px solid var(--gray-200);
-  font-size: .82rem;
-  color: var(--gray-800);
-  background: #fff;
-  font-family: inherit;
-  box-sizing: border-box;
-  transition: border-color .15s ease, box-shadow .15s ease;
-}
-#modalMarcarEndereco .input-pedido:focus {
-  outline: none; border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(10, 102, 194, .1);
-}
 #modalMarcarEndereco .form-row {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: .5rem;
@@ -523,10 +557,10 @@
     height: 2.75rem !important;
   }
   .btn-location-modern,
-  .btn-confirmar-rota { width: 2.75rem; min-width: 2.75rem; height: 2.75rem; }
+  .btn-confirmar-rota { width: 2.75rem !important; min-width: 2.75rem !important; height: 2.75rem !important; }
   #modalTransporte #btnSolicitarCorrida { height: 3rem; }
   .rota-chip-remover { width: 2rem; height: 2rem; min-width: 2rem; }
-  .rota-sugestao-flag { padding: 0 1rem; }
+  .rota-sugestoes .rota-sugestao-flag { padding: 0 1rem; }
 }
 
 /* ===== APP MODE ===== */
