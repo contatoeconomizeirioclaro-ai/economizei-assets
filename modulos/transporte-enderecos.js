@@ -1,8 +1,7 @@
 /* ============================================================
    TRANSPORTE — MODAIS DE ENDEREÇO
    Marcar no mapa + sugerir correção.
-   Reusa modais.css + Core.UI + criarModalAcessivel.
-   Depende de: Core, UI, EnderecosCache (opcional).
+   v2 — usa adicionarLocal() pra refletir na hora
    ============================================================ */
 (function () {
   'use strict';
@@ -56,7 +55,6 @@
     return lat >= RC_BBOX[1] && lat <= RC_BBOX[3] && lng >= RC_BBOX[0] && lng <= RC_BBOX[2];
   }
 
-  /* ===== Login (reusa Google Sign-In) ===== */
   function fazerLogin(callback) {
     var overlay = document.getElementById('loginOverlay');
     if (overlay) overlay.style.display = 'flex';
@@ -157,8 +155,6 @@
 
     var btnSalvar = document.getElementById('marcarSalvar');
     var inputLog = document.getElementById('marcarLogradouro');
-    var inputNum = document.getElementById('marcarNumero');
-    var inputBai = document.getElementById('marcarBairro');
 
     function validar() {
       var log = inputLog.value.trim();
@@ -243,9 +239,24 @@
     Core.db.collection('enderecos_usuario').add(dados)
       .then(function (ref) {
         UI.mostrarToast('Endereço marcado! Obrigado.');
-        if (window.EnderecosCache && window.EnderecosCache.limparCache) {
-          window.EnderecosCache.limparCache();
+
+        /* Injeta no cache em memória E no localStorage — aparece imediatamente */
+        if (window.EnderecosCache && typeof window.EnderecosCache.adicionarLocal === 'function') {
+          window.EnderecosCache.adicionarLocal({
+            id: 'usr_' + ref.id,
+            logradouro: logradouro,
+            numero: numero,
+            bairro: bairro,
+            cep: '',
+            lat: latSel,
+            lng: lngSel,
+            busca: busca,
+            uid: user.uid,
+            nome_usuario: user.displayName || '',
+            score: score
+          });
         }
+
         var completo = logradouro + (numero !== 'SN' ? ', ' + numero : '') + (bairro ? ' - ' + bairro : '');
         if (typeof cbSucesso === 'function') {
           cbSucesso({
@@ -284,7 +295,7 @@
         '<div class="modal-conteudo modal-lista">' +
           '<div class="modal-header">' +
             '<h3 id="modalSugerirTitulo">' +
-              '<i class="fa-solid fa-flag" aria-hidden="true"></i>' +
+              '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>' +
               'O que está errado?' +
             '</h3>' +
             '<button class="modal-close-btn" data-fechar aria-label="Fechar">×</button>' +
@@ -332,7 +343,7 @@
       '<div class="modal-overlay" id="modalDetalheSugestao" role="dialog" aria-modal="true">' +
         '<div class="modal-conteudo modal-sm modal-confirmar">' +
           '<div class="modal-header">' +
-            '<h3><i class="fa-solid fa-pen" aria-hidden="true"></i> ' + titulo + '</h3>' +
+            '<h3><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> ' + titulo + '</h3>' +
           '</div>' +
           '<div class="modal-body">' +
             '<p style="font-size:.85rem;color:#64748b;margin-bottom:.65rem;">' + Core.sanitize(ref) + '</p>' +
@@ -388,7 +399,7 @@
         criado_em: firebase.firestore.FieldValue.serverTimestamp(),
         score: 0.3
       }).then(function () {
-        UI.mostrarToast('Obrigado! Sua sugestão foi enviada.');
+        UI.mostrarToast('Obrigado! Sua sugestão foi enviada para análise.');
         ctrl.fechar();
       }).catch(function (err) {
         btn.disabled = false;
@@ -398,7 +409,6 @@
     });
   }
 
-  /* ===== API ===== */
   window.Economizei.TransporteEnderecos = {
     abrirMarcar: abrirMarcar,
     abrirSugerir: abrirSugerir
