@@ -35,11 +35,13 @@
     else if (el) el.remove();
   }
 
-  Cards.registrarModulo('loja', {
-    label: '🛍️ Ver produtos',
-    ariaLabel: 'Ver produtos da loja',
-    onClick: function (idx) { return 'Economizei.Loja.abrirModal(' + idx + ')'; }
-  });
+ Cards.registrarModulo('loja', {
+  label: 'Ver produtos',
+  ariaLabel: 'Ver produtos da loja',
+  icone: 'fa-solid fa-store',
+  cor: '#e67e22',
+  onClick: function (idx) { return 'Economizei.Loja.abrirModal(' + idx + ')'; }
+});
 
   (function instalarBadgeModulos() {
     if (window.__economizeiBadgeModulos) return;
