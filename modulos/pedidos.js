@@ -85,11 +85,13 @@ Economizei.Pedido = (function () {
     }
   }
 
-  Cards.registrarModulo('pedido', {
-    label: '🍽️ Fazer pedido',
-    ariaLabel: 'Fazer pedido',
-    onClick: function (idx) { return 'Economizei.Pedido.abrirModal(' + idx + ')'; }
-  });
+Cards.registrarModulo('pedido', {
+  label: 'Fazer pedido',
+  ariaLabel: 'Fazer pedido',
+  icone: 'fa-solid fa-utensils',
+  cor: '#c0392b',
+  onClick: function (idx) { return 'Economizei.Pedido.abrirModal(' + idx + ')'; }
+});
 
   function garantirModalScanner() {
     if (document.getElementById('modalScanner')) return;
