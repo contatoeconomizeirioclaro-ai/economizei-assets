@@ -35,11 +35,13 @@
     else if (el) el.remove();
   }
 
-  Cards.registrarModulo('transporte', {
-    label: '🚕 Solicitar corrida',
-    ariaLabel: 'Solicitar corrida ou frete',
-    onClick: function (idx) { return 'window.abrirModalTransporte(' + idx + ')'; }
-  });
+ Cards.registrarModulo('transporte', {
+  label: 'Solicitar corrida',
+  ariaLabel: 'Solicitar corrida ou frete',
+  icone: 'fa-solid fa-taxi',
+  cor: '#2980b9',
+  onClick: function (idx) { return 'window.abrirModalTransporte(' + idx + ')'; }
+});
 
   var MAPBOX_TOKEN = (window.ECONOMIZEI_CONFIG && window.ECONOMIZEI_CONFIG.mapboxToken) || window.ECONOMIZEI_MAPBOX_TOKEN || '';
   var RC_CENTER = [-44.135, -22.723];
