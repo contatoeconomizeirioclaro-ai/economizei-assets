@@ -38,7 +38,9 @@ var CARDS_CFG = {
   iconeSemResultados: '📋',
   modoHorario: '7dias',
   colunas: null,
-  tiposFiltroVisiveis: null
+  tiposFiltroVisiveis: null,
+  botoes: null,
+  camposDetalhe: null
 };
 
 (function aplicarGRUPO_CONFIG() {
@@ -46,7 +48,8 @@ var CARDS_CFG = {
   var m = {
     csvUrl: 1, cacheKey: 1, favoritosKey: 1,
     urlBaseQR: 1, imagemFallback: 1, iconeSemResultados: 1,
-    modoHorario: 1, colunas: 1, mapeamentoExato: 1
+    modoHorario: 1, colunas: 1, mapeamentoExato: 1,
+    botoes: 1, camposDetalhe: 1
   };
   for (var k in CFG) {
     if (m[k] && CFG[k] !== undefined) {
@@ -205,10 +208,25 @@ Economizei.Utils = (function () {
   function gerarImagemQRCode(nome, urlBase, tamanho) {
     return EU.gerarImagemQRCode(gerarURLQRCode(nome, urlBase), tamanho);
   }
+  function parseListaNomesURLs(valor) {
+    if (!valor) return [];
+    return valor.split(/[,\n;]+/)
+      .map(function (s) { return s.trim(); })
+      .filter(function (s) { return s !== ''; })
+      .map(function (parte) {
+        if (parte.indexOf('|') !== -1) {
+          var sp = parte.split('|').map(function (s) { return s.trim(); });
+          return { nome: sp[0] || 'Abrir', url: sp[1] || '' };
+        }
+        return { nome: 'Abrir', url: parte };
+      })
+      .filter(function (it) { return it.url; });
+  }
   return {
     parseCSV:parseCSV, splitValores:splitValores, valorAtendeFiltro:valorAtendeFiltro,
     calcularDistancia:calcularDistancia, formatarDistancia:formatarDistancia,
-    isClosedValue:isClosedValue, gerarURLQRCode:gerarURLQRCode, gerarImagemQRCode:gerarImagemQRCode
+    isClosedValue:isClosedValue, gerarURLQRCode:gerarURLQRCode, gerarImagemQRCode:gerarImagemQRCode,
+    parseListaNomesURLs: parseListaNomesURLs
   };
 })();
 
@@ -384,11 +402,68 @@ Economizei.UI = (function () {
     modalAcessivel.abrir(modal);
   }
 
+  function abrirModalItens(index, idBotao) {
+    var card = Economizei.Cards.getCardByIndex(index);
+    if (!card) return;
+    var mapa = {};
+    try { mapa = JSON.parse(card.dataset.itens || '{}'); } catch (e) { mapa = {}; }
+    var lista = mapa[idBotao] || [];
+    if (!lista.length) return;
+
+    var cfgBtn = (CARDS_CFG.botoes || []).filter(function (b) {
+      return (b.id || b.classe) === idBotao;
+    })[0] || {};
+
+    var rotulo = cfgBtn.rotulo || 'Opções';
+    var icone  = cfgBtn.icone  || 'fa-list';
+
+    var modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.setAttribute('role','dialog');
+    modal.setAttribute('aria-modal','true');
+    modal.setAttribute('aria-label', rotulo);
+    modal.innerHTML =
+      '<div class="modal-conteudo modal-multis">' +
+        '<div class="modal-header">' +
+          '<h3><i class="' + icone + '" aria-hidden="true"></i> ' + Core.sanitize(rotulo) + '</h3>' +
+          '<button class="modal-close-btn" data-fechar-itens aria-label="Fechar">×</button>' +
+        '</div>' +
+        '<div class="modal-body"><div class="lista-itens-modal"></div></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+
+    var cont = modal.querySelector('.lista-itens-modal');
+    lista.forEach(function (it) {
+      var a = document.createElement('a');
+      a.href = it.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.className = 'item-opcao';
+      a.setAttribute('aria-label', 'Abrir ' + it.nome);
+      a.innerHTML =
+        '<span class="item-icone" style="background:var(--primary);color:#fff;" aria-hidden="true">' +
+          '<i class="' + icone + '"></i>' +
+        '</span>' +
+        '<span class="item-texto">' +
+          '<span class="item-label">' + Core.sanitize(it.nome) + '</span>' +
+        '</span>' +
+        '<span class="item-seta" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>';
+      cont.appendChild(a);
+    });
+
+    var ctrl = EU.criarModalAcessivel();
+    ctrl.abrir(modal, function () { modal.remove(); });
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal || e.target.closest('[data-fechar-itens]')) ctrl.fechar();
+    });
+  }
+
   function trapFocus(modal) { modalAcessivel.abrir(modal); }
   function restoreFocus() { modalAcessivel.fechar(); }
 
   return {
     mostrarToast:mostrarToast, abrirModalWhatsapp:abrirModalWhatsapp,
+    abrirModalItens:abrirModalItens,
     trapFocus:trapFocus, restoreFocus:restoreFocus
   };
 })();
@@ -976,21 +1051,66 @@ Economizei.Cards = (function () {
 
       var authHTML = gerarAuthHTML(idx);
 
+      // ==================== BOTÕES ====================
       var botoes = [];
-      if (whatsappData.length === 1) {
-        var w = whatsappData[0];
-        botoes.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + Core.sanitize(w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">WhatsApp</a>');
-      } else if (whatsappData.length > 1) {
-        botoes.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + Core.sanitize(nome) + '">WhatsApp</button>');
-      }
-      if (maps) botoes.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + Core.sanitize(nome) + '">Localização</a>');
-      if (cardapio) botoes.push('<a href="' + cardapio + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-cardapio" aria-label="Cardápio de ' + Core.sanitize(nome) + '">Cardápio</a>');
-      if (site) botoes.push('<a href="' + site + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-site-pedido" aria-label="Site/Pedido de ' + Core.sanitize(nome) + '">Site/Pedido</a>');
-      if (facebook) botoes.push('<a href="' + facebook + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-facebook" aria-label="Facebook de ' + Core.sanitize(nome) + '">Facebook</a>');
-      if (instagram) botoes.push('<a href="' + instagram + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-instagram" aria-label="Instagram de ' + Core.sanitize(nome) + '">Instagram</a>');
-      if (promocao) botoes.push('<a href="' + promocao + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-promocao" aria-label="Promoção de ' + Core.sanitize(nome) + '">🔥 Promoção</a>');
+      var itensPorBotao = {};
+      var cfgBotoes = CARDS_CFG.botoes || [
+        { tipo:'whatsapp' }, { tipo:'maps' }, { tipo:'qrcode' }
+      ];
+
+      cfgBotoes.forEach(function (b) {
+        var tipo = b.tipo;
+
+        if (tipo === 'whatsapp') {
+          if (whatsappData.length === 1) {
+            var w = whatsappData[0];
+            botoes.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + Core.sanitize(w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">WhatsApp</a>');
+          } else if (whatsappData.length > 1) {
+            botoes.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + Core.sanitize(nome) + '">WhatsApp</button>');
+          }
+          return;
+        }
+
+        if (tipo === 'maps') {
+          if (maps) botoes.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + Core.sanitize(nome) + '">Localização</a>');
+          return;
+        }
+
+        if (tipo === 'qrcode') {
+          botoes.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + Core.jsEscape(nome) + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + Core.sanitize(nome) + '">📱 QR Code</button>');
+          return;
+        }
+
+        if (tipo === 'reserva') {
+          if (reservasData.length) {
+            botoes.push('<button class="btn-acao btn-reserva" onclick="Economizei.Cards.abrirModalReservas(' + idx + ')" aria-label="Reservas de ' + Core.sanitize(nome) + '">Reservas</button>');
+          }
+          return;
+        }
+
+        if (tipo === 'link' || tipo === 'multis') {
+          var valor = c[b.coluna];
+          if (!valor) return;
+          var listaItens = Utils.parseListaNomesURLs(valor);
+          if (!listaItens.length) return;
+          var classe = b.classe || ('btn-link-' + b.coluna);
+          var idBtn  = b.id || classe;
+          var rotulo = b.rotulo || 'Abrir';
+
+          if (listaItens.length === 1) {
+            botoes.push('<a href="' + Core.sanitize(listaItens[0].url) + '" target="_blank" rel="noopener noreferrer" class="btn-acao ' + classe + '" aria-label="' + Core.sanitize(rotulo) + '">' + rotulo + '</a>');
+          } else {
+            itensPorBotao[idBtn] = listaItens;
+            botoes.push('<button class="btn-acao ' + classe + '" data-index="' + idx + '" onclick="Economizei.UI.abrirModalItens(' + idx + ',\'' + Core.jsEscape(idBtn) + '\')" aria-label="' + Core.sanitize(rotulo) + ' para ' + Core.sanitize(nome) + '">' + rotulo + '</button>');
+          }
+          return;
+        }
+      });
+
       if (estilo) botoes.push(montarBotaoModulo(estilo, idx));
-      botoes.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + Core.jsEscape(nome) + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + Core.sanitize(nome) + '">📱 QR Code</button>');
+
+      card.dataset.itens = JSON.stringify(itensPorBotao);
+      // ==================== FIM BOTÕES ====================
 
       var detalhesHTML = '';
       if (horarioDisplay) detalhesHTML += '<div class="detalhe-item"><strong>Horário:</strong> ' + Core.sanitize(horarioDisplay) + '</div>';
