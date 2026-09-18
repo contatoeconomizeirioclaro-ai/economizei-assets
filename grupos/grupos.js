@@ -513,13 +513,17 @@ Economizei.Cards = (function () {
     modulosRegistrados[String(estilo).toLowerCase().trim()] = definicao;
   }
 
-  function montarBotaoModulo(estilo, idx) {
-    var def = modulosRegistrados[(estilo || '').toLowerCase().trim()];
-    if (!def) return '';
-    var label = def.label || 'Abrir';
-    var aria = def.ariaLabel || label;
-    return '<button class="btn-acao btn-modulo" onclick="' + def.onClick(idx) + '" aria-label="' + Core.sanitize(aria) + '">' + label + '</button>';
-  }
+ function montarBotaoModulo(estilo, idx) {
+  var def = modulosRegistrados[(estilo || '').toLowerCase().trim()];
+  if (!def) return '';
+  var label = def.label || 'Abrir';
+  var aria = def.ariaLabel || label;
+  var icone = def.icone || '';
+  var cor = def.cor || '';
+  var estiloInline = cor ? ' style="background:' + cor + ';border-color:' + cor + ';color:#fff;"' : '';
+  var iconeHTML = icone ? '<i class="' + icone + '" aria-hidden="true"></i> ' : '';
+  return '<button class="btn-acao btn-modulo"' + estiloInline + ' onclick="' + def.onClick(idx) + '" aria-label="' + Core.sanitize(aria) + '">' + iconeHTML + label + '</button>';
+}
 
   function getFavoritos() { return gerenciadorFav.getTodos(); }
   function toggleFavorito(nome) { return gerenciadorFav.toggle(nome); }
