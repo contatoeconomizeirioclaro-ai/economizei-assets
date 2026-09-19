@@ -1185,7 +1185,8 @@ Economizei.Cards = (function () {
 
       var authHTML = gerarAuthHTML(idx);
 
-      var botoes = [];
+      var botoesOutros = [];
+      var botoesModulo = [];
       var itensPorBotao = {};
       var cfgBotoes = CARDS_CFG.botoes || [
         { tipo:'whatsapp' }, { tipo:'maps' }, { tipo:'qrcode' }
@@ -1197,26 +1198,26 @@ Economizei.Cards = (function () {
         if (tipo === 'whatsapp') {
           if (whatsappData.length === 1) {
             var w = whatsappData[0];
-            botoes.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + Core.sanitize(w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">' + iconeDoBotao('btn-whatsapp') + 'WhatsApp</a>');
+            botoesOutros.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + Core.sanitize(w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">' + iconeDoBotao('btn-whatsapp') + 'WhatsApp</a>');
           } else if (whatsappData.length > 1) {
-            botoes.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-whatsapp') + 'WhatsApp</button>');
+            botoesOutros.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-whatsapp') + 'WhatsApp</button>');
           }
           return;
         }
 
         if (tipo === 'maps') {
-          if (maps) botoes.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-mapa') + 'Localização</a>');
+          if (maps) botoesOutros.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-mapa') + 'Localização</a>');
           return;
         }
 
         if (tipo === 'qrcode') {
-          botoes.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + Core.jsEscape(nome) + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-qrcode') + 'QR Code</button>');
+          botoesOutros.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + Core.jsEscape(nome) + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-qrcode') + 'QR Code</button>');
           return;
         }
 
         if (tipo === 'reserva') {
           if (reservasData.length) {
-            botoes.push('<button class="btn-acao btn-reserva" onclick="Economizei.Cards.abrirModalReservas(' + idx + ')" aria-label="Reservas de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-reserva') + 'Reservas</button>');
+            botoesOutros.push('<button class="btn-acao btn-reserva" onclick="Economizei.Cards.abrirModalReservas(' + idx + ')" aria-label="Reservas de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-reserva') + 'Reservas</button>');
           }
           return;
         }
@@ -1232,16 +1233,23 @@ Economizei.Cards = (function () {
           var iconeHTML = iconeDoBotao(classe);
 
           if (listaItens.length === 1) {
-            botoes.push('<a href="' + Core.sanitize(listaItens[0].url) + '" target="_blank" rel="noopener noreferrer" class="btn-acao ' + classe + '" aria-label="' + Core.sanitize(rotulo) + '">' + iconeHTML + rotulo + '</a>');
+            botoesOutros.push('<a href="' + Core.sanitize(listaItens[0].url) + '" target="_blank" rel="noopener noreferrer" class="btn-acao ' + classe + '" aria-label="' + Core.sanitize(rotulo) + '">' + iconeHTML + rotulo + '</a>');
           } else {
             itensPorBotao[idBtn] = listaItens;
-            botoes.push('<button class="btn-acao ' + classe + '" data-index="' + idx + '" onclick="Economizei.UI.abrirModalItens(' + idx + ',\'' + Core.jsEscape(idBtn) + '\')" aria-label="' + Core.sanitize(rotulo) + ' para ' + Core.sanitize(nome) + '">' + iconeHTML + rotulo + '</button>');
+            botoesOutros.push('<button class="btn-acao ' + classe + '" data-index="' + idx + '" onclick="Economizei.UI.abrirModalItens(' + idx + ',\'' + Core.jsEscape(idBtn) + '\')" aria-label="' + Core.sanitize(rotulo) + ' para ' + Core.sanitize(nome) + '">' + iconeHTML + rotulo + '</button>');
           }
           return;
         }
       });
 
-      if (estilo) botoes.push(montarBotaoModulo(estilo, idx));
+      if (estilo) {
+        var htmlModulo = montarBotaoModulo(estilo, idx);
+        if (htmlModulo) botoesModulo.push(htmlModulo);
+      }
+
+      var acoesHTML = '';
+      if (botoesModulo.length) acoesHTML += botoesModulo.join('');
+      if (botoesOutros.length) acoesHTML += '<div class="card-acoes-resto">' + botoesOutros.join('') + '</div>';
 
       card.dataset.itens = JSON.stringify(itensPorBotao);
 
@@ -1265,7 +1273,7 @@ Economizei.Cards = (function () {
             '</div>' +
             '<div class="avaliacao-mensagem" data-index="' + idx + '">' + (avUser ? 'Sua nota: ' + avUser + ' estrela' + (avUser > 1 ? 's' : '') : '') + '</div>' +
           '</div>' +
-          '<div class="card-acoes">' + botoes.join('') + '</div>' +
+          '<div class="card-acoes">' + acoesHTML + '</div>' +
         '</div>';
 
       todosCardsRenderizados.push({ card:card, expanded:expanded, index:idx });
