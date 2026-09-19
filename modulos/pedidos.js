@@ -88,13 +88,13 @@ Economizei.Pedido = (function () {
   Cards.registrarModulo('pedido', {
     label: 'Fazer pedido',
     ariaLabel: 'Fazer pedido',
-    icone: 'fa-solid fa-bell-concierge',
+    icone: 'fa-solid fa-utensils',
     onClick: function (idx) { return 'Economizei.Pedido.abrirModal(' + idx + ')'; }
   });
 
   Cards.registrarBadge('pedido', {
     label: 'Módulo Pedidos',
-    icone: 'fa-solid fa-bell-concierge',
+    icone: 'fa-solid fa-utensils',
     desc: 'Este cadastro permite fazer pedidos online.'
   });
 
