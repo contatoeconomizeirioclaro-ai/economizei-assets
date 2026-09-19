@@ -39,131 +39,14 @@
   label: 'Ver produtos',
   ariaLabel: 'Ver produtos da loja',
   icone: 'fa-solid fa-store',
-  cor: '#e67e22',
   onClick: function (idx) { return 'Economizei.Loja.abrirModal(' + idx + ')'; }
 });
 
-  (function instalarBadgeModulos() {
-    if (window.__economizeiBadgeModulos) return;
-    window.__economizeiBadgeModulos = true;
-
-    var configs = {
-      pedidos:     { label: 'Módulo Pedidos',     icone: 'fa-utensils',            desc: 'Este cadastro permite fazer pedidos online.' },
-      loja:        { label: 'Módulo Loja',        icone: 'fa-store',               desc: 'Este estabelecimento oferece uma vitrine digital para você comprar online.' },
-      transporte:  { label: 'Módulo Transporte',  icone: 'fa-taxi',                desc: 'Este cadastro permite solicitar corridas/fretes online.' },
-      orcamentos:  { label: 'Módulo Orçamentos',  icone: 'fa-file-invoice-dollar', desc: 'Este cadastro permite solicitar orçamentos online.' },
-      agendamentos:{ label: 'Módulo Agendamentos',icone: 'fa-calendar-check',      desc: 'Este cadastro permite realizar agendamentos online.' },
-      hospedagem:  { label: 'Módulo Hospedagem',  icone: 'fa-bed',                 desc: 'Este cadastro permite fazer reservas de hospedagem online.' }
-    };
-    var aliases = {
-      pedido: 'pedidos', pedidos: 'pedidos',
-      loja: 'loja', 'loja online': 'loja', ecommerce: 'loja',
-      transporte: 'transporte', taxi: 'transporte', taxis: 'transporte',
-      orcamento: 'orcamentos', orcamentos: 'orcamentos',
-      agendamento: 'agendamentos', agendamentos: 'agendamentos',
-      hospedagem: 'hospedagem'
-    };
-    var tooltipAberto = null;
-
-    function normalizar(v) {
-      return String(v || '').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    }
-    function obterModulo(card) {
-      var estilo = normalizar(card.dataset.estilo);
-      return aliases[estilo] || '';
-    }
-    function fecharTooltip() {
-      if (!tooltipAberto) return;
-      if (tooltipAberto.botao) {
-        tooltipAberto.botao.classList.remove('tooltip-aberto');
-        tooltipAberto.botao.setAttribute('aria-expanded', 'false');
-        tooltipAberto.botao.removeAttribute('aria-describedby');
-      }
-      if (tooltipAberto.elemento && tooltipAberto.elemento.parentNode) tooltipAberto.elemento.remove();
-      tooltipAberto = null;
-    }
-    function posicionarTooltip() {
-      if (!tooltipAberto || !tooltipAberto.botao || !tooltipAberto.elemento) return;
-      var b = tooltipAberto.botao, t = tooltipAberto.elemento;
-      var r = b.getBoundingClientRect(), m = 8;
-      var l = Math.max(m, Math.min(r.left + r.width / 2 - t.offsetWidth / 2, window.innerWidth - t.offsetWidth - m));
-      var top = r.top - t.offsetHeight - m;
-      if (top < m) top = r.bottom + m;
-      t.style.left = l + 'px';
-      t.style.top = Math.max(m, top) + 'px';
-    }
-    function abrirTooltip(botao, modulo) {
-      fecharTooltip();
-      var meta = configs[modulo];
-      if (!meta) return;
-      var tt = document.createElement('div');
-      tt.className = 'tooltip-modulo-flutuante';
-      tt.id = 'tooltip-' + modulo + '-' + Date.now();
-      tt.setAttribute('role', 'tooltip');
-      tt.textContent = meta.desc;
-      document.body.appendChild(tt);
-      botao.classList.add('tooltip-aberto');
-      botao.setAttribute('aria-expanded', 'true');
-      tooltipAberto = { botao: botao, elemento: tt };
-      botao.setAttribute('aria-describedby', tt.id);
-      posicionarTooltip();
-      requestAnimationFrame(function () {
-        if (tooltipAberto && tooltipAberto.elemento === tt) tt.classList.add('visivel');
-      });
-    }
-    function vincularBotao(botao, modulo) {
-      botao.addEventListener('mouseenter', function () { abrirTooltip(botao, modulo); });
-      botao.addEventListener('mouseleave', fecharTooltip);
-      botao.addEventListener('focus', function () { abrirTooltip(botao, modulo); });
-      botao.addEventListener('blur', fecharTooltip);
-      botao.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); abrirTooltip(botao, modulo); });
-      botao.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); });
-    }
-    function renderizarSelos() {
-      document.querySelectorAll('.card').forEach(function (card) {
-        var content = card.querySelector('.card-content');
-        if (!content) return;
-        var slot = content.querySelector('.badge-modulo-slot');
-        if (!slot) {
-          slot = document.createElement('div');
-          slot.className = 'badge-modulo-slot';
-          slot.setAttribute('aria-hidden', 'true');
-          var titulo = content.querySelector('.card-title');
-          if (titulo) content.insertBefore(slot, titulo); else content.appendChild(slot);
-        }
-        var modulo = obterModulo(card);
-        var existente = slot.querySelector('.badge-modulo-card');
-        if (!modulo) { if (existente) existente.remove(); return; }
-        if (existente && existente.dataset.modulo === modulo) return;
-        if (existente) existente.remove();
-        var meta = configs[modulo];
-        var aria = card.getAttribute('aria-label') || '';
-        if (aria.indexOf(meta.label) === -1) card.setAttribute('aria-label', aria + ', ' + meta.label);
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'badge-modulo-card';
-        btn.dataset.modulo = modulo;
-        btn.title = meta.desc;
-        btn.setAttribute('aria-label', meta.label + '. Clique para saber mais.');
-        btn.setAttribute('aria-expanded', 'false');
-        btn.innerHTML = '<i class="fas ' + meta.icone + '" aria-hidden="true"></i><span>' + meta.label + '</span>';
-        slot.appendChild(btn);
-        vincularBotao(btn, modulo);
-      });
-    }
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest('.badge-modulo-card')) fecharTooltip();
-    }, true);
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fecharTooltip(); }, true);
-    window.addEventListener('resize', fecharTooltip);
-    window.addEventListener('scroll', fecharTooltip, true);
-    var lista = document.getElementById('lista') || document.body;
-    if (window.MutationObserver) {
-      var obs = new MutationObserver(renderizarSelos);
-      obs.observe(lista, { childList: true, subtree: true });
-    }
-    renderizarSelos();
-  })();
+Cards.registrarBadge('loja', {
+  label: 'Módulo Loja',
+  icone: 'fa-solid fa-store',
+  desc: 'Este estabelecimento oferece uma vitrine digital para você comprar online.'
+});
 
   function abrirModal(idx) {
     var est = Cards.dadosProcessados[idx];
