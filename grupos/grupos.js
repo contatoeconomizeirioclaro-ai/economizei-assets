@@ -59,6 +59,28 @@ var CARDS_CFG = {
   }
 })();
 
+var ICONES_BOTOES = {
+  'btn-whatsapp':    'fa-brands fa-whatsapp',
+  'btn-mapa':        'fa-solid fa-location-dot',
+  'btn-cardapio':    'fa-solid fa-book-open',
+  'btn-encarte':     'fa-solid fa-file-lines',
+  'btn-catalogo':    'fa-solid fa-box',
+  'btn-portfolio':   'fa-solid fa-folder-open',
+  'btn-site':        'fa-solid fa-globe',
+  'btn-site-pedido': 'fa-solid fa-cart-shopping',
+  'btn-facebook':    'fa-brands fa-facebook',
+  'btn-instagram':   'fa-brands fa-instagram',
+  'btn-pinterest':   'fa-brands fa-pinterest',
+  'btn-promocao':    'fa-solid fa-fire',
+  'btn-qrcode':      'fa-solid fa-qrcode',
+  'btn-reserva':     'fa-solid fa-calendar-check'
+};
+
+function iconeDoBotao(classe) {
+  var ic = ICONES_BOTOES[classe];
+  return ic ? '<i class="' + ic + '" aria-hidden="true"></i> ' : '';
+}
+
 Economizei.Core = (function () {
   if (!window.EconomizeiFirebase) {
     console.error('[grupos.js] comum/firebase.js não foi carregado antes deste script.');
@@ -415,7 +437,7 @@ Economizei.UI = (function () {
     })[0] || {};
 
     var rotulo = cfgBtn.rotulo || 'Opções';
-    var icone  = cfgBtn.icone  || 'fa-list';
+    var icone = ICONES_BOTOES[idBotao] || 'fa-solid fa-list';
 
     var modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -513,17 +535,16 @@ Economizei.Cards = (function () {
     modulosRegistrados[String(estilo).toLowerCase().trim()] = definicao;
   }
 
- function montarBotaoModulo(estilo, idx) {
-  var def = modulosRegistrados[(estilo || '').toLowerCase().trim()];
-  if (!def) return '';
-  var label = def.label || 'Abrir';
-  var aria = def.ariaLabel || label;
-  var icone = def.icone || '';
-  var cor = def.cor || '';
-  var estiloInline = cor ? ' style="background:' + cor + ';border-color:' + cor + ';color:#fff;"' : '';
-  var iconeHTML = icone ? '<i class="' + icone + '" aria-hidden="true"></i> ' : '';
-  return '<button class="btn-acao btn-modulo"' + estiloInline + ' onclick="' + def.onClick(idx) + '" aria-label="' + Core.sanitize(aria) + '">' + iconeHTML + label + '</button>';
-}
+  function montarBotaoModulo(estilo, idx) {
+    var chave = (estilo || '').toLowerCase().trim();
+    var def = modulosRegistrados[chave];
+    if (!def) return '';
+    var label = def.label || 'Abrir';
+    var aria = def.ariaLabel || label;
+    var icone = def.icone || '';
+    var iconeHTML = icone ? '<i class="' + icone + '" aria-hidden="true"></i> ' : '';
+    return '<button class="btn-acao btn-modulo" data-modulo="' + chave + '" onclick="' + def.onClick(idx) + '" aria-label="' + Core.sanitize(aria) + '">' + iconeHTML + label + '</button>';
+  }
 
   function getFavoritos() { return gerenciadorFav.getTodos(); }
   function toggleFavorito(nome) { return gerenciadorFav.toggle(nome); }
@@ -1055,7 +1076,6 @@ Economizei.Cards = (function () {
 
       var authHTML = gerarAuthHTML(idx);
 
-      // ==================== BOTÕES ====================
       var botoes = [];
       var itensPorBotao = {};
       var cfgBotoes = CARDS_CFG.botoes || [
@@ -1068,26 +1088,26 @@ Economizei.Cards = (function () {
         if (tipo === 'whatsapp') {
           if (whatsappData.length === 1) {
             var w = whatsappData[0];
-            botoes.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + Core.sanitize(w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">WhatsApp</a>');
+            botoes.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + Core.sanitize(w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">' + iconeDoBotao('btn-whatsapp') + 'WhatsApp</a>');
           } else if (whatsappData.length > 1) {
-            botoes.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + Core.sanitize(nome) + '">WhatsApp</button>');
+            botoes.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-whatsapp') + 'WhatsApp</button>');
           }
           return;
         }
 
         if (tipo === 'maps') {
-          if (maps) botoes.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + Core.sanitize(nome) + '">Localização</a>');
+          if (maps) botoes.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-mapa') + 'Localização</a>');
           return;
         }
 
         if (tipo === 'qrcode') {
-          botoes.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + Core.jsEscape(nome) + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + Core.sanitize(nome) + '">📱 QR Code</button>');
+          botoes.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + Core.jsEscape(nome) + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-qrcode') + 'QR Code</button>');
           return;
         }
 
         if (tipo === 'reserva') {
           if (reservasData.length) {
-            botoes.push('<button class="btn-acao btn-reserva" onclick="Economizei.Cards.abrirModalReservas(' + idx + ')" aria-label="Reservas de ' + Core.sanitize(nome) + '">Reservas</button>');
+            botoes.push('<button class="btn-acao btn-reserva" onclick="Economizei.Cards.abrirModalReservas(' + idx + ')" aria-label="Reservas de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-reserva') + 'Reservas</button>');
           }
           return;
         }
@@ -1100,12 +1120,13 @@ Economizei.Cards = (function () {
           var classe = b.classe || ('btn-link-' + b.coluna);
           var idBtn  = b.id || classe;
           var rotulo = b.rotulo || 'Abrir';
+          var iconeHTML = iconeDoBotao(classe);
 
           if (listaItens.length === 1) {
-            botoes.push('<a href="' + Core.sanitize(listaItens[0].url) + '" target="_blank" rel="noopener noreferrer" class="btn-acao ' + classe + '" aria-label="' + Core.sanitize(rotulo) + '">' + rotulo + '</a>');
+            botoes.push('<a href="' + Core.sanitize(listaItens[0].url) + '" target="_blank" rel="noopener noreferrer" class="btn-acao ' + classe + '" aria-label="' + Core.sanitize(rotulo) + '">' + iconeHTML + rotulo + '</a>');
           } else {
             itensPorBotao[idBtn] = listaItens;
-            botoes.push('<button class="btn-acao ' + classe + '" data-index="' + idx + '" onclick="Economizei.UI.abrirModalItens(' + idx + ',\'' + Core.jsEscape(idBtn) + '\')" aria-label="' + Core.sanitize(rotulo) + ' para ' + Core.sanitize(nome) + '">' + rotulo + '</button>');
+            botoes.push('<button class="btn-acao ' + classe + '" data-index="' + idx + '" onclick="Economizei.UI.abrirModalItens(' + idx + ',\'' + Core.jsEscape(idBtn) + '\')" aria-label="' + Core.sanitize(rotulo) + ' para ' + Core.sanitize(nome) + '">' + iconeHTML + rotulo + '</button>');
           }
           return;
         }
@@ -1114,7 +1135,6 @@ Economizei.Cards = (function () {
       if (estilo) botoes.push(montarBotaoModulo(estilo, idx));
 
       card.dataset.itens = JSON.stringify(itensPorBotao);
-      // ==================== FIM BOTÕES ====================
 
       var detalhesHTML = '';
       if (horarioDisplay) detalhesHTML += '<div class="detalhe-item"><strong>Horário:</strong> ' + Core.sanitize(horarioDisplay) + '</div>';
