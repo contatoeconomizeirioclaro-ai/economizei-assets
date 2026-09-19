@@ -35,12 +35,17 @@
     else if (el) el.remove();
   }
 
- Cards.registrarModulo('transporte', {
+Cards.registrarModulo('transporte', {
   label: 'Solicitar corrida',
   ariaLabel: 'Solicitar corrida ou frete',
   icone: 'fa-solid fa-taxi',
-  cor: '#2980b9',
   onClick: function (idx) { return 'window.abrirModalTransporte(' + idx + ')'; }
+});
+
+Cards.registrarBadge('transporte', {
+  label: 'Módulo Transporte',
+  icone: 'fa-solid fa-taxi',
+  desc: 'Este cadastro permite solicitar corridas/fretes online.'
 });
 
   var MAPBOX_TOKEN = (window.ECONOMIZEI_CONFIG && window.ECONOMIZEI_CONFIG.mapboxToken) || window.ECONOMIZEI_MAPBOX_TOKEN || '';
