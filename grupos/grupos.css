@@ -124,22 +124,27 @@
 .card-acoes { display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.3rem; }
 .btn-acao { padding:.5rem .75rem; border-radius:2rem; font-weight:600; font-size:.7rem; text-align:center; transition:var(--transition); flex:1 1 auto; display:inline-flex; align-items:center; justify-content:center; gap:.2rem; border:none; cursor:pointer; color:#fff !important; text-decoration:none; min-height:2.2rem; }
 .btn-acao:hover { transform:translateY(-2px); filter:brightness(1.1); }
+.btn-acao i { font-size:.85em; line-height:1; }
 .btn-whatsapp     { background:#25D366; }
 .btn-mapa         { background:#1a73e8; }
-.btn-cardapio     { background:#dc3545; }
-.btn-encarte      { background:#dc3545; }
-.btn-portfolio    { background:#6f42c1; }
-.btn-catalogo     { background:#dc3545; }
-.btn-site         { background:#2c3e50; }
+.btn-cardapio     { background:#c0392b; }
+.btn-encarte      { background:#d35400; }
+.btn-catalogo     { background:#e67e22; }
+.btn-portfolio    { background:#8e44ad; }
+.btn-site         { background:#34495e; }
 .btn-site-pedido  { background:#2c3e50; }
 .btn-facebook     { background:#1877f2; }
 .btn-pinterest    { background:#e60023; }
 .btn-instagram    { background:#e1306c; }
-.btn-qrcode       { background:#28a745; }
-.btn-reserva      { background:#9333ea; }
-.btn-promocao     { background:#ff5722; animation:neonPulseSuave 5s infinite ease-in-out; }
-.btn-promocao:hover { transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,.2),0 0 30px #ff5722; }
-@keyframes neonPulseSuave { 0%{box-shadow:0 0 5px #ff5722,0 0 10px #ff5722,0 0 15px #ff5722;} 50%{box-shadow:0 0 20px #ff5722,0 0 40px #ff5722,0 0 60px #ff5722;} 100%{box-shadow:0 0 5px #ff5722,0 0 10px #ff5722,0 0 15px #ff5722;} }
+.btn-qrcode       { background:#27ae60; }
+.btn-reserva      { background:#9b59b6; }
+.btn-promocao     { background:#e74c3c; animation:neonPulseSuave 5s infinite ease-in-out; }
+.btn-promocao:hover { transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,.2),0 0 30px #e74c3c; }
+.btn-modulo                     { background:#64748b; }
+.btn-modulo[data-modulo="pedido"]     { background:#a93226; }
+.btn-modulo[data-modulo="loja"]       { background:#e67e22; }
+.btn-modulo[data-modulo="transporte"] { background:#2980b9; }
+@keyframes neonPulseSuave { 0%{box-shadow:0 0 5px #e74c3c,0 0 10px #e74c3c,0 0 15px #e74c3c;} 50%{box-shadow:0 0 20px #e74c3c,0 0 40px #e74c3c,0 0 60px #e74c3c;} 100%{box-shadow:0 0 5px #e74c3c,0 0 10px #e74c3c,0 0 15px #e74c3c;} }
 
 /* ===== ESTADOS ===== */
 .login-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; justify-content:center; align-items:center; z-index:3000; flex-direction:column; gap:1rem; }
