@@ -510,6 +510,7 @@ Economizei.Cards = (function () {
   var cardsPorPagina = 20, paginaAtual = 1, vigiaScroll = null;
   var estatisticasGlobais = {}, avaliacoesUsuarioGlobais = {};
   var modulosRegistrados = {};
+  var badgesRegistrados = {};
   var dadosResolvidos;
   var dadosProntos = new Promise(function (r) { dadosResolvidos = r; });
 
@@ -527,12 +528,20 @@ Economizei.Cards = (function () {
     }
   }
 
-  function registrarModulo(estilo, definicao) {
+   function registrarModulo(estilo, definicao) {
     if (!estilo || !definicao || typeof definicao.onClick !== 'function') {
       console.error('[registrarModulo] inválido:', estilo, definicao);
       return;
     }
     modulosRegistrados[String(estilo).toLowerCase().trim()] = definicao;
+  }
+
+  function registrarBadge(estilo, definicao) {
+    if (!estilo || !definicao || !definicao.label) {
+      console.error('[registrarBadge] inválido:', estilo, definicao);
+      return;
+    }
+    badgesRegistrados[String(estilo).toLowerCase().trim()] = definicao;
   }
 
   function montarBotaoModulo(estilo, idx) {
