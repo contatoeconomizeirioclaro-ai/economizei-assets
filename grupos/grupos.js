@@ -528,7 +528,7 @@ Economizei.Cards = (function () {
     }
   }
 
-   function registrarModulo(estilo, definicao) {
+  function registrarModulo(estilo, definicao) {
     if (!estilo || !definicao || typeof definicao.onClick !== 'function') {
       console.error('[registrarModulo] inválido:', estilo, definicao);
       return;
@@ -554,6 +554,106 @@ Economizei.Cards = (function () {
     var iconeHTML = icone ? '<i class="' + icone + '" aria-hidden="true"></i> ' : '';
     return '<button class="btn-acao btn-modulo" data-modulo="' + chave + '" onclick="' + def.onClick(idx) + '" aria-label="' + Core.sanitize(aria) + '">' + iconeHTML + label + '</button>';
   }
+
+  // ==================== MOTOR DE BADGES ====================
+  var __badgeTooltipAberto = null;
+
+  function fecharTooltipBadge() {
+    if (!__badgeTooltipAberto) return;
+    if (__badgeTooltipAberto.botao) {
+      __badgeTooltipAberto.botao.classList.remove('tooltip-aberto');
+      __badgeTooltipAberto.botao.setAttribute('aria-expanded', 'false');
+      __badgeTooltipAberto.botao.removeAttribute('aria-describedby');
+    }
+    if (__badgeTooltipAberto.elemento && __badgeTooltipAberto.elemento.parentNode) {
+      __badgeTooltipAberto.elemento.remove();
+    }
+    __badgeTooltipAberto = null;
+  }
+  function posicionarTooltipBadge() {
+    if (!__badgeTooltipAberto || !__badgeTooltipAberto.botao || !__badgeTooltipAberto.elemento) return;
+    var b = __badgeTooltipAberto.botao, t = __badgeTooltipAberto.elemento;
+    var r = b.getBoundingClientRect(), m = 8;
+    var l = Math.max(m, Math.min(r.left + r.width / 2 - t.offsetWidth / 2, window.innerWidth - t.offsetWidth - m));
+    var top = r.top - t.offsetHeight - m;
+    if (top < m) top = r.bottom + m;
+    t.style.left = l + 'px';
+    t.style.top = Math.max(m, top) + 'px';
+  }
+  function abrirTooltipBadge(botao, meta) {
+    fecharTooltipBadge();
+    var tt = document.createElement('div');
+    tt.className = 'tooltip-modulo-flutuante';
+    tt.id = 'tooltip-badge-' + Date.now();
+    tt.setAttribute('role', 'tooltip');
+    tt.textContent = meta.desc || meta.label;
+    document.body.appendChild(tt);
+    botao.classList.add('tooltip-aberto');
+    botao.setAttribute('aria-expanded', 'true');
+    __badgeTooltipAberto = { botao: botao, elemento: tt };
+    botao.setAttribute('aria-describedby', tt.id);
+    posicionarTooltipBadge();
+    requestAnimationFrame(function () {
+      if (__badgeTooltipAberto && __badgeTooltipAberto.elemento === tt) tt.classList.add('visivel');
+    });
+  }
+  function vincularBotaoBadge(botao, meta) {
+    botao.addEventListener('mouseenter', function () { abrirTooltipBadge(botao, meta); });
+    botao.addEventListener('mouseleave', fecharTooltipBadge);
+    botao.addEventListener('focus', function () { abrirTooltipBadge(botao, meta); });
+    botao.addEventListener('blur', fecharTooltipBadge);
+    botao.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); abrirTooltipBadge(botao, meta); });
+    botao.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); });
+  }
+  function renderizarBadges() {
+    document.querySelectorAll('.card').forEach(function (card) {
+      var content = card.querySelector('.card-content');
+      if (!content) return;
+      var slot = content.querySelector('.badge-modulo-slot');
+      if (!slot) {
+        slot = document.createElement('div');
+        slot.className = 'badge-modulo-slot';
+        slot.setAttribute('aria-hidden', 'true');
+        var titulo = content.querySelector('.card-title');
+        if (titulo) content.insertBefore(slot, titulo); else content.appendChild(slot);
+      }
+      var estilo = String(card.dataset.estilo || '').toLowerCase().trim();
+      var meta = badgesRegistrados[estilo];
+      var existente = slot.querySelector('.badge-modulo-card');
+      if (!meta) { if (existente) existente.remove(); return; }
+      if (existente && existente.dataset.modulo === estilo) return;
+      if (existente) existente.remove();
+      var aria = card.getAttribute('aria-label') || '';
+      if (aria.indexOf(meta.label) === -1) card.setAttribute('aria-label', aria + ', ' + meta.label);
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'badge-modulo-card';
+      btn.dataset.modulo = estilo;
+      btn.title = meta.desc || meta.label;
+      btn.setAttribute('aria-label', meta.label + '. Clique para saber mais.');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.innerHTML = '<i class="' + (meta.icone || 'fa-solid fa-cube') + '" aria-hidden="true"></i><span>' + meta.label + '</span>';
+      slot.appendChild(btn);
+      vincularBotaoBadge(btn, meta);
+    });
+  }
+  (function instalarBadgeObserver() {
+    if (window.__economizeiBadgeObserver) return;
+    window.__economizeiBadgeObserver = true;
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.badge-modulo-card')) fecharTooltipBadge();
+    }, true);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fecharTooltipBadge(); }, true);
+    window.addEventListener('resize', fecharTooltipBadge);
+    window.addEventListener('scroll', fecharTooltipBadge, true);
+    var lista = document.getElementById('lista') || document.body;
+    if (window.MutationObserver) {
+      var obs = new MutationObserver(renderizarBadges);
+      obs.observe(lista, { childList: true, subtree: true });
+    }
+    renderizarBadges();
+  })();
+  // ==================== FIM MOTOR DE BADGES ====================
 
   function getFavoritos() { return gerenciadorFav.getTodos(); }
   function toggleFavorito(nome) { return gerenciadorFav.toggle(nome); }
@@ -1176,6 +1276,7 @@ Economizei.Cards = (function () {
     listaEl.style.display = window.innerWidth <= 768 ? 'flex' : 'grid';
     if (window.innerWidth <= 768) listaEl.style.flexDirection = 'column';
     ativarInteracoesCards();
+    renderizarBadges();
     if (dadosResolvidos) { dadosResolvidos(); dadosResolvidos = null; }
   }
 
@@ -1240,12 +1341,12 @@ Economizei.Cards = (function () {
   }
 
   function handleCardClick(e) {
-    if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .btn-modulo, .badge-tooltip, .link-entrar, .link-sair')) return;
+    if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .btn-modulo, .badge-tooltip, .badge-modulo-card, .link-entrar, .link-sair')) return;
     toggleCardExpand(this);
   }
   function handleCardKeydown(e) {
     if (e.key === 'Enter' || e.key === ' ') {
-      if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .btn-modulo, .badge-tooltip, .link-entrar, .link-sair')) return;
+      if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .btn-modulo, .badge-tooltip, .badge-modulo-card, .link-entrar, .link-sair')) return;
       e.preventDefault(); toggleCardExpand(this);
     }
   }
@@ -1509,6 +1610,7 @@ Economizei.Cards = (function () {
   return {
     configurar: configurar,
     registrarModulo: registrarModulo,
+    registrarBadge: registrarBadge,
     dadosProntos: dadosProntos,
     get dadosProcessados() { return dadosProcessados; },
     getFavoritos:getFavoritos, toggleFavorito:toggleFavorito, estaVerificado:estaVerificado,
