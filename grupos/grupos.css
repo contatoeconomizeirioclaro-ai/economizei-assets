@@ -1,12 +1,5 @@
 /* ============================================================
    ECONOMIZEI! RIO CLARO — GRUPOS (padrão)
-   Base compartilhada das 18 páginas de grupo.
-   Escopado em .pagina-wrap pra não vazar pro resto do site.
-
-   DEPENDE DE tokens.css E modais.css — carregar os dois ANTES
-   deste arquivo. As classes de modal (.modal-overlay, .modal-header,
-   .modal-body, .modal-footer, .modal-close-btn, .btn-modal-fechar,
-   .item-opcao, etc.) vêm de comum/modais.css. Não são redefinidas aqui.
    ============================================================ */
 
 .pagina-wrap * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -109,7 +102,19 @@
 .detalhe-item { font-size:.7rem; color:var(--gray-600); line-height:1.3; }
 .detalhe-item strong { color:var(--gray-800); display:block; margin-bottom:.2rem; font-size:.65rem; }
 
-.avaliacao-section { background:#fff; border-radius:var(--radius-sm); padding:.5rem; border:1px solid var(--gray-200); margin-bottom:.5rem; }
+/* ===== SEÇÃO: rótulos discretos ===== */
+.secao-titulo {
+  font-size:.62rem;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--gray-500);
+  text-align:center;
+  margin:.55rem 0 .3rem;
+}
+
+/* ===== AVALIAÇÃO ===== */
+.avaliacao-section { background:#fff; border-radius:var(--radius-sm); padding:.5rem; border:1px solid var(--gray-200); margin-bottom:.4rem; }
 .avaliacao-topo { display:flex; justify-content:flex-end; align-items:center; gap:.3rem; margin-bottom:.5rem; font-size:.7rem; }
 .avaliacao-topo .foto-perfil { width:1.6rem; height:1.6rem; border-radius:50%; object-fit:cover; }
 .avaliacao-topo span { font-weight:500; color:var(--gray-700); }
@@ -121,49 +126,78 @@
 .estrela-btn:hover { transform:scale(1.1); }
 .avaliacao-mensagem { text-align:center; font-size:.65rem; color:var(--gray-500); min-height:1.2rem; }
 
-/* ===== AÇÕES DO CARD ===== */
-.card-acoes { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.3rem; align-items:stretch; }
-
-/* Botão de módulo: estreito, altura casada com a grade ao lado */
-.card-acoes > .btn-modulo {
-  flex: 0 0 auto;
-  min-width: 120px;
-  max-width: 160px;
-  padding:.5rem .75rem;
-  font-size:.72rem;
-  min-height: auto;
-  border-radius:.7rem;
-  font-weight:700;
-  gap:.4rem;
+/* ===== MÓDULOS ===== */
+.modulo-section {
+  background:#fff;
+  border:1px solid var(--gray-200);
+  border-radius:var(--radius-sm);
+  padding:.5rem;
+  margin-bottom:.4rem;
+  text-align:center;
+}
+.modulo-section .btn-modulo {
+  display:inline-flex;
+  align-items:center;
   justify-content:center;
-  align-self:stretch;
+  gap:.4rem;
+  padding:.5rem 1.1rem;
+  min-height:2.2rem;
+  border-radius:2rem;
+  font-size:.72rem;
+  font-weight:700;
+  color:#fff !important;
+  text-decoration:none;
+  border:none;
+  cursor:pointer;
+  transition:var(--transition);
+  flex:0 0 auto;
 }
-.card-acoes > .btn-modulo i { font-size:.95rem; }
+.modulo-section .btn-modulo:hover { transform:translateY(-2px); filter:brightness(1.1); }
+.modulo-section .btn-modulo i { font-size:.9em; }
+.modulo-vazio {
+  font-size:.68rem;
+  color:var(--gray-500);
+  padding:.4rem 0;
+  text-align:center;
+  line-height:1.35;
+}
 
-/* Grade de botões secundários: 3 colunas */
-.card-acoes-resto {
-  flex: 1 1 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: .3rem;
-  min-width: 0;
-  align-content: stretch;
+/* ===== BOTÕES DE AÇÃO ===== */
+.card-acoes {
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:.35rem;
+  margin-top:.3rem;
 }
-.card-acoes-resto .btn-acao {
-  min-height: 2rem;
-  padding: .4rem .35rem;
-  font-size: .6rem;
-  gap: .2rem;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.card-acoes-resto .btn-acao i { font-size:.85em; flex-shrink:0; }
 
-.btn-acao { padding:.5rem .75rem; border-radius:2rem; font-weight:600; font-size:.7rem; text-align:center; transition:var(--transition); flex:1 1 auto; display:inline-flex; align-items:center; justify-content:center; gap:.2rem; border:none; cursor:pointer; color:#fff !important; text-decoration:none; min-height:2.2rem; }
+.card-compartilhar {
+  margin-top:.35rem;
+}
+
+.btn-acao {
+  padding:.5rem .6rem;
+  border-radius:2rem;
+  font-weight:600;
+  font-size:.65rem;
+  text-align:center;
+  transition:var(--transition);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.25rem;
+  border:none;
+  cursor:pointer;
+  color:#fff !important;
+  text-decoration:none;
+  min-height:2rem;
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
 .btn-acao:hover { transform:translateY(-2px); filter:brightness(1.1); }
-.btn-acao i { font-size:.85em; line-height:1; }
+.btn-acao i { font-size:.85em; line-height:1; flex-shrink:0; }
+
 .btn-whatsapp     { background:#25D366; }
 .btn-mapa         { background:#1a73e8; }
 .btn-cardapio     { background:#c0392b; }
@@ -175,15 +209,28 @@
 .btn-facebook     { background:#1877f2; }
 .btn-pinterest    { background:#e60023; }
 .btn-instagram    { background:#e1306c; }
-.btn-qrcode       { background:#27ae60; }
 .btn-reserva      { background:#9b59b6; }
 .btn-promocao     { background:#e74c3c; animation:neonPulseSuave 5s infinite ease-in-out; }
 .btn-promocao:hover { transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,.2),0 0 30px #e74c3c; }
+
+.btn-compartilhar {
+  background:#27ae60;
+  width:100%;
+  min-height:2.2rem;
+  font-size:.7rem;
+  padding:.5rem .75rem;
+}
+
 .btn-modulo                     { background:#64748b; }
 .btn-modulo[data-modulo="pedido"]     { background:#a93226; }
 .btn-modulo[data-modulo="loja"]       { background:#e67e22; }
 .btn-modulo[data-modulo="transporte"] { background:#2980b9; }
-@keyframes neonPulseSuave { 0%{box-shadow:0 0 5px #e74c3c,0 0 10px #e74c3c,0 0 15px #e74c3c;} 50%{box-shadow:0 0 20px #e74c3c,0 0 40px #e74c3c,0 0 60px #e74c3c;} 100%{box-shadow:0 0 5px #e74c3c,0 0 10px #e74c3c,0 0 15px #e74c3c;} }
+
+@keyframes neonPulseSuave {
+  0%   { box-shadow:0 0 5px #e74c3c,0 0 10px #e74c3c,0 0 15px #e74c3c; }
+  50%  { box-shadow:0 0 20px #e74c3c,0 0 40px #e74c3c,0 0 60px #e74c3c; }
+  100% { box-shadow:0 0 5px #e74c3c,0 0 10px #e74c3c,0 0 15px #e74c3c; }
+}
 
 /* ===== ESTADOS ===== */
 .login-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; justify-content:center; align-items:center; z-index:3000; flex-direction:column; gap:1rem; }
@@ -221,9 +268,8 @@
   .card-status { font-size:.5rem; padding:.1rem .3rem; }
   .btn-acao, .btn-filtro { padding:.4rem .6rem; font-size:.6rem; min-height:2rem; }
   .btn-acao { min-height:2rem; font-size:.65rem; }
-  .card-acoes > .btn-modulo { min-width:100%; max-width:none; min-height:2.4rem; font-size:.72rem; }
-  .card-acoes-resto { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .card-acoes-resto .btn-acao { min-height:2rem; font-size:.6rem; }
+  .card-acoes { grid-template-columns:1fr; }
+  .modulo-section .btn-modulo { width:100%; }
 }
 
 @media (pointer:coarse) {
