@@ -60,20 +60,20 @@ var CARDS_CFG = {
 })();
 
 var ICONES_BOTOES = {
-  'btn-whatsapp':    'fa-brands fa-whatsapp',
-  'btn-mapa':        'fa-solid fa-location-dot',
-  'btn-cardapio':    'fa-solid fa-book-open',
-  'btn-encarte':     'fa-solid fa-file-lines',
-  'btn-catalogo':    'fa-solid fa-box',
-  'btn-portfolio':   'fa-solid fa-folder-open',
-  'btn-site':        'fa-solid fa-globe',
-  'btn-site-pedido': 'fa-solid fa-cart-shopping',
-  'btn-facebook':    'fa-brands fa-facebook',
-  'btn-instagram':   'fa-brands fa-instagram',
-  'btn-pinterest':   'fa-brands fa-pinterest',
-  'btn-promocao':    'fa-solid fa-fire',
-  'btn-qrcode':      'fa-solid fa-qrcode',
-  'btn-reserva':     'fa-solid fa-calendar-check'
+  'btn-whatsapp':     'fa-brands fa-whatsapp',
+  'btn-mapa':         'fa-solid fa-location-dot',
+  'btn-cardapio':     'fa-solid fa-book-open',
+  'btn-encarte':      'fa-solid fa-file-lines',
+  'btn-catalogo':     'fa-solid fa-box',
+  'btn-portfolio':    'fa-solid fa-folder-open',
+  'btn-site':         'fa-solid fa-globe',
+  'btn-site-pedido':  'fa-solid fa-cart-shopping',
+  'btn-facebook':     'fa-brands fa-facebook',
+  'btn-instagram':    'fa-brands fa-instagram',
+  'btn-pinterest':    'fa-brands fa-pinterest',
+  'btn-promocao':     'fa-solid fa-fire',
+  'btn-reserva':      'fa-solid fa-calendar-check',
+  'btn-compartilhar': 'fa-solid fa-share-nodes'
 };
 
 function iconeDoBotao(classe) {
@@ -1185,8 +1185,9 @@ Economizei.Cards = (function () {
 
       var authHTML = gerarAuthHTML(idx);
 
-      var botoesOutros = [];
+      var botoesComuns = [];
       var botoesModulo = [];
+      var botaoCompartilhar = '';
       var itensPorBotao = {};
       var cfgBotoes = CARDS_CFG.botoes || [
         { tipo:'whatsapp' }, { tipo:'maps' }, { tipo:'qrcode' }
@@ -1198,26 +1199,26 @@ Economizei.Cards = (function () {
         if (tipo === 'whatsapp') {
           if (whatsappData.length === 1) {
             var w = whatsappData[0];
-            botoesOutros.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + Core.sanitize(w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">' + iconeDoBotao('btn-whatsapp') + 'WhatsApp</a>');
+            botoesComuns.push('<a href="https://wa.me/' + w.numero + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-whatsapp" aria-label="WhatsApp ' + Core.sanitize(w.nome ? w.nome : Core.formatarTelefone(w.numero)) + '">' + iconeDoBotao('btn-whatsapp') + 'WhatsApp</a>');
           } else if (whatsappData.length > 1) {
-            botoesOutros.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-whatsapp') + 'WhatsApp</button>');
+            botoesComuns.push('<button class="btn-acao btn-whatsapp" data-index="' + idx + '" onclick="Economizei.UI.abrirModalWhatsapp(' + idx + ')" aria-label="Opções de WhatsApp para ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-whatsapp') + 'WhatsApp</button>');
           }
           return;
         }
 
         if (tipo === 'maps') {
-          if (maps) botoesOutros.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-mapa') + 'Localização</a>');
+          if (maps) botoesComuns.push('<a href="' + maps + '" target="_blank" rel="noopener noreferrer" class="btn-acao btn-mapa" aria-label="Localização de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-mapa') + 'Localização</a>');
           return;
         }
 
         if (tipo === 'qrcode') {
-          botoesOutros.push('<button class="btn-acao btn-qrcode" onclick="abrirQRCode(event, \'' + Core.jsEscape(nome) + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="QR Code de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-qrcode') + 'QR Code</button>');
+          botaoCompartilhar = '<button class="btn-acao btn-compartilhar" onclick="abrirQRCode(event, \'' + Core.jsEscape(nome) + '\', \'' + qrCodeURL + '\', \'' + urlQRCode + '\')" aria-label="Compartilhar ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-compartilhar') + 'Compartilhar</button>';
           return;
         }
 
         if (tipo === 'reserva') {
           if (reservasData.length) {
-            botoesOutros.push('<button class="btn-acao btn-reserva" onclick="Economizei.Cards.abrirModalReservas(' + idx + ')" aria-label="Reservas de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-reserva') + 'Reservas</button>');
+            botoesComuns.push('<button class="btn-acao btn-reserva" onclick="Economizei.Cards.abrirModalReservas(' + idx + ')" aria-label="Reservas de ' + Core.sanitize(nome) + '">' + iconeDoBotao('btn-reserva') + 'Reservas</button>');
           }
           return;
         }
@@ -1233,10 +1234,10 @@ Economizei.Cards = (function () {
           var iconeHTML = iconeDoBotao(classe);
 
           if (listaItens.length === 1) {
-            botoesOutros.push('<a href="' + Core.sanitize(listaItens[0].url) + '" target="_blank" rel="noopener noreferrer" class="btn-acao ' + classe + '" aria-label="' + Core.sanitize(rotulo) + '">' + iconeHTML + rotulo + '</a>');
+            botoesComuns.push('<a href="' + Core.sanitize(listaItens[0].url) + '" target="_blank" rel="noopener noreferrer" class="btn-acao ' + classe + '" aria-label="' + Core.sanitize(rotulo) + '">' + iconeHTML + rotulo + '</a>');
           } else {
             itensPorBotao[idBtn] = listaItens;
-            botoesOutros.push('<button class="btn-acao ' + classe + '" data-index="' + idx + '" onclick="Economizei.UI.abrirModalItens(' + idx + ',\'' + Core.jsEscape(idBtn) + '\')" aria-label="' + Core.sanitize(rotulo) + ' para ' + Core.sanitize(nome) + '">' + iconeHTML + rotulo + '</button>');
+            botoesComuns.push('<button class="btn-acao ' + classe + '" data-index="' + idx + '" onclick="Economizei.UI.abrirModalItens(' + idx + ',\'' + Core.jsEscape(idBtn) + '\')" aria-label="' + Core.sanitize(rotulo) + ' para ' + Core.sanitize(nome) + '">' + iconeHTML + rotulo + '</button>');
           }
           return;
         }
@@ -1247,11 +1248,19 @@ Economizei.Cards = (function () {
         if (htmlModulo) botoesModulo.push(htmlModulo);
       }
 
-      var acoesHTML = '';
-      if (botoesModulo.length) acoesHTML += botoesModulo.join('');
-      if (botoesOutros.length) acoesHTML += '<div class="card-acoes-resto">' + botoesOutros.join('') + '</div>';
-
       card.dataset.itens = JSON.stringify(itensPorBotao);
+
+      var moduloHTML = botoesModulo.length
+        ? botoesModulo.join('')
+        : '<div class="modulo-vazio">Este cadastro ainda não possui módulo ativo</div>';
+
+      var botoesComunsHTML = botoesComuns.length
+        ? '<div class="card-acoes">' + botoesComuns.join('') + '</div>'
+        : '';
+
+      var compartilharHTML = botaoCompartilhar
+        ? '<div class="card-compartilhar">' + botaoCompartilhar + '</div>'
+        : '';
 
       var detalhesHTML = '';
       if (horarioDisplay) detalhesHTML += '<div class="detalhe-item"><strong>Horário:</strong> ' + Core.sanitize(horarioDisplay) + '</div>';
@@ -1263,6 +1272,7 @@ Economizei.Cards = (function () {
       expanded.innerHTML =
         '<div class="card-expanded">' +
           '<div class="detalhes-grid">' + detalhesHTML + '</div>' +
+          '<div class="secao-titulo">Deixe a sua avaliação</div>' +
           '<div class="avaliacao-section">' +
             '<div class="avaliacao-topo" data-index="' + idx + '" data-nome="' + Core.sanitize(nome) + '">' + authHTML + '</div>' +
             '<div class="avaliacao-estrelas" data-nome="' + Core.sanitize(nome) + '" data-index="' + idx + '" role="radiogroup" aria-label="Avaliar ' + Core.sanitize(nome) + '">' +
@@ -1273,7 +1283,10 @@ Economizei.Cards = (function () {
             '</div>' +
             '<div class="avaliacao-mensagem" data-index="' + idx + '">' + (avUser ? 'Sua nota: ' + avUser + ' estrela' + (avUser > 1 ? 's' : '') : '') + '</div>' +
           '</div>' +
-          '<div class="card-acoes">' + acoesHTML + '</div>' +
+          '<div class="secao-titulo">Economizei Módulos</div>' +
+          '<div class="modulo-section">' + moduloHTML + '</div>' +
+          botoesComunsHTML +
+          compartilharHTML +
         '</div>';
 
       todosCardsRenderizados.push({ card:card, expanded:expanded, index:idx });
@@ -1349,12 +1362,12 @@ Economizei.Cards = (function () {
   }
 
   function handleCardClick(e) {
-    if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .btn-modulo, .badge-tooltip, .badge-modulo-card, .link-entrar, .link-sair')) return;
+    if (e.target.closest('.btn-favorito, .card-toggle, .btn-compartilhar, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .btn-modulo, .badge-tooltip, .badge-modulo-card, .link-entrar, .link-sair')) return;
     toggleCardExpand(this);
   }
   function handleCardKeydown(e) {
     if (e.key === 'Enter' || e.key === ' ') {
-      if (e.target.closest('.btn-favorito, .card-toggle, .btn-qrcode, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .btn-modulo, .badge-tooltip, .badge-modulo-card, .link-entrar, .link-sair')) return;
+      if (e.target.closest('.btn-favorito, .card-toggle, .btn-compartilhar, .btn-whatsapp, .btn-mapa, .btn-cardapio, .btn-catalogo, .btn-site, .btn-site-pedido, .btn-facebook, .btn-instagram, .btn-promocao, .btn-reserva, .btn-modulo, .badge-tooltip, .badge-modulo-card, .link-entrar, .link-sair')) return;
       e.preventDefault(); toggleCardExpand(this);
     }
   }
