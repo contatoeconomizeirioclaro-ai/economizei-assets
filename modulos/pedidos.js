@@ -85,13 +85,18 @@ Economizei.Pedido = (function () {
     }
   }
 
-Cards.registrarModulo('pedido', {
-  label: 'Fazer pedido',
-  ariaLabel: 'Fazer pedido',
-  icone: 'fa-solid fa-utensils',
-  cor: '#c0392b',
-  onClick: function (idx) { return 'Economizei.Pedido.abrirModal(' + idx + ')'; }
-});
+  Cards.registrarModulo('pedido', {
+    label: 'Fazer pedido',
+    ariaLabel: 'Fazer pedido',
+    icone: 'fa-solid fa-bell-concierge',
+    onClick: function (idx) { return 'Economizei.Pedido.abrirModal(' + idx + ')'; }
+  });
+
+  Cards.registrarBadge('pedido', {
+    label: 'Módulo Pedidos',
+    icone: 'fa-solid fa-bell-concierge',
+    desc: 'Este cadastro permite fazer pedidos online.'
+  });
 
   function garantirModalScanner() {
     if (document.getElementById('modalScanner')) return;
