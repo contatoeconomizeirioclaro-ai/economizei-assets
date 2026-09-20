@@ -1262,12 +1262,31 @@ Economizei.Cards = (function () {
         ? '<div class="card-compartilhar">' + botaoCompartilhar + '</div>'
         : '';
 
+      // ==================== CAMPOS DE DETALHE ====================
       var detalhesHTML = '';
-      if (horarioDisplay) detalhesHTML += '<div class="detalhe-item"><strong>Horário:</strong> ' + Core.sanitize(horarioDisplay) + '</div>';
-      if (delivery) detalhesHTML += '<div class="detalhe-item"><strong>Delivery:</strong> ' + Core.sanitize(delivery) + '</div>';
-      if (consumo) detalhesHTML += '<div class="detalhe-item"><strong>Consumo Local:</strong> ' + Core.sanitize(consumo) + '</div>';
-      if (observacao) detalhesHTML += '<div class="detalhe-item"><strong>Observações:</strong> ' + Core.sanitize(observacao) + '</div>';
-      if (idUnico) detalhesHTML += '<div class="detalhe-item"><strong>ID Único:</strong> ' + Core.sanitize(idUnico) + '</div>';
+      var camposDet = CARDS_CFG.camposDetalhe;
+      if (camposDet && camposDet.length) {
+        camposDet.forEach(function (campo) {
+          var val;
+          if (campo.especial === 'horario') {
+            val = horarioDisplay;
+          } else if (campo.coluna !== undefined) {
+            val = c[campo.coluna];
+          } else {
+            return;
+          }
+          if (val === undefined || val === null || String(val).trim() === '') return;
+          detalhesHTML += '<div class="detalhe-item"><strong>' + Core.sanitize(campo.rotulo) + ':</strong> ' + Core.sanitize(String(val)) + '</div>';
+        });
+      } else {
+        // Fallback (sem camposDetalhe na config)
+        if (horarioDisplay) detalhesHTML += '<div class="detalhe-item"><strong>Horário:</strong> ' + Core.sanitize(horarioDisplay) + '</div>';
+        if (delivery) detalhesHTML += '<div class="detalhe-item"><strong>Delivery:</strong> ' + Core.sanitize(delivery) + '</div>';
+        if (consumo) detalhesHTML += '<div class="detalhe-item"><strong>Consumo Local:</strong> ' + Core.sanitize(consumo) + '</div>';
+        if (observacao) detalhesHTML += '<div class="detalhe-item"><strong>Observações:</strong> ' + Core.sanitize(observacao) + '</div>';
+        if (idUnico) detalhesHTML += '<div class="detalhe-item"><strong>ID Único:</strong> ' + Core.sanitize(idUnico) + '</div>';
+      }
+      // ==================== FIM CAMPOS DE DETALHE ====================
 
       expanded.innerHTML =
         '<div class="card-expanded">' +
