@@ -1217,15 +1217,34 @@ Economizei.Pedido = (function () {
     var btnFinalizar = document.getElementById('btnFinalizarPedido');
     var bloqueado = (statusLoja === 'fechada' || statusLoja === 'pausada');
     statusLojaAtual = statusLoja;
-    if (msgDiv) {
-      var mensagem = (statusMessage || '').trim();
-      if (bloqueado || mensagem) {
-        msgDiv.style.display = 'block';
-        var prefixo = statusLoja === 'fechada' ? '🔴 Loja fechada: ' : statusLoja === 'pausada' ? '🟡 Pedidos pausados: ' : '🟢 Aviso da loja: ';
-        msgDiv.innerHTML = prefixo + Core.sanitize(mensagem || 'Indisponível no momento.');
-        msgDiv.setAttribute('role', 'alert');
-      } else msgDiv.style.display = 'none';
+   if (msgDiv) {
+  var mensagem = (statusMessage || '').trim();
+  if (bloqueado || mensagem) {
+    msgDiv.style.display = 'block';
+    var prefixo = statusLoja === 'fechada' ? '🔴 Loja fechada: ' : statusLoja === 'pausada' ? '🟡 Pedidos pausados: ' : '🟢 Aviso da loja: ';
+    msgDiv.innerHTML = prefixo + Core.sanitize(mensagem || 'Indisponível no momento.');
+    msgDiv.style.borderRadius = '0.75rem';
+    msgDiv.style.padding = '0.75rem';
+    msgDiv.style.marginBottom = '0.75rem';
+    msgDiv.style.textAlign = 'center';
+    msgDiv.style.fontWeight = '600';
+    if (statusLoja === 'fechada') {
+      msgDiv.style.background = '#fef2f2';
+      msgDiv.style.border = '1px solid #ef4444';
+      msgDiv.style.color = '#991b1b';
+    } else if (statusLoja === 'pausada') {
+      msgDiv.style.background = '#fef3c7';
+      msgDiv.style.border = '1px solid #f59e0b';
+      msgDiv.style.color = '#92400e';
+    } else {
+      msgDiv.style.background = '#ecfdf5';
+      msgDiv.style.border = '1px solid #10b981';
+      msgDiv.style.color = '#065f46';
     }
+  } else {
+    msgDiv.style.display = 'none';
+  }
+}
     if (btnFinalizar) {
       if (bloqueado) { btnFinalizar.classList.add('disabled'); btnFinalizar.setAttribute('aria-disabled', 'true'); }
       else { btnFinalizar.classList.remove('disabled'); btnFinalizar.removeAttribute('aria-disabled'); }
@@ -1459,8 +1478,7 @@ Economizei.Pedido = (function () {
           '</div>' +
           '<div class="modal-body">' +
             '<div id="tabProdutos" class="modal-tab-content active">' +
-              '<div id="statusLojaMsg" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:0.75rem;padding:0.75rem;margin-bottom:0.75rem;text-align:center;font-weight:600;color:#92400e;" role="alert"></div>' +
-              produtosHtml +
+<div id="statusLojaMsg" style="display:none;" role="alert"></div>              produtosHtml +
             '</div>' +
             '<div id="tabCarrinho" class="modal-tab-content">' +
               '<div class="carrinho-layout">' +
