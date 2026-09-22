@@ -1,7 +1,7 @@
 /* ==============================================================
    ECONOMIZEI! RIO CLARO — UTILITÁRIOS COMPARTILHADOS
    Usado por: grupos, vitrine, trilhas, ônibus, eventos, vagas,
-              e todos os módulos (loja, pedidos, transporte).
+              e todos os módulos (loja, pedidos, transporte, painel).
    Sem dependências externas. Expõe tudo em window.EconomizeiUtils.
    ============================================================== */
 (function (global) {
@@ -40,6 +40,24 @@
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim();
+  }
+
+  function validarEmail(str) {
+    if (!str) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(str).trim());
+  }
+
+  function formatarWhatsapp(numero) {
+    if (!numero) return '';
+    var limpo = String(numero).replace(/\D/g, '');
+    if (!limpo) return '';
+    if (!limpo.startsWith('55')) limpo = '55' + limpo;
+    return limpo;
+  }
+
+  function pertencePrefixo(id, prefixos) {
+    if (!id || !Array.isArray(prefixos)) return false;
+    return prefixos.some(function (p) { return String(id).startsWith(p); });
   }
 
   // ---------- PARSER CSV ----------
@@ -185,8 +203,6 @@
   }
 
   // ---------- DADOS DO CLIENTE (localStorage) ----------
-  // Compartilhado entre módulos (Pedidos, Transporte) para lembrar
-  // nome/telefone/endereço/mesa sem o cliente redigitar.
   function salvarDadosClienteLocal(nome, telefone, endereco, mesa) {
     if (!nome && !telefone && !endereco && !mesa) return;
     try {
@@ -208,8 +224,6 @@
   }
 
   // ---------- MÁSCARA DE TELEFONE ----------
-  // Registra o listener de input num <input type="tel"> e aplica
-  // a máscara (99) 99999-9999 conforme digita.
   function aplicarMascaraTelefone(input) {
     if (!input || input.__mascaraAplicada) return;
     input.__mascaraAplicada = true;
@@ -226,10 +240,7 @@
     });
   }
 
-  // ---------- JANELA COM HTML (comprovante) ----------
-  // Abre uma nova janela do navegador e escreve HTML nela. Usado para
-  // comprovantes (Pedidos, Loja, Transporte). Devolve a janela ou null
-  // se o navegador bloquear.
+  // ---------- JANELA COM HTML ----------
   function abrirJanelaHTML(html) {
     var win = window.open('', '_blank');
     if (!win) return null;
@@ -240,14 +251,6 @@
   }
 
   // ---------- POPUP DE CONFIRMAÇÃO ----------
-  // Popup flutuante com código copiável + botões de ação.
-  //   mostrarPopupConfirmacao({
-  //     titulo:   '✅ Pedido Confirmado!',
-  //     mensagem: 'Seu pedido foi enviado com sucesso!',   // opcional
-  //     codigo:   'ABC123',                                // opcional
-  //     botoes:   '<button>…</button>',                    // opcional
-  //     onClose:  'funcaoASerChamada()'                    // opcional (string)
-  //   })
   function mostrarPopupConfirmacao(opcoes) {
     opcoes = opcoes || {};
     var overlay = document.createElement('div');
@@ -287,7 +290,6 @@
 
     document.body.appendChild(overlay);
 
-    // Acessibilidade: foco preso, Esc fecha
     var ctrl = criarModalAcessivel();
     ctrl.abrir(overlay, function () {
       overlay.remove();
@@ -296,7 +298,6 @@
       }
     });
 
-    // Copiar código
     var btnCopiar = overlay.querySelector('[data-popup-copiar]');
     if (btnCopiar) {
       btnCopiar.addEventListener('click', function () {
@@ -314,18 +315,54 @@
       });
     }
 
-    // Botões que fecham
     overlay.querySelectorAll('[data-popup-fechar]').forEach(function (b) {
       b.addEventListener('click', function () { ctrl.fechar(); });
     });
 
-    // Clique no overlay (fora do card) fecha
     overlay.addEventListener('click', function (e) {
       if (e.target === overlay) ctrl.fechar();
     });
 
     return { fechar: function () { ctrl.fechar(); }, elemento: overlay };
   }
+
+  // ============================================================
+  // TOAST / LOADING
+  // ============================================================
+  function mostrarToast(msg, tipo) {
+    tipo = tipo || 'info';
+    var t = document.createElement('div');
+    t.className = 'toast' + (tipo === 'erro' ? ' erro' : tipo === 'sucesso' ? ' sucesso' : '');
+    t.setAttribute('role', 'alert');
+    t.setAttribute('aria-live', 'assertive');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 3000);
+    return t;
+  }
+
+  function showLoading(texto, opcoes) {
+    opcoes = opcoes || {};
+    var overlay = document.getElementById(opcoes.overlayId || 'loadingOverlay');
+    if (!overlay) return;
+    var textEl = opcoes.textoId === null ? null : document.getElementById(opcoes.textoId || 'loadingText');
+    if (textEl && texto) textEl.textContent = texto;
+    if (opcoes.modoFlex) overlay.style.display = 'flex';
+    else overlay.classList.add('active');
+  }
+
+  function hideLoading(opcoes) {
+    opcoes = opcoes || {};
+    var overlay = document.getElementById(opcoes.overlayId || 'loadingOverlay');
+    if (!overlay) return;
+    if (opcoes.modoFlex) overlay.style.display = 'none';
+    else overlay.classList.remove('active');
+  }
+
+  // ============================================================
+  // PLACEHOLDER DE LOGO (SVG embutido, sem depender de rede)
+  // ============================================================
+  var LOGO_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='18' fill='%2364748b' text-anchor='middle' dy='.3em'%3ELogo%3C/text%3E%3C/svg%3E";
 
   // ============================================================
   // EXPORTAÇÃO
@@ -336,6 +373,9 @@
     ensureHttps,
     linkSeguro,
     gerarSlug,
+    validarEmail,
+    formatarWhatsapp,
+    pertencePrefixo,
     // CSV
     parseCSV,
     criarCacheCSV,
@@ -351,6 +391,11 @@
     carregarDadosClienteLocal,
     aplicarMascaraTelefone,
     abrirJanelaHTML,
-    mostrarPopupConfirmacao
+    mostrarPopupConfirmacao,
+    // UI geral
+    mostrarToast,
+    showLoading,
+    hideLoading,
+    LOGO_PLACEHOLDER
   };
 })(window);
