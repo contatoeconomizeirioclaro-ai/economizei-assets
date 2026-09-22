@@ -1,0 +1,102 @@
+/* ============================================================
+   ECONOMIZEI! — CSS ESPECÍFICO DO MÓDULO PEDIDOS (painel)
+   Só o que é único desta página. O resto vem de painel.css.
+   ============================================================ */
+
+/* ===== Grid de pedidos ===== */
+.pedidos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--spacing-lg); }
+@media (max-width: 480px) { .pedidos-grid { grid-template-columns: 1fr; } }
+
+/* ===== Card de pedido ===== */
+.pedido-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: var(--spacing-md); border-left: 4px solid var(--border); display: flex; flex-direction: column; gap: var(--spacing-sm); transition: 0.2s; }
+.pedido-card.status-pendente { border-left-color: var(--status-pendente-text); animation: blink-border 1s infinite; }
+.pedido-card.status-confirmado { border-left-color: var(--status-confirmado-text); }
+.pedido-card.status-em_preparo { border-left-color: var(--status-em_preparo-text); }
+.pedido-card.status-saiu_entrega { border-left-color: var(--status-saiu_entrega-text); }
+.pedido-card.status-concluido { border-left-color: var(--status-concluido-text); }
+.pedido-card.status-cancelado { border-left-color: var(--status-cancelado-text); }
+@keyframes blink-border { 0% { border-left-color: var(--status-pendente-text); } 50% { border-left-color: #fca5a5; } 100% { border-left-color: var(--status-pendente-text); } }
+
+.pedido-card.status-pendente .pedido-corpo, .pedido-card.status-pendente .pedido-id, .pedido-card.status-pendente .cliente-info, .pedido-card.status-pendente .itens-lista, .pedido-card.status-pendente .info-pagamento, .pedido-card.status-pendente .info-pagamento .total { color: var(--status-pendente-text); }
+.pedido-card.status-confirmado .pedido-corpo, .pedido-card.status-confirmado .pedido-id, .pedido-card.status-confirmado .cliente-info, .pedido-card.status-confirmado .itens-lista, .pedido-card.status-confirmado .info-pagamento, .pedido-card.status-confirmado .info-pagamento .total { color: var(--status-confirmado-text); }
+.pedido-card.status-em_preparo .pedido-corpo, .pedido-card.status-em_preparo .pedido-id, .pedido-card.status-em_preparo .cliente-info, .pedido-card.status-em_preparo .itens-lista, .pedido-card.status-em_preparo .info-pagamento, .pedido-card.status-em_preparo .info-pagamento .total { color: var(--status-em_preparo-text); }
+.pedido-card.status-saiu_entrega .pedido-corpo, .pedido-card.status-saiu_entrega .pedido-id, .pedido-card.status-saiu_entrega .cliente-info, .pedido-card.status-saiu_entrega .itens-lista, .pedido-card.status-saiu_entrega .info-pagamento, .pedido-card.status-saiu_entrega .info-pagamento .total { color: var(--status-saiu_entrega-text); }
+.pedido-card.status-concluido .pedido-corpo, .pedido-card.status-concluido .pedido-id, .pedido-card.status-concluido .cliente-info, .pedido-card.status-concluido .itens-lista, .pedido-card.status-concluido .info-pagamento, .pedido-card.status-concluido .info-pagamento .total { color: var(--status-concluido-text); }
+.pedido-card.status-cancelado .pedido-corpo, .pedido-card.status-cancelado .pedido-id, .pedido-card.status-cancelado .cliente-info, .pedido-card.status-cancelado .itens-lista, .pedido-card.status-cancelado .info-pagamento, .pedido-card.status-cancelado .info-pagamento .total { color: var(--status-cancelado-text); }
+
+/* ===== Status select ===== */
+.status-select { padding: 4px 8px; border-radius: 20px; font-weight: 600; border: none; cursor: pointer; font-size: 12px; width: auto; margin-bottom: var(--spacing-sm); }
+.status-pendente { background: var(--status-pendente-bg); color: var(--status-pendente-text); }
+.status-confirmado { background: var(--status-confirmado-bg); color: var(--status-confirmado-text); }
+.status-em_preparo { background: var(--status-em_preparo-bg); color: var(--status-em_preparo-text); }
+.status-saiu_entrega { background: var(--status-saiu_entrega-bg); color: var(--status-saiu_entrega-text); }
+.status-concluido { background: var(--status-concluido-bg); color: var(--status-concluido-text); }
+.status-cancelado { background: var(--status-cancelado-bg); color: var(--status-cancelado-text); }
+
+.pedido-card .status-select { display: block; width: 100%; min-height: 40px; margin: 2px 0 8px; border: 2px solid var(--primary); background: var(--primary-light); color: var(--primary); font-size: 13px; font-weight: 800; text-align: center; box-shadow: 0 0 0 2px rgba(10,102,194,.08); cursor: pointer; }
+.pedido-card .status-select:focus { outline: 3px solid rgba(10,102,194,.25); }
+
+/* ===== Header do pedido ===== */
+.pedido-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--spacing-sm); }
+.pedido-id { font-weight: 800; font-size: 0.95rem; }
+.pedido-data { font-size: 11px; color: var(--text-muted); }
+
+/* ===== Corpo ===== */
+.cliente-info { background: #f8fafc; padding: var(--spacing-sm); border-radius: 8px; border-left: 3px solid var(--primary); margin: var(--spacing-sm) 0; font-size: 12px; display: flex; flex-direction: column; gap: 4px; }
+.cliente-nome { font-weight: 700; font-size: 0.9rem; }
+.cliente-contato { font-size: 11px; }
+.itens-lista { background: #f8fafc; padding: var(--spacing-sm); border-radius: 8px; margin: var(--spacing-sm) 0; font-size: 12px; }
+.itens-lista strong { display: block; margin-bottom: 4px; font-size: 11px; text-transform: uppercase; }
+.item-linha { display: flex; justify-content: space-between; margin-bottom: 2px; }
+.item-obs { font-size: 10px; font-style: italic; margin-top: 2px; padding-left: 8px; border-left: 2px solid var(--border); }
+.info-pagamento { font-size: 12px; margin: var(--spacing-sm) 0; }
+.info-pagamento .linha { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.info-pagamento .total { font-weight: 800; font-size: 1rem; border-top: 2px solid #e2e8f0; margin-top: 6px; padding-top: 6px; }
+
+/* ===== Ações ===== */
+.pedido-acoes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+.btn-acao-pedido { background: #fff; border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; transition: 0.2s; color: var(--text); }
+.btn-acao-pedido:hover { background: #f1f5f9; border-color: var(--primary); }
+.btn-falar-cliente { color: #087f3e; border-color: #86efac; background: #f0fdf4; font-weight: 800; }
+.btn-falar-cliente:hover { background: #dcfce7; border-color: #16a34a; }
+@media (max-width:640px) { .pedido-acoes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ===== Badge pendentes na tab ===== */
+.badge-pendente { background-color: #ef4444; color: white; border-radius: 30px; padding: 2px 8px; font-size: 11px; font-weight: bold; margin-left: 8px; vertical-align: middle; display: none; }
+
+/* ===== Cards de tipo de produto (simples/tamanhos/personalizável) ===== */
+.tipo-produto-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tipo-card { border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 10px; cursor: pointer; text-align: center; transition: 0.15s; background: #fff; }
+.tipo-card:hover { border-color: var(--primary); background: var(--primary-light); }
+.tipo-card.selected { border-color: var(--primary); background: var(--primary-light); box-shadow: 0 0 0 1px var(--primary); }
+.tipo-card .tipo-icone { font-size: 22px; margin-bottom: 6px; }
+.tipo-card .tipo-titulo { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+.tipo-card .tipo-desc { font-size: 11px; color: var(--text-muted); line-height: 1.3; }
+@media (max-width: 640px) { .tipo-produto-cards { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 5px; } .tipo-card { padding: 8px 4px; } .tipo-card .tipo-icone { font-size: 18px; margin-bottom: 2px; } .tipo-card .tipo-titulo { font-size: 11px; } .tipo-card .tipo-desc { font-size: 9px; } }
+
+/* ===== Aviso de dependência (sabor ainda não cadastrado) ===== */
+.aviso-dependencia { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; border-radius: 8px; padding: var(--spacing-md); font-size: 12px; margin-bottom: var(--spacing-md); display: flex; flex-direction: column; gap: 8px; }
+.aviso-dependencia strong { display: block; }
+.aviso-dependencia button { align-self: flex-start; }
+
+/* ===== Busca de produtos ===== */
+.busca-lista { position: relative; margin-bottom: var(--spacing-md); }
+.busca-lista input { width: 100%; padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) 36px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; }
+.busca-lista i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; }
+
+/* ===== Preview de produto no modal ===== */
+.preview-produto-card { display: flex; gap: var(--spacing-md); align-items: center; background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--spacing-md); margin-bottom: var(--spacing-lg); }
+.preview-produto-card .preview-img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
+.preview-produto-card .preview-info { min-width: 0; }
+.preview-produto-card .preview-nome { font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.preview-produto-card .preview-preco { color: var(--primary); font-weight: 700; font-size: 13px; }
+.preview-produto-card .preview-label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.03em; margin-bottom: 2px; }
+
+/* ===== Estoque (usado no modal de produto) ===== */
+.estoque-controle { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; box-shadow: inset 0 0 0 1px rgba(148,163,184,.08); }
+.estoque-controle .checkbox-inline-label { display: flex; align-items: center; gap: 9px; min-height: 38px; margin: 0; padding: 8px 10px; border: 2px solid #94a3b8; border-radius: 8px; background: #fff; cursor: pointer; color: var(--text); font-weight: 800; }
+.estoque-controle .checkbox-inline-label:hover { border-color: var(--primary); background: var(--primary-light); }
+.estoque-controle .checkbox-inline-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+.estoque-controle .checkbox-inline-label:has(input:checked) { border-color: #16a34a; background: #f0fdf4; color: #166534; }
+.estoque-controle input[type="number"]:disabled { background: #e2e8f0; color: #64748b; cursor: not-allowed; }
+.estoque-ajuda { color: var(--text-muted); font-size: 11px; line-height: 1.35; }
