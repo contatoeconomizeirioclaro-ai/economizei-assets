@@ -12,29 +12,57 @@ for `transporte`, ganha "Solicitar corrida/frete".
 
 ## Como um módulo se registra
 
-Todo módulo faz, ao carregar:
+**API atual.** O registro passa por `Economizei.Cards`, não mais por
+`Economizei.Modulos` (nome antigo, mantido só como referência
+histórica).
+
+Todo módulo faz, ao carregar, duas chamadas: uma pra registrar o
+**botão de ação** no card e outra (opcional) pra registrar um **badge**
+visual acima do título.
 
 ```js
-Economizei.Modulos.registrar({
-  id:     'loja',                    // identificador único
-  estilo: 'loja',                    // casa com a coluna ESTILO
-  rotulo: 'Comprar produtos',        // texto do botão no card
-  icone:  'fa-cart-shopping',        // classe Font Awesome
-  classe: 'btn-modulo',              // classe visual do botão
-  abrir:  function (idx) { ... },    // abre o modal
-  fechar: function () { ... }        // fecha o modal
+// 1. Botão de ação no card
+Economizei.Cards.registrarModulo('loja', {
+  label:     'Ver produtos',           // texto do botão
+  ariaLabel: 'Ver produtos da loja',   // rótulo de acessibilidade
+  icone:     'fa-solid fa-store',      // classe Font Awesome
+  onClick:   function (idx) {          // recebe o índice do card
+    return 'Economizei.Loja.abrirModal(' + idx + ')';
+  }                                    // retorna a STRING do onclick
+});
+
+// 2. Badge no topo do card (opcional)
+Economizei.Cards.registrarBadge('loja', {
+  label: 'Módulo Loja',
+  icone: 'fa-solid fa-store',
+  desc:  'Este estabelecimento oferece uma vitrine digital.'
 });
 ```
 
-O core, ao renderizar cada card, faz:
+### Regras da API
+
+- O **primeiro argumento** é o `estilo` (mesmo valor da coluna `ESTILO`
+  do CSV). É normalizado com `.toLowerCase().trim()` antes de ser
+  guardado.
+- `onClick` é uma função que recebe `idx` (índice do estabelecimento
+  no array de dados) e retorna uma **string** com o código JS a ser
+  executado no `onclick` inline do botão. Não é uma função a ser
+  chamada direto.
+- Só é possível registrar **um** módulo por estilo. Registrar de novo
+  sobrescreve o anterior.
+- `registrarBadge` exige `label`. `registrarModulo` exige `onClick`.
+
+## Como o core usa
+
+Ao renderizar cada card, o `grupos.js` consulta o registro:
 
 ```js
-var modulo = Economizei.Modulos.paraEstilo(estilo);
+var modulo = modulosRegistrados[estilo];  // interno
 if (modulo) {
   botoes.push(
-    '<button class="btn-acao ' + modulo.classe + '" ' +
-    'onclick="Economizei.Modulos.abrir(\'' + modulo.id + '\', ' + idx + ')">' +
-    '<i class="fa-solid ' + modulo.icone + '"></i> ' + modulo.rotulo +
+    '<button class="btn-acao btn-modulo" data-modulo="' + estilo + '" ' +
+    'onclick="' + modulo.onClick(idx) + '">' +
+    '<i class="' + modulo.icone + '"></i> ' + modulo.label +
     '</button>'
   );
 }
@@ -42,13 +70,28 @@ if (modulo) {
 
 **O core não sabe o nome de nenhum módulo.** Só consulta o registro.
 
+### Badges
+
+Um módulo pode registrar também um **badge** — pílula pequena que
+aparece acima do título do card, com tooltip. Serve pra sinalizar
+visualmente que aquele estabelecimento tem aquele módulo disponível,
+sem precisar abrir o card.
+
 ## Estrutura de arquivos
 
 ```
 comum/
-  modulos.js          ← sistema de registro
+  utils.js            ← utilitários puros
+  firebase.js         ← init do Firebase
+  modulos.js          ← LEGADO. Sistema antigo de registro. Mantido
+                         por compatibilidade, mas o registro hoje
+                         acontece via Economizei.Cards.
   componentes.css     ← peças reutilizáveis (abas, cards, botões)
   modais.css          ← moldura do modal
+
+grupos/
+  grupos.js           ← core atual (contém registrarModulo/registrarBadge)
+  grupos.css          ← CSS do layout de grupo (cards, filtros, busca)
 
 modulos/
   _base.css           ← moldura específica de módulo
@@ -58,6 +101,7 @@ modulos/
   pedidos.css
   transporte.js
   transporte.css
+  transporte-enderecos.js  ← modais auxiliares de endereço
 ```
 
 ## Como a página carrega
@@ -76,7 +120,6 @@ modulos/
   <script src=".../comum/utils.js"></script>
   <script src=".../comum/modulos.js"></script>
   <script src=".../grupos/grupos.js"></script>
-  <script src=".../js/economizei-core.js"></script>
 
   <script>
     Economizei.Cards.configurar({ ... });
@@ -101,7 +144,6 @@ Todo modal de módulo segue:
 <div class="modal-overlay" id="modalModuloX" role="dialog" aria-modal="true">
   <div class="modal-conteudo modal-modulo">
     <div class="modal-header">
-      <!-- Bloco de identidade da loja (logo + nome + status) -->
       <div class="modal-estabelecimento-brand">
         <div class="modal-estabelecimento-logo">...</div>
         <div class="modal-estabelecimento-meta">
@@ -111,15 +153,17 @@ Todo modal de módulo segue:
       </div>
       <button class="modal-close-btn" aria-label="Fechar">×</button>
     </div>
-    <div class="modal-body">
-      <!-- conteúdo do módulo -->
-    </div>
-    <div class="modal-footer">
-      <!-- ações do módulo -->
-    </div>
+    <div class="modal-body">…</div>
+    <div class="modal-footer">…</div>
   </div>
 </div>
 ```
+
+**Variantes de largura:**
+
+- `modal-conteudo modal-modulo` — modal de tamanho médio (padrão)
+- `modal-conteudo modal-modulo modal-modulo-wide` — médio em desktop, mais largo
+- `modal-conteudo fullscreen` — tela cheia (Loja, Pedidos, Transporte)
 
 ## Peças disponíveis em componentes.css
 
@@ -151,5 +195,6 @@ variável em `modulos/*.css`.**
 | `comum/componentes.css` | Peças reutilizáveis dentro de módulos (abas, cards, botões) |
 | `modulos/_base.css` | Moldura específica de módulo (largura, fullscreen, barra do app) |
 | `modulos/*.css` | Só o que é exclusivo daquele módulo |
-| `comum/modulos.js` | Sistema de registro |
+| `comum/modulos.js` | (legado) sistema de registro antigo — não usar em código novo |
+| `grupos/grupos.js` | Core atual — contém `registrarModulo`, `registrarBadge`, `configurar`, `carregarDados` |
 | `modulos/*.js` | Lógica + HTML do modal de cada módulo |
