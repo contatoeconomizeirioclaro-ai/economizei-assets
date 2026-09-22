@@ -159,13 +159,17 @@ body {
 }
 .status-message-input:focus { outline: none; border-color: var(--mensagem-cor); box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.1); }
 .mensagem-cliente-ajuda { display: block; margin: 4px 8px 0; color: var(--mensagem-cor); opacity: 0.85; font-size: 11px; line-height: 1.3; }
-.mensagem-cliente-box .btn-salvar-mensagem {
-  align-self: flex-start; margin-top: 22px; min-height: 38px; padding: 8px 14px;
+
+/* Botão Salvar — pega nos dois casos: quando o shell cria (.btn-salvar-mensagem) e quando já está no HTML (#btnSalvarMensagemStatus) */
+.mensagem-cliente-box .btn-salvar-mensagem,
+.mensagem-cliente-box #btnSalvarMensagemStatus {
+  align-self: flex-start; margin-top: 26px; min-height: 38px; padding: 8px 14px;
   background: var(--mensagem-cor); color: #fff; border: 1px solid var(--mensagem-cor);
   border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit;
   transition: filter 0.2s ease;
 }
-.mensagem-cliente-box .btn-salvar-mensagem:hover { filter: brightness(0.92); }
+.mensagem-cliente-box .btn-salvar-mensagem:hover,
+.mensagem-cliente-box #btnSalvarMensagemStatus:hover { filter: brightness(0.92); }
 
 /* ===== DASHBOARD ===== */
 .dashboard-content { padding: var(--spacing-md); max-width: 100%; margin: 0 auto; width: 100%; }
@@ -256,12 +260,9 @@ body {
 
 .btn-secundario {
   border: 1px solid #bfdbfe; color: var(--primary); background: #eff6ff;
-  border-radius: 8px;
-  padding: var(--spacing-md) var(--spacing-lg);
-  font-weight: 700; cursor: pointer; font-family: inherit; font-size: 14px;
-  transition: 0.2s ease;
-  display: inline-flex; align-items: center; justify-content: center;
-  gap: 8px; min-height: 44px;
+  border-radius: 8px; padding: var(--spacing-md) var(--spacing-lg);
+  font-weight: 700; cursor: pointer; font-family: inherit; font-size: 14px; transition: 0.2s ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
 }
 .btn-secundario:hover { background: #dbeafe; border-color: #93c5fd; }
 
@@ -466,7 +467,8 @@ input:checked + .slider:before { transform: translateX(22px); }
   .modal-overlay { align-items: flex-end; padding: 10px; }
   .modal-conteudo { max-height: calc(100dvh - 20px); border-radius: 16px 16px 10px 10px; padding: var(--spacing-lg) var(--spacing-md); }
   .mensagem-cliente-box { align-items: stretch; }
-  .mensagem-cliente-box .btn-salvar-mensagem { width: 100%; margin-top: 0; }
+  .mensagem-cliente-box .btn-salvar-mensagem,
+  .mensagem-cliente-box #btnSalvarMensagemStatus { width: 100%; margin-top: 0; }
   .cadastro-modal { align-items: flex-end; padding: 10px 10px 130px; }
   .cadastro-modal .cadastro-modal-conteudo { max-height: calc(100dvh - 20px - 130px); padding: var(--spacing-lg) var(--spacing-md); border-radius: 16px 16px 10px 10px; }
   .cadastro-modal .modal-header { top: calc(-1 * var(--spacing-lg)); padding-top: var(--spacing-lg); }
