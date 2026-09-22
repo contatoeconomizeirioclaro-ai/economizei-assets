@@ -4,6 +4,45 @@
    Depende de: tokens.css
    ============================================================ */
 
+/* ===== VARIÁVEIS ESPECÍFICAS DO PAINEL ===== */
+:root {
+  --bg: #f8fafc;
+  --card-bg: #ffffff;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --primary-hover: #084d92;
+  --gray-100: #f1f5f9;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+  --ok-bg: #d1fae5; --ok-text: #065f46;
+  --warn-bg: #fef3c7; --warn-text: #92400e;
+  --danger-bg: #fee2e2; --danger-text: #991b1b;
+  --neutral-bg: #f1f5f9; --neutral-text: #475569;
+
+  --status-pendente-bg: #fff7ed; --status-pendente-text: #9a3412;
+  --status-confirmado-bg: #eff6ff; --status-confirmado-text: #1e40af;
+  --status-em_preparo-bg: #fdf2f8; --status-em_preparo-text: #9d174d;
+  --status-saiu_entrega-bg: #ecfdf5; --status-saiu_entrega-text: #065f46;
+  --status-concluido-bg: #f1f5f9; --status-concluido-text: #475569;
+  --status-cancelado-bg: #fef2f2; --status-cancelado-text: #991b1b;
+  --status-a_caminho-bg: #e0f2fe; --status-a_caminho-text: #0369a1;
+  --status-em_curso-bg: #fef3c7; --status-em_curso-text: #b45309;
+  --status-visualizada-bg: #eff6ff; --status-visualizada-text: #1e40af;
+  --status-respondida-bg: #ecfdf5; --status-respondida-text: #065f46;
+  --status-inconsistente-bg: #fef2f2; --status-inconsistente-text: #dc2626;
+}
+
 /* ===== RESET E VARIÁVEIS ===== */
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
