@@ -1,29 +1,5 @@
 /* ==============================================================
    ECONOMIZEI! RIO CLARO — PAINEL AUTH
-   Unifica o fluxo de entrada dos painéis do empreendedor.
-
-   Suporta 3 contextos:
-     - Módulos (Pedidos/Loja/Transporte): login em página inteira
-     - Hub (painel-do-empreendedor.html): login em modal + vitrine
-     - Admin (admin.html): login em página inteira, só admin
-
-   Estados possíveis do lojista:
-     anonimo      → não logado
-     sem-cadastro → logado, mas sem doc em lojistas/{email}
-     em-analise   → doc existe, mas sem estabelecimentoId
-     vencendo     → faltam ≤ 10 dias
-     vencido      → dataVencimento passou
-     bloqueado    → bloqueadoManualmente === true
-     ativo        → tudo certo
-
-   Depende de:
-     - comum/firebase.js     (EconomizeiFirebase)
-     - comum/utils.js        (EconomizeiUtils)
-     - comum/lojista.js      (Economizei.Lojista)
-     - comum/painel-shell.js (Economizei.Painel.Shell — opcional)
-
-   Expõe:
-     window.Economizei.Painel.Auth
    ============================================================== */
 (function (global) {
   'use strict';
@@ -36,33 +12,33 @@
   if (!FB) { console.error('[Painel.Auth] EconomizeiFirebase não carregado.'); return; }
   if (!Loj) { console.error('[Painel.Auth] Economizei.Lojista não carregado.'); return; }
 
-  // ==================================================================
-  // CONFIGURAÇÃO
-  // ==================================================================
   var HUB_URL = 'https://www.economizeirioclaro.com.br/p/painel-do-empreendedor.html';
   var COL_ADMINS = 'admins';
   var COL_LOJISTAS = 'lojistas';
+  var TEMPO_TOLERANCIA_ANONIMO = 3000;
 
-  // ==================================================================
-  // ESTADO
-  // ==================================================================
   var state = {
-    tipo: 'lojista',          // 'lojista' | 'admin'
-    modoLogin: 'pagina',      // 'pagina' | 'modal'
-    contexto: null,           // 'pedidos' | 'loja' | 'transporte' | 'hub' | 'admin'
-    prefixosEsperados: null,  // array — só em módulos
-    redirecionarAnonimo: true,// só em módulos
-    aoEntrar: null,           // callback(user, dados)
-    aoEstadoInvalido: null,   // callback(motivo, mensagem)
-    aoSair: null,             // callback()
+    tipo: 'lojista',
+    modoLogin: 'pagina',
+    contexto: null,
+    prefixosEsperados: null,
+    redirecionarAnonimo: true,
+    aoEntrar: null,
+    aoEstadoInvalido: null,
+    aoSair: null,
     dadosAtuais: null,
     usuarioAtual: null,
-    iniciado: false
+    iniciado: false,
+    timeoutAnonimo: null,
+    jaEntrou: false
   };
 
-  // ==================================================================
-  // HELPERS
-  // ==================================================================
+  function log() {
+    var args = Array.prototype.slice.call(arguments);
+    args.unshift('[Painel.Auth]');
+    console.log.apply(console, args);
+  }
+
   function $id(id) { return document.getElementById(id); }
 
   function traduzirErroAuth(code) {
@@ -97,9 +73,6 @@
       .catch(function () { return false; });
   }
 
-  // ==================================================================
-  // UI — mostra a área certa
-  // ==================================================================
   function mostrarAreaPagina(area) {
     var elLogin = $id('areaLogin');
     var elPainel = $id('areaPainel') || $id('areaAdmin');
@@ -107,26 +80,10 @@
     if (elPainel) elPainel.style.display = (area === 'painel') ? 'block' : 'none';
   }
 
-  function abrirModalLogin() {
-    var el = $id('modalLogin');
-    if (el) el.classList.add('active');
-  }
-
-  function fecharModalLogin() {
-    var el = $id('modalLogin');
-    if (el) el.classList.remove('active');
-  }
-
-  function abrirModalPerfil() {
-    var el = $id('modalPerfil');
-    if (el) el.classList.add('active');
-  }
-
-  function fecharModalPerfil() {
-    var el = $id('modalPerfil');
-    if (el) el.classList.remove('active');
-  }
-
+  function abrirModalLogin() { var el = $id('modalLogin'); if (el) el.classList.add('active'); }
+  function fecharModalLogin() { var el = $id('modalLogin'); if (el) el.classList.remove('active'); }
+  function abrirModalPerfil() { var el = $id('modalPerfil'); if (el) el.classList.add('active'); }
+  function fecharModalPerfil() { var el = $id('modalPerfil'); if (el) el.classList.remove('active'); }
   function atualizarBotaoLoginHub(user) {
     var btn = $id('loginButton');
     var txt = $id('loginText');
@@ -134,10 +91,8 @@
     if (txt) txt.textContent = user ? 'Perfil' : 'Entrar';
   }
 
-  // ==================================================================
-  // ESTADOS INVÁLIDOS — reação unificada
-  // ==================================================================
   function tratarEstadoInvalido(motivo, mensagem) {
+    log('Estado inválido:', motivo, '|', mensagem);
     if (typeof state.aoEstadoInvalido === 'function') {
       try { state.aoEstadoInvalido(motivo, mensagem); } catch (e) {}
     }
@@ -150,19 +105,18 @@
       fecharModalPerfil();
     }
 
-    // Desloga nos casos em que a conta não tem acesso
-    if (motivo !== 'em-analise' && motivo !== 'vencendo') {
+    if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errado') {
+      log('Chamando signOut() por causa do motivo:', motivo);
       setTimeout(function () { FB.auth.signOut(); }, 200);
     }
   }
 
-  // ==================================================================
-  // FLUXO — LOJISTA
-  // ==================================================================
   function tratarLojista(user) {
     var email = user.email;
+    log('tratarLojista — email:', email);
 
     carregarDocLojista(email).then(function (dados) {
+      log('Doc carregado:', dados ? 'sim' : 'NÃO');
       if (!dados) {
         tratarEstadoInvalido('sem-cadastro',
           'Cadastro não encontrado. Fale com a gente pelo WhatsApp para contratar.');
@@ -170,37 +124,35 @@
       }
 
       var estado = Loj.estadoDoLojista(dados);
+      log('Estado do lojista:', estado, '| estabelecimentoId:', dados.estabelecimentoId);
 
       if (estado === 'pendente' || !dados.estabelecimentoId) {
-        tratarEstadoInvalido('em-analise',
-          'Seu cadastro está em análise. Em breve você terá acesso.');
+        tratarEstadoInvalido('em-analise', 'Seu cadastro está em análise. Em breve você terá acesso.');
         return;
       }
       if (estado === 'bloqueado') {
-        tratarEstadoInvalido('bloqueado',
-          'Seu acesso está suspenso. Fale com a gente pelo WhatsApp.');
+        tratarEstadoInvalido('bloqueado', 'Seu acesso está suspenso. Fale com a gente pelo WhatsApp.');
         return;
       }
       if (estado === 'vencido') {
-        tratarEstadoInvalido('vencido',
-          'Sua assinatura venceu. Fale com a gente pelo WhatsApp para renovar.');
+        tratarEstadoInvalido('vencido', 'Sua assinatura venceu. Fale com a gente pelo WhatsApp para renovar.');
         return;
       }
 
-      // Checa se o módulo desta página bate com o estabelecimentoId
       if (state.prefixosEsperados && dados.estabelecimentoId) {
-        if (!EU.pertencePrefixo(dados.estabelecimentoId, state.prefixosEsperados)) {
+        var bate = EU.pertencePrefixo(dados.estabelecimentoId, state.prefixosEsperados);
+        log('Prefixo bate?', bate, '| esperados:', state.prefixosEsperados.join(','), '| id:', dados.estabelecimentoId);
+        if (!bate) {
           var mod = Loj.moduloDoId(dados.estabelecimentoId);
           tratarEstadoInvalido('modulo-errado',
-            'Você não tem acesso a este módulo. Seu módulo é ' +
-            (Loj.rotuloModulo(mod) || 'desconhecido') + '.');
+            'Você não tem acesso a este módulo. Seu módulo é ' + (Loj.rotuloModulo(mod) || 'desconhecido') + '.');
           return;
         }
       }
 
-      // OK — entra
       state.dadosAtuais = dados;
       state.usuarioAtual = user;
+      state.jaEntrou = true;
 
       if (state.modoLogin === 'pagina') {
         mostrarAreaPagina('painel');
@@ -210,7 +162,6 @@
         atualizarBotaoLoginHub(user);
       }
 
-      // Shell — só em módulos
       var Shell = global.Economizei && global.Economizei.Painel && global.Economizei.Painel.Shell;
       if (state.modoLogin === 'pagina' && Shell) {
         Shell.iniciar({
@@ -232,22 +183,19 @@
     });
   }
 
-  // ==================================================================
-  // FLUXO — ADMIN
-  // ==================================================================
   function tratarAdmin(user) {
     verificarAdmin(user.email).then(function (isAdmin) {
+      log('É admin?', isAdmin);
       if (!isAdmin) {
         mostrarAreaPagina('login');
         EU.mostrarToast('Acesso restrito ao administrador.', 'erro');
         setTimeout(function () { FB.auth.signOut(); }, 200);
         return;
       }
-
       state.usuarioAtual = user;
+      state.jaEntrou = true;
       mostrarAreaPagina('painel');
       atualizarBotaoLoginHub(user);
-
       if (typeof state.aoEntrar === 'function') {
         Promise.resolve(state.aoEntrar(user)).catch(function (e) {
           console.error('[Painel.Auth] aoEntrar (admin):', e);
@@ -256,37 +204,27 @@
     });
   }
 
-  // ==================================================================
-  // FLUXO — HUB
-  // ==================================================================
   function tratarHub(user) {
     state.usuarioAtual = user;
-
     if (!user) {
-      // Anônimo: Hub mostra vitrine
+      log('Hub — anônimo');
       atualizarBotaoLoginHub(null);
       if (typeof state.aoEntrar === 'function') {
         Promise.resolve(state.aoEntrar(null, null)).catch(function () {});
       }
       return;
     }
-
-    // Logado: carrega doc e decide
+    log('Hub — logado:', user.email);
     carregarDocLojista(user.email).then(function (dados) {
       var estado = dados ? Loj.estadoDoLojista(dados) : 'sem-cadastro';
-
       state.dadosAtuais = dados;
       atualizarBotaoLoginHub(user);
-
       if (typeof state.aoEntrar === 'function') {
         Promise.resolve(state.aoEntrar(user, dados, estado)).catch(function () {});
       }
     });
   }
 
-  // ==================================================================
-  // LOGIN
-  // ==================================================================
   function loginGoogle() {
     EU.showLoading('Autenticando...');
     FB.auth.signInWithPopup(FB.provider)
@@ -302,13 +240,10 @@
     var emailEl = $id('emailLogin');
     var senhaEl = $id('senhaLogin');
     if (!emailEl || !senhaEl) return;
-
     var email = emailEl.value.trim();
     var senha = senhaEl.value;
-
     if (!email || !senha) { EU.mostrarToast('Preencha e-mail e senha.', 'erro'); return; }
     if (!EU.validarEmail(email)) { EU.mostrarToast('E-mail inválido.', 'erro'); return; }
-
     EU.showLoading('Autenticando...');
     FB.auth.signInWithEmailAndPassword(email, senha)
       .then(function () { fecharModalLogin(); })
@@ -337,19 +272,14 @@
       .finally(function () { EU.hideLoading(); });
   }
 
-  // ==================================================================
-  // SAIR
-  // ==================================================================
   function sair() {
     if (typeof state.aoSair === 'function') { try { state.aoSair(); } catch (e) {} }
     state.dadosAtuais = null;
     state.usuarioAtual = null;
+    state.jaEntrou = false;
     FB.auth.signOut();
   }
 
-  // ==================================================================
-  // WIRING DOS BOTÕES DE LOGIN
-  // ==================================================================
   function wireLoginUI() {
     var btnGoogle = $id('btnLoginGoogle') || $id('btnGoogleLogin');
     if (btnGoogle && !btnGoogle.__authWired) {
@@ -368,14 +298,32 @@
     }
   }
 
-  // ==================================================================
-  // PROCESSAR USUÁRIO
-  // ==================================================================
+  function redirecionarParaHub() {
+    var redir = encodeURIComponent(window.location.href);
+    log('Redirecionando pro Hub (motivo: anônimo confirmado).');
+    window.location.replace(HUB_URL + '?redir=' + redir);
+  }
+
   function processarUsuario(user) {
-    // Módulo: se anônimo e deve redirecionar, manda pro Hub
+    log('onAuthStateChanged — user:', user ? user.email : 'null');
+
+    if (state.timeoutAnonimo) {
+      clearTimeout(state.timeoutAnonimo);
+      state.timeoutAnonimo = null;
+    }
+
     if (!user && state.modoLogin === 'pagina' && state.redirecionarAnonimo) {
-      var redir = encodeURIComponent(window.location.href);
-      window.location.replace(HUB_URL + '?redir=' + redir);
+      if (!state.timeoutAnonimo) {
+        log('User null — aguardando ' + TEMPO_TOLERANCIA_ANONIMO + 'ms antes de redirecionar pro Hub.');
+        state.timeoutAnonimo = setTimeout(function () {
+          state.timeoutAnonimo = null;
+          if (FB.auth.currentUser) {
+            log('Sessão restaurou nesse meio tempo, cancelando redirect.');
+            return;
+          }
+          redirecionarParaHub();
+        }, TEMPO_TOLERANCIA_ANONIMO);
+      }
       return;
     }
 
@@ -391,13 +339,9 @@
     tratarLojista(user);
   }
 
-  // ==================================================================
-  // INICIAR
-  // ==================================================================
   function iniciar(opcoes) {
     if (state.iniciado) { console.warn('[Painel.Auth] iniciar() chamado 2x'); return; }
     opcoes = opcoes || {};
-
     state.tipo = opcoes.tipo || 'lojista';
     state.modoLogin = opcoes.modoLogin || (opcoes.contexto === 'hub' ? 'modal' : 'pagina');
     state.contexto = opcoes.contexto || null;
@@ -407,6 +351,8 @@
     state.aoEstadoInvalido = opcoes.aoEstadoInvalido || null;
     state.aoSair = opcoes.aoSair || null;
     state.iniciado = true;
+
+    log('Iniciando — tipo:', state.tipo, '| contexto:', state.contexto, '| prefixos:', state.prefixosEsperados);
 
     if (!FB.auth) { console.error('[Painel.Auth] FB.auth indisponível'); return; }
 
@@ -421,9 +367,6 @@
     wireLoginUI();
   }
 
-  // ==================================================================
-  // EXPOSIÇÃO
-  // ==================================================================
   global.Economizei = global.Economizei || {};
   global.Economizei.Painel = global.Economizei.Painel || {};
   global.Economizei.Painel.Auth = {
@@ -437,6 +380,7 @@
     abrirModalPerfil: abrirModalPerfil,
     fecharModalPerfil: fecharModalPerfil,
     dadosAtuais: function () { return state.dadosAtuais; },
-    usuarioAtual: function () { return state.usuarioAtual; }
+    usuarioAtual: function () { return state.usuarioAtual; },
+    jaEntrou: function () { return state.jaEntrou; }
   };
 })(window);
