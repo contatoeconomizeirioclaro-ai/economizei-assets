@@ -105,8 +105,7 @@
       fecharModalPerfil();
     }
 
-    if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errado') {
-      log('Chamando signOut() por causa do motivo:', motivo);
+if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errado' && motivo !== 'erro') {      log('Chamando signOut() por causa do motivo:', motivo);
       setTimeout(function () { FB.auth.signOut(); }, 200);
     }
   }
