@@ -20,7 +20,6 @@ var pedidosAtuais = [];
 var rankingVendas = [];
 var saboresGlobais = [];
 var extrasGlobais = [];
-var saboresTamanhoCache = {};
 var imagensExtrasUrls = [];
 var previewVariacoesSelecionadas = {};
 var produtoEmEdicao = null;
@@ -198,14 +197,18 @@ function renderizarPedidos(pedidos) {
 }
 async function atualizarStatus(id, novoStatus) {
   EU.showLoading('Atualizando...');
-  try { await db.collection('pedidos').doc(id).update({ status: novoStatus }); EU.mostrarToast('Status atualizado!', 'sucesso'); }
-  catch (e) { EU.mostrarToast(e.message, 'erro'); }
+  try {
+    await db.collection('pedidos').doc(id).update({ status: novoStatus });
+    var cod = '#' + (id.slice(0, 6).toUpperCase());
+    EU.mostrarToast('Pedido ' + cod + ' agora está ' + novoStatus + '.', 'sucesso');
+  } catch (e) { EU.mostrarToast(e.message, 'erro'); }
   finally { EU.hideLoading(); }
 }
 async function excluirPedido(id) {
-  if (!confirm('Excluir?')) return;
+  var cod = '#' + id.slice(0, 6).toUpperCase();
+  if (!confirm('Excluir o pedido ' + cod + '? Essa ação não pode ser desfeita.')) return;
   EU.showLoading('Excluindo...');
-  try { await db.collection('pedidos').doc(id).delete(); }
+  try { await db.collection('pedidos').doc(id).delete(); EU.mostrarToast('Pedido ' + cod + ' excluído.', 'sucesso'); }
   catch (e) { EU.mostrarToast(e.message, 'erro'); }
   finally { EU.hideLoading(); }
 }
@@ -234,7 +237,7 @@ async function compartilharMotoboy(id) {
   await db.collection('tokensMotoboy').doc(token).set({ pedidoId: id, expiraEm: Date.now() + 24 * 60 * 60 * 1000, dadosEntrega: { clienteNome: p.clienteNome, clienteTelefone: p.clienteTelefone, endereco: p.endereco, observacao: p.observacao, estabelecimentoNome: p.estabelecimentoNome } });
   var link = window.location.origin + '/p/entregador.html?token=' + encodeURIComponent(token);
   await navigator.clipboard.writeText(link);
-  if (confirm('Link copiado! Abrir WhatsApp?')) window.open('https://wa.me/' + EU.formatarWhatsapp(p.clienteTelefone) + '?text=' + encodeURIComponent('Olá! Link da entrega: ' + link), '_blank');
+  if (confirm('Link copiado! Deseja abrir o WhatsApp para enviar ao motoboy?')) window.open('https://wa.me/' + EU.formatarWhatsapp(p.clienteTelefone) + '?text=' + encodeURIComponent('Olá! Link da entrega: ' + link), '_blank');
 }
 function notificarNovoPedido(p) {
   Shell.mostrarPopupNovo({
@@ -318,7 +321,6 @@ function precoDaSelecaoAtual() {
     return isNaN(preco) ? null : preco;
   }
   if (tipoProduto === 'personalizavel') {
-    // Preço médio dos sabores selecionados; se não houver sabor, usa o preço do produto
     var base = parseFloat((document.getElementById('novoItemPreco') || {}).value);
     var tamSelP = previewVariacoesSelecionadas['Tamanho'];
     if (tamSelP) {
@@ -544,13 +546,19 @@ async function carregarCardapio() {
   }).join('');
 }
 async function toggleDisponibilidadeProduto(id, disp) {
-  try { await db.collection('lojistas').doc(emailAtual).collection('cardapio').doc(id).update({ disponivel: disp ? 'sim' : 'nao' }); EU.mostrarToast(disp ? 'Produto disponível!' : 'Produto indisponível.', 'sucesso'); }
-  catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); carregarCardapio(); }
+  try {
+    await db.collection('lojistas').doc(emailAtual).collection('cardapio').doc(id).update({ disponivel: disp ? 'sim' : 'nao' });
+    var doc = await db.collection('lojistas').doc(emailAtual).collection('cardapio').doc(id).get();
+    var nome = doc.exists ? (doc.data().nome || '') : '';
+    EU.mostrarToast(nome ? 'Produto "' + nome + '" agora está ' + (disp ? 'disponível' : 'indisponível') + '.' : (disp ? 'Produto disponível!' : 'Produto indisponível.'), 'sucesso');
+  } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); carregarCardapio(); }
 }
 async function excluirItemCardapio(id) {
-  if (!confirm('Excluir este item do cardápio?')) return;
+  var doc = await db.collection('lojistas').doc(emailAtual).collection('cardapio').doc(id).get();
+  var nome = doc.exists ? (doc.data().nome || 'este item') : 'este item';
+  if (!confirm('Excluir "' + nome + '"? Essa ação não pode ser desfeita.')) return;
   EU.showLoading('Excluindo...');
-  try { await db.collection('lojistas').doc(emailAtual).collection('cardapio').doc(id).delete(); await carregarCardapio(); EU.mostrarToast('Item removido!', 'sucesso'); }
+  try { await db.collection('lojistas').doc(emailAtual).collection('cardapio').doc(id).delete(); await carregarCardapio(); EU.mostrarToast('"' + nome + '" removido.', 'sucesso'); }
   catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
   finally { EU.hideLoading(); }
 }
@@ -596,7 +604,6 @@ function carregarProdutoNoFormulario(item) {
   imagensExtrasUrls = imagens.slice(1);
   previewVariacoesSelecionadas = {};
   document.getElementById('tipoProduto').value = tipo;
-  // Tamanhos
   if (tipo === 'tamanhos' && Array.isArray(item.tamanhos) && item.tamanhos.length) {
     var tbodyA = document.getElementById('listaTamanhosAdicionar');
     tbodyA.innerHTML = item.tamanhos.map(function (t) {
@@ -610,7 +617,6 @@ function carregarProdutoNoFormulario(item) {
     }).join('');
   }
   toggleTipoProduto().then(function () {
-    // Pré-seleciona sabores e extras
     if (tipo === 'tamanhos' && Array.isArray(item.extrasPermitidos)) {
       item.extrasPermitidos.forEach(function (id) { var cb = document.getElementById('extra_' + id); if (cb) cb.checked = true; });
     }
@@ -676,10 +682,10 @@ document.getElementById('btnAdicionarItem').onclick = async function () {
     var ref = db.collection('lojistas').doc(emailAtual).collection('cardapio');
     if (produtoEmEdicao && !produtoEmEdicao.isDuplicar) {
       await ref.doc(produtoEmEdicao.id).update(itemData);
-      EU.mostrarToast('Produto atualizado!', 'sucesso');
+      EU.mostrarToast('Produto "' + nome + '" atualizado!', 'sucesso');
     } else {
       await ref.add(itemData);
-      EU.mostrarToast(produtoEmEdicao && produtoEmEdicao.isDuplicar ? 'Produto duplicado!' : 'Produto adicionado!', 'sucesso');
+      EU.mostrarToast(produtoEmEdicao && produtoEmEdicao.isDuplicar ? 'Produto "' + nome + '" duplicado!' : 'Produto "' + nome + '" adicionado!', 'sucesso');
     }
     await carregarCardapio();
     fecharModalCadastro('modalProduto');
@@ -704,8 +710,12 @@ async function carregarSabores() {
   }).join('');
 }
 async function toggleDisponibilidadeSabor(id, disp) {
-  try { await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).update({ disponivel: disp ? 'sim' : 'nao' }); EU.mostrarToast(disp ? 'Sabor disponível!' : 'Sabor indisponível.', 'sucesso'); }
-  catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); carregarSabores(); }
+  try {
+    await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).update({ disponivel: disp ? 'sim' : 'nao' });
+    var doc = await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).get();
+    var nome = doc.exists ? (doc.data().nome || '') : '';
+    EU.mostrarToast(nome ? 'Sabor "' + nome + '" agora está ' + (disp ? 'disponível' : 'indisponível') + '.' : (disp ? 'Sabor disponível!' : 'Sabor indisponível.'), 'sucesso');
+  } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); carregarSabores(); }
 }
 async function editarSaborModal(id, isDuplicar) {
   var doc = await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).get();
@@ -728,14 +738,21 @@ async function editarSaborModal(id, isDuplicar) {
       document.querySelectorAll('#editPrecosSabor tr').forEach(function (tr) { var inputs = tr.querySelectorAll('input'); if (inputs.length === 2) { var t = inputs[0].value.trim(), p = parseFloat(inputs[1].value); if (t && !isNaN(p)) precos[t] = p; } });
       if (Object.keys(precos).length === 0) { EU.mostrarToast('Adicione pelo menos um tamanho com preço.', 'erro'); btn.classList.remove('loading'); btn.disabled = false; return; }
       var data = { nome: nome, precos: precos, descricao: document.getElementById('editSaborDescricao').value.trim(), categorias: document.getElementById('editSaborCategorias').value.trim(), disponivel: isDuplicar ? 'sim' : (s.disponivel || 'sim') };
-      if (isDuplicar) { await db.collection('lojistas').doc(emailAtual).collection('sabores').add(data); EU.mostrarToast('Sabor duplicado!', 'sucesso'); }
-      else { await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).update(data); EU.mostrarToast('Sabor atualizado!', 'sucesso'); }
+      if (isDuplicar) { await db.collection('lojistas').doc(emailAtual).collection('sabores').add(data); EU.mostrarToast('Sabor "' + nome + '" duplicado!', 'sucesso'); }
+      else { await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).update(data); EU.mostrarToast('Sabor "' + nome + '" atualizado!', 'sucesso'); }
       await carregarSabores(); modal.remove();
     } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
     finally { btn.classList.remove('loading'); btn.disabled = false; }
   };
 }
-async function excluirSabor(id) { if (confirm('Excluir sabor?')) { await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).delete(); carregarSabores(); EU.mostrarToast('Sabor removido!', 'sucesso'); } }
+async function excluirSabor(id) {
+  var doc = await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).get();
+  var nome = doc.exists ? (doc.data().nome || 'este sabor') : 'este sabor';
+  if (!confirm('Excluir "' + nome + '"? Essa ação não pode ser desfeita.')) return;
+  await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).delete();
+  carregarSabores();
+  EU.mostrarToast('"' + nome + '" removido.', 'sucesso');
+}
 function duplicarSabor(id) { editarSaborModal(id, true); }
 
 /* ============================================================
@@ -753,8 +770,12 @@ async function carregarExtras() {
   }).join('');
 }
 async function toggleDisponibilidadeExtra(id, disp) {
-  try { await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).update({ disponivel: disp ? 'sim' : 'nao' }); EU.mostrarToast(disp ? 'Adicional disponível!' : 'Adicional indisponível.', 'sucesso'); }
-  catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); carregarExtras(); }
+  try {
+    await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).update({ disponivel: disp ? 'sim' : 'nao' });
+    var doc = await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).get();
+    var nome = doc.exists ? (doc.data().nome || '') : '';
+    EU.mostrarToast(nome ? 'Adicional "' + nome + '" agora está ' + (disp ? 'disponível' : 'indisponível') + '.' : (disp ? 'Adicional disponível!' : 'Adicional indisponível.'), 'sucesso');
+  } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); carregarExtras(); }
 }
 async function editarExtraModal(id, isDuplicar) {
   var doc = await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).get();
@@ -773,14 +794,21 @@ async function editarExtraModal(id, isDuplicar) {
       var preco = parseFloat(document.getElementById('editExtraPreco').value);
       if (isNaN(preco) || preco < 0) { EU.mostrarToast('Preço inválido.', 'erro'); btn.classList.remove('loading'); btn.disabled = false; return; }
       var data = { nome: nome, preco: preco, descricao: document.getElementById('editExtraDescricao').value.trim(), max: parseInt(document.getElementById('editExtraMax').value) || 0, categorias: document.getElementById('editExtraCategorias').value.trim(), disponivel: isDuplicar ? 'sim' : (e.disponivel || 'sim') };
-      if (isDuplicar) { await db.collection('lojistas').doc(emailAtual).collection('extras').add(data); EU.mostrarToast('Adicional duplicado!', 'sucesso'); }
-      else { await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).update(data); EU.mostrarToast('Adicional atualizado!', 'sucesso'); }
+      if (isDuplicar) { await db.collection('lojistas').doc(emailAtual).collection('extras').add(data); EU.mostrarToast('Adicional "' + nome + '" duplicado!', 'sucesso'); }
+      else { await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).update(data); EU.mostrarToast('Adicional "' + nome + '" atualizado!', 'sucesso'); }
       await carregarExtras(); modal.remove();
     } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
     finally { btn.classList.remove('loading'); btn.disabled = false; }
   };
 }
-async function excluirExtra(id) { if (confirm('Excluir adicional?')) { await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).delete(); carregarExtras(); EU.mostrarToast('Adicional removido!', 'sucesso'); } }
+async function excluirExtra(id) {
+  var doc = await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).get();
+  var nome = doc.exists ? (doc.data().nome || 'este adicional') : 'este adicional';
+  if (!confirm('Excluir "' + nome + '"? Essa ação não pode ser desfeita.')) return;
+  await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).delete();
+  carregarExtras();
+  EU.mostrarToast('"' + nome + '" removido.', 'sucesso');
+}
 function duplicarExtra(id) { editarExtraModal(id, true); }
 
 /* ============================================================
@@ -798,8 +826,12 @@ async function carregarFretes() {
   }).join('') || '<p style="text-align:center;">Nenhuma taxa configurada.</p>';
 }
 async function toggleAtivoFrete(id, ativo) {
-  try { await db.collection('lojistas').doc(emailAtual).collection('fretes').doc(id).update({ ativo: ativo ? 'sim' : 'nao' }); EU.mostrarToast(ativo ? 'Taxa ativa!' : 'Taxa inativa.', 'sucesso'); }
-  catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); await carregarFretes(); }
+  try {
+    await db.collection('lojistas').doc(emailAtual).collection('fretes').doc(id).update({ ativo: ativo ? 'sim' : 'nao' });
+    var doc = await db.collection('lojistas').doc(emailAtual).collection('fretes').doc(id).get();
+    var loc = doc.exists ? (doc.data().localidade || '') : '';
+    EU.mostrarToast(loc ? 'Taxa "' + loc + '" agora está ' + (ativo ? 'ativa' : 'inativa') + '.' : (ativo ? 'Taxa ativa!' : 'Taxa inativa.'), 'sucesso');
+  } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); await carregarFretes(); }
 }
 async function duplicarFrete(id) {
   var snap = await db.collection('lojistas').doc(emailAtual).collection('fretes').doc(id).get();
@@ -811,21 +843,29 @@ function editarFreteModal(id, loc, taxa, ativo, isDuplicar) {
   var modal = document.createElement('div');
   modal.className = 'modal-overlay entrega-modal active';
   var titulo = isDuplicar ? 'Duplicar taxa de entrega' : 'Editar taxa de entrega';
-  modal.innerHTML = '<div class="modal-conteudo entrega-modal-conteudo"><div class="modal-header"><div><span class="modal-eyebrow">Taxas de entrega</span><h3>' + titulo + '</h3></div><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div><div class="campanha-form"><div class="campanha-secao-titulo">1. DADOS DA ENTREGA</div><div class="campo"><label>Localidade</label><input type="text" id="editLoc" value="' + EU.sanitize(loc) + '"></div><div class="campo"><label>Taxa (R$)</label><input type="number" step="0.01" id="editTaxa" value="' + taxa + '"></div><div class="campanha-modal-acoes"><button class="btn-secundario" onclick="this.closest(\'.modal-overlay\').remove()">Cancelar</button><button class="btn-primary" id="salvarFrete">' + (isDuplicar ? 'Duplicar' : 'Salvar') + '</button></div></div></div>';
+  modal.innerHTML = '<div class="modal-conteudo entrega-modal-conteudo"><div class="modal-header"><div><span class="modal-eyebrow">Taxas de entrega</span><h3>' + titulo + '</h3></div><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div><div class="campanha-form"><div class="campanha-secao-titulo">1. DADOS DA ENTREGA</div><div class="campo"><label>Localidade</label><input type="text" id="editLoc" value="' + EU.sanitize(loc) + '"></div><div class="campo"><label>Taxa (R$)</label><input type="number" step="0.01" id="editTaxa" value="' + taxa + '"></div><div class="campanha-modal-acoes"><button class="btn-secundario" onclick="this.closest(\'.modal-overlay\').remove()">Cancelar</button><button class="btn-primary" id="salvarFrete"><span class="spinner-btn"></span><span class="btn-text">' + (isDuplicar ? 'Duplicar' : 'Salvar') + '</span></button></div></div></div>';
   document.body.appendChild(modal);
   document.getElementById('salvarFrete').onclick = async function () {
+    var btn = this; btn.classList.add('loading'); btn.disabled = true;
     var l = document.getElementById('editLoc').value.trim();
     var t = parseFloat(document.getElementById('editTaxa').value);
-    if (!l || !Number.isFinite(t) || t < 0) { EU.mostrarToast('Preencha localidade e taxa.', 'erro'); return; }
+    if (!l || !Number.isFinite(t) || t < 0) { EU.mostrarToast('Preencha localidade e taxa.', 'erro'); btn.classList.remove('loading'); btn.disabled = false; return; }
     try {
       var ref = db.collection('lojistas').doc(emailAtual).collection('fretes');
-      if (isDuplicar) { await ref.add({ localidade: l, taxa: t, ativo: 'sim' }); EU.mostrarToast('Taxa duplicada!', 'sucesso'); }
-      else { await ref.doc(id).update({ localidade: l, taxa: t }); EU.mostrarToast('Taxa atualizada!', 'sucesso'); }
+      if (isDuplicar) { await ref.add({ localidade: l, taxa: t, ativo: 'sim' }); EU.mostrarToast('Taxa "' + l + '" duplicada!', 'sucesso'); }
+      else { await ref.doc(id).update({ localidade: l, taxa: t }); EU.mostrarToast('Taxa "' + l + '" atualizada!', 'sucesso'); }
       await carregarFretes(); modal.remove();
-    } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
+    } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); btn.classList.remove('loading'); btn.disabled = false; }
   };
 }
-async function excluirFrete(id) { if (confirm('Remover?')) { await db.collection('lojistas').doc(emailAtual).collection('fretes').doc(id).delete(); carregarFretes(); } }
+async function excluirFrete(id) {
+  var doc = await db.collection('lojistas').doc(emailAtual).collection('fretes').doc(id).get();
+  var loc = doc.exists ? (doc.data().localidade || 'esta taxa') : 'esta taxa';
+  if (!confirm('Excluir a taxa de "' + loc + '"? Essa ação não pode ser desfeita.')) return;
+  await db.collection('lojistas').doc(emailAtual).collection('fretes').doc(id).delete();
+  carregarFretes();
+  EU.mostrarToast('Taxa "' + loc + '" removida.', 'sucesso');
+}
 
 /* ============================================================
    CUPONS (completo)
@@ -870,17 +910,29 @@ async function salvarCupomLoja() {
   try {
     var ref = db.collection('lojistas').doc(emailAtual).collection('cupons');
     var dados = { codigo: cod, tipo: tipo, valor: valor, ativo: ativo, validade: validade || null, minimoPedido: minPed, limiteUsos: limiteUsos };
-    if (cupomEmEdicao && !cupomEmEdicao.isDuplicar) { await ref.doc(cupomEmEdicao.id).update(dados); EU.mostrarToast('Cupom atualizado!', 'sucesso'); }
-    else { await ref.add(Object.assign({}, dados, { usosTotal: 0, usosPorCliente: {} })); EU.mostrarToast(cupomEmEdicao && cupomEmEdicao.isDuplicar ? 'Cupom duplicado!' : 'Cupom criado!', 'sucesso'); }
+    if (cupomEmEdicao && !cupomEmEdicao.isDuplicar) { await ref.doc(cupomEmEdicao.id).update(dados); EU.mostrarToast('Cupom "' + cod + '" atualizado!', 'sucesso'); }
+    else { await ref.add(Object.assign({}, dados, { usosTotal: 0, usosPorCliente: {} })); EU.mostrarToast(cupomEmEdicao && cupomEmEdicao.isDuplicar ? 'Cupom "' + cod + '" duplicado!' : 'Cupom "' + cod + '" criado!', 'sucesso'); }
     await carregarCupons(); fecharModalCupomLoja(); limparFormularioCupom();
   } catch (e) { EU.mostrarToast(e.message, 'erro'); }
   finally { EU.hideLoading(); }
 }
 async function toggleAtivoCupom(id, ativo) {
-  try { await db.collection('lojistas').doc(emailAtual).collection('cupons').doc(id).update({ ativo: ativo ? 'sim' : 'nao' }); EU.mostrarToast(ativo ? 'Cupom ativo!' : 'Cupom inativo.', 'sucesso'); await carregarCupons(); }
-  catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); await carregarCupons(); }
+  try {
+    await db.collection('lojistas').doc(emailAtual).collection('cupons').doc(id).update({ ativo: ativo ? 'sim' : 'nao' });
+    var doc = await db.collection('lojistas').doc(emailAtual).collection('cupons').doc(id).get();
+    var cod = doc.exists ? (doc.data().codigo || '') : '';
+    EU.mostrarToast(cod ? 'Cupom "' + cod + '" agora está ' + (ativo ? 'ativo' : 'inativo') + '.' : (ativo ? 'Cupom ativo!' : 'Cupom inativo.'), 'sucesso');
+    await carregarCupons();
+  } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); await carregarCupons(); }
 }
-async function excluirCupom(id) { if (confirm('Excluir este cupom?')) { await db.collection('lojistas').doc(emailAtual).collection('cupons').doc(id).delete(); carregarCupons(); } }
+async function excluirCupom(id) {
+  var doc = await db.collection('lojistas').doc(emailAtual).collection('cupons').doc(id).get();
+  var cod = doc.exists ? (doc.data().codigo || 'este cupom') : 'este cupom';
+  if (!confirm('Excluir o cupom "' + cod + '"? Essa ação não pode ser desfeita.')) return;
+  await db.collection('lojistas').doc(emailAtual).collection('cupons').doc(id).delete();
+  carregarCupons();
+  EU.mostrarToast('Cupom "' + cod + '" removido.', 'sucesso');
+}
 async function duplicarCupom(id) {
   var snap = await db.collection('lojistas').doc(emailAtual).collection('cupons').doc(id).get();
   if (!snap.exists) return;
@@ -1097,17 +1149,27 @@ async function salvarPromocao() {
   EU.showLoading(promocaoEmEdicao ? (promocaoEmEdicao.isDuplicar ? 'Duplicando...' : 'Salvando...') : 'Criando...');
   try {
     var ref = db.collection('lojistas').doc(emailAtual).collection('promocoes');
-    if (promocaoEmEdicao && !promocaoEmEdicao.isDuplicar) { await ref.doc(promocaoEmEdicao.id).update(Object.assign({}, d, { atualizadoEm: firebase.firestore.FieldValue.serverTimestamp() })); EU.mostrarToast('Promoção atualizada!', 'sucesso'); }
-    else { d.criadoEm = firebase.firestore.FieldValue.serverTimestamp(); await ref.add(d); EU.mostrarToast(promocaoEmEdicao && promocaoEmEdicao.isDuplicar ? 'Promoção duplicada!' : 'Promoção criada!', 'sucesso'); }
+    if (promocaoEmEdicao && !promocaoEmEdicao.isDuplicar) { await ref.doc(promocaoEmEdicao.id).update(Object.assign({}, d, { atualizadoEm: firebase.firestore.FieldValue.serverTimestamp() })); EU.mostrarToast('Promoção "' + d.nome + '" atualizada!', 'sucesso'); }
+    else { d.criadoEm = firebase.firestore.FieldValue.serverTimestamp(); await ref.add(d); EU.mostrarToast(promocaoEmEdicao && promocaoEmEdicao.isDuplicar ? 'Promoção "' + d.nome + '" duplicada!' : 'Promoção "' + d.nome + '" criada!', 'sucesso'); }
     await carregarPromocoes(); limparFormularioPromocao(); fecharModalPromocaoLoja();
   } catch (e) { EU.mostrarToast(e.message, 'erro'); }
   finally { EU.hideLoading(); }
 }
 async function toggleAtivoPromocao(id, ativo) {
-  try { await db.collection('lojistas').doc(emailAtual).collection('promocoes').doc(id).update({ ativo: ativo ? 'sim' : 'nao' }); EU.mostrarToast(ativo ? 'Promoção ativa!' : 'Promoção inativa.', 'sucesso'); await carregarPromocoes(); }
-  catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); await carregarPromocoes(); }
+  try {
+    await db.collection('lojistas').doc(emailAtual).collection('promocoes').doc(id).update({ ativo: ativo ? 'sim' : 'nao' });
+    var doc = await db.collection('lojistas').doc(emailAtual).collection('promocoes').doc(id).get();
+    var nome = doc.exists ? (doc.data().nome || '') : '';
+    EU.mostrarToast(nome ? 'Promoção "' + nome + '" agora está ' + (ativo ? 'ativa' : 'inativa') + '.' : (ativo ? 'Promoção ativa!' : 'Promoção inativa.'), 'sucesso');
+    await carregarPromocoes();
+  } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); await carregarPromocoes(); }
 }
-async function excluirPromocao(id) { if (!confirm('Excluir promoção?')) return; try { await db.collection('lojistas').doc(emailAtual).collection('promocoes').doc(id).delete(); await carregarPromocoes(); EU.mostrarToast('Promoção removida!', 'sucesso'); } catch (e) { EU.mostrarToast(e.message, 'erro'); } }
+async function excluirPromocao(id) {
+  var doc = await db.collection('lojistas').doc(emailAtual).collection('promocoes').doc(id).get();
+  var nome = doc.exists ? (doc.data().nome || 'esta promoção') : 'esta promoção';
+  if (!confirm('Excluir a promoção "' + nome + '"? Essa ação não pode ser desfeita.')) return;
+  try { await db.collection('lojistas').doc(emailAtual).collection('promocoes').doc(id).delete(); await carregarPromocoes(); EU.mostrarToast('Promoção "' + nome + '" removida.', 'sucesso'); } catch (e) { EU.mostrarToast(e.message, 'erro'); }
+}
 async function editarPromocao(id, isDuplicar) {
   try {
     var snap = await db.collection('lojistas').doc(emailAtual).collection('promocoes').doc(id).get();
@@ -1168,7 +1230,10 @@ async function excluirMesa(id, numero) {
     var snap = await db.collection('pedidos').where('estabelecimentoId', '==', estId).where('numeroMesa', '==', String(numero)).where('status', 'in', ['pendente','confirmado','em_preparo','saiu_entrega']).get();
     if (!snap.empty) { EU.mostrarToast('Essa mesa tem pedido em andamento.', 'erro'); return; }
   } catch (e) {}
-  if (confirm('Excluir mesa?')) { await db.collection('lojistas').doc(emailAtual).collection('mesas').doc(id).delete(); carregarMesas(); }
+  if (!confirm('Excluir a Mesa ' + numero + '? Essa ação não pode ser desfeita.')) return;
+  await db.collection('lojistas').doc(emailAtual).collection('mesas').doc(id).delete();
+  carregarMesas();
+  EU.mostrarToast('Mesa ' + numero + ' removida.', 'sucesso');
 }
 async function verPedidosMesa(n) {
   var snap = await db.collection('pedidos').where('estabelecimentoId', '==', estId).where('numeroMesa', '==', n).orderBy('criadoEm', 'desc').get();
@@ -1186,7 +1251,7 @@ function duplicarMesa(numero) {
 }
 function gerarQRCodeMesa(n) {
   var url = 'https://www.economizeirioclaro.com.br/p/onde-comer_13.html?qr=' + estId + '&mesa=' + n;
-  var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+  var qrUrl = EU.gerarImagemQRCode(url, 200);
   var win = window.open();
   win.document.write('<html><body style="text-align:center;"><h2>Mesa ' + n + '</h2><img src="' + qrUrl + '"><p>' + url + '</p><button onclick="window.print()">Imprimir</button></body></html>');
 }
@@ -1231,7 +1296,7 @@ document.getElementById('btnAdicionarSabor').onclick = async function () {
     await carregarSabores();
     if (document.getElementById('tipoProduto').value === 'personalizavel') { await carregarSaboresCheckboxes(document.getElementById('novoItemCategoria').value.trim()); verificarAvisoSemSabores(); }
     fecharModalSaborCadastro(); limparFormularioSaborCadastro();
-    EU.mostrarToast('Sabor salvo!', 'sucesso');
+    EU.mostrarToast('Sabor "' + nome + '" salvo!', 'sucesso');
   } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
   finally { btn.classList.remove('loading'); btn.disabled = false; }
 };
@@ -1245,7 +1310,7 @@ document.getElementById('btnAdicionarExtra').onclick = async function () {
     await db.collection('lojistas').doc(emailAtual).collection('extras').add({ nome: nome, preco: preco, descricao: document.getElementById('novoExtraDescricao').value.trim(), max: parseInt(document.getElementById('novoExtraMax').value) || 0, categorias: document.getElementById('extraCategorias').value.trim(), imagem: document.getElementById('novoExtraImagem').value.trim(), disponivel: 'sim' });
     await carregarExtras();
     fecharModalExtraCadastro(); limparFormularioExtraCadastro();
-    EU.mostrarToast('Adicional salvo!', 'sucesso');
+    EU.mostrarToast('Adicional "' + nome + '" salvo!', 'sucesso');
   } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
   finally { btn.classList.remove('loading'); btn.disabled = false; }
 };
@@ -1254,7 +1319,7 @@ document.getElementById('btnAdicionarFrete').onclick = async function () {
   var t = parseFloat(document.getElementById('novaTaxa').value);
   if (!l || isNaN(t) || t < 0) { EU.mostrarToast('Preencha localidade e taxa.', 'erro'); return; }
   EU.showLoading('Salvando...');
-  try { await db.collection('lojistas').doc(emailAtual).collection('fretes').add({ localidade: l, taxa: t, ativo: 'sim' }); fecharModalCadastro('modalFrete'); limparFormularioFreteCadastro(); carregarFretes(); EU.mostrarToast('Taxa salva!', 'sucesso'); }
+  try { await db.collection('lojistas').doc(emailAtual).collection('fretes').add({ localidade: l, taxa: t, ativo: 'sim' }); fecharModalCadastro('modalFrete'); limparFormularioFreteCadastro(); carregarFretes(); EU.mostrarToast('Taxa "' + l + '" salva!', 'sucesso'); }
   catch (e) { EU.mostrarToast(e.message, 'erro'); }
   finally { EU.hideLoading(); }
 };
@@ -1266,7 +1331,7 @@ document.getElementById('btnAdicionarMesa').onclick = async function () {
     if ((await ref.get()).exists) { EU.mostrarToast('Mesa já cadastrada.', 'erro'); return; }
     await ref.set({ numero: n, status: 'livre' });
     fecharModalCadastro('modalMesa'); limparFormularioMesaCadastro(); await carregarMesas();
-    EU.mostrarToast('Mesa adicionada!', 'sucesso');
+    EU.mostrarToast('Mesa ' + n + ' adicionada!', 'sucesso');
   } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
 };
 document.getElementById('btnAdicionarCupom').onclick = salvarCupomLoja;
@@ -1329,7 +1394,6 @@ document.querySelectorAll('.tab-principal').forEach(function (btn) {
   var t4 = document.getElementById('limparBuscaProdutosPromocao'); if (t4) t4.addEventListener('click', function () { var b = document.getElementById('buscaProdutosPromocao'); if (b) b.value = ''; renderizarProdutosPromocao(); if (b) b.focus(); });
   var t5 = document.getElementById('aplicacaoPromocao'); if (t5) t5.addEventListener('change', atualizarAplicacaoVariacoesPromocao);
   var t6 = document.getElementById('btnAdicionarFaixaPromocao'); if (t6) t6.addEventListener('click', function () { adicionarFaixaPromocao(); });
-  // Fechar modais
   ['btnFecharProdutoModal','btnCancelarProdutoModal'].forEach(function (id) { var el = document.getElementById(id); if (el) el.addEventListener('click', function () { fecharModalCadastro('modalProduto'); resetarFormularioProdutoLoja(); }); });
   ['btnFecharSaborModal','btnCancelarSaborModal'].forEach(function (id) { var el = document.getElementById(id); if (el) el.addEventListener('click', function () { fecharModalSaborCadastro(); limparFormularioSaborCadastro(); }); });
   ['btnFecharExtraModal','btnCancelarExtraModal'].forEach(function (id) { var el = document.getElementById(id); if (el) el.addEventListener('click', function () { fecharModalExtraCadastro(); limparFormularioExtraCadastro(); }); });
@@ -1444,6 +1508,10 @@ Auth.iniciar({
     ]).then(function () {
       toggleTipoProduto();
       atualizarPreviewProdutoLoja();
+      // Transição: esconde overlay quando tudo carregou
+      if (window.EconomizeiPainel && EconomizeiPainel.Transicao) {
+        setTimeout(function () { EconomizeiPainel.Transicao.esconderOverlay(); }, 300);
+      }
     });
   }
 });
