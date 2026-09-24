@@ -1,7 +1,8 @@
 /* ==============================================================
    ECONOMIZEI! RIO CLARO — UTILITÁRIOS COMPARTILHADOS
    Usado por: grupos, vitrine, trilhas, ônibus, eventos, vagas,
-              e todos os módulos (loja, pedidos, transporte, painel).
+              todos os módulos (loja, pedidos, transporte)
+              e todo o painel (hub, master, módulos).
    Sem dependências externas. Expõe tudo em window.EconomizeiUtils.
    ============================================================== */
 (function (global) {
@@ -42,11 +43,14 @@
       .trim();
   }
 
+  // ---------- VALIDAÇÕES E FORMATAÇÕES ----------
+  // [NOVO] Valida e-mail no formato padrão.
   function validarEmail(str) {
     if (!str) return false;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(str).trim());
   }
 
+  // [NOVO] Normaliza número de WhatsApp para o formato do wa.me (com 55).
   function formatarWhatsapp(numero) {
     if (!numero) return '';
     var limpo = String(numero).replace(/\D/g, '');
@@ -55,6 +59,7 @@
     return limpo;
   }
 
+  // [NOVO] Verifica se o id do estabelecimento casa com algum dos prefixos.
   function pertencePrefixo(id, prefixos) {
     if (!id || !Array.isArray(prefixos)) return false;
     return prefixos.some(function (p) { return String(id).startsWith(p); });
@@ -304,12 +309,7 @@
         var cod = btnCopiar.dataset.popupCopiar;
         if (navigator.clipboard) {
           navigator.clipboard.writeText(cod).then(function () {
-            var t = document.createElement('div');
-            t.className = 'toast';
-            t.textContent = 'Código copiado!';
-            t.setAttribute('role', 'alert');
-            document.body.appendChild(t);
-            setTimeout(function () { t.remove(); }, 2400);
+            mostrarToast('Código copiado!', 'sucesso');
           });
         }
       });
@@ -373,6 +373,7 @@
     ensureHttps,
     linkSeguro,
     gerarSlug,
+    // Validações e formatações
     validarEmail,
     formatarWhatsapp,
     pertencePrefixo,
