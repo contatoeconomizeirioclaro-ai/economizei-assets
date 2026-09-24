@@ -1700,4 +1700,54 @@ Economizei.Pedido = (function () {
         var contentId = 'tab' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1);
         var contentEl = document.getElementById(contentId);
         if (contentEl) contentEl.classList.add('active');
-        if (tab.dat
+        if (tab.dataset.tab === 'historico' && Core.getCurrentUser()) carregarHistorico(estId);
+      };
+    });
+    if (!isLoading && produtos) { atualizarCarrinhoVisual(); recalcularTotal(); }
+    toggleTroco();
+    var saved = EU.carregarDadosClienteLocal();
+    if (saved) {
+      if (saved.nome) document.getElementById('clienteNome').value = saved.nome;
+      if (saved.telefone) document.getElementById('clienteTel').value = saved.telefone;
+      if (saved.endereco) document.getElementById('clienteEndereco').value = saved.endereco;
+    }
+    EU.aplicarMascaraTelefone(document.getElementById('clienteTel'));
+    var mesaAtual = getMesaQR();
+    if (mesaAtual) {
+      var mesaField = document.getElementById('mesaInput');
+      if (mesaField && !mesaField.value) { mesaField.value = mesaAtual; mesaField.readOnly = true; mesaField.disabled = true; mesaField.style.backgroundColor = '#f0f0f0'; }
+    }
+  }
+
+  function fecharModalPedido() {
+    pararTodosListeners();
+    var modal = document.getElementById('modalPedidoRest');
+    if (modal) {
+      if (modal.__ctrl) modal.__ctrl.fechar();
+      else modal.remove();
+    }
+  }
+
+  return {
+    abrirModal: abrirModal,
+    abrirImagemProduto: abrirImagemProduto,
+    abrirProdutoPeloCard: abrirProdutoPeloCard,
+    atualizarCarrinhoVisual: atualizarCarrinhoVisual,
+    alterarQuantidade: alterarQuantidade,
+    removerItem: removerItem,
+    atualizarBadgeCarrinho: atualizarBadgeCarrinho,
+    recalcularTotal: recalcularTotal,
+    aplicarCupom: aplicarCupom,
+    toggleTroco: toggleTroco,
+    finalizarPedido: finalizarPedido,
+    consultarPedido: consultarPedido,
+    gerarComprovantePedido: gerarComprovantePedido,
+    mostrarPopupConfirmacao: EU.mostrarPopupConfirmacao,
+    validarCupom: validarCupom,
+    fecharModalPedido: fecharModalPedido,
+    pararListenerPedidos: pararListenerPedidos,
+    getMesaQR: getMesaQR,
+    setMesaQR: setMesaQR,
+    verComprovanteHistorico: verComprovanteHistorico
+  };
+})();
