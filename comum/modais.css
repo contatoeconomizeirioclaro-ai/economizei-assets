@@ -43,7 +43,6 @@
   box-sizing: border-box;
 }
 .modal-overlay.ativo,
-.modal-overlay.active,
 .modal-overlay[style*="display: flex"],
 .modal-overlay[style*="display:flex"] {
   display: flex;
@@ -610,11 +609,17 @@ body.modo-app .modal-conteudo {
 }
 
 /* ===== VARIANTE: HEADER STICKY ===== */
-/* Modais altos (cadastro de produto, campanha, entrega) mantêm
-   o header visível enquanto o body rola. */
 .modal-conteudo.modal-sticky-header .modal-header {
   position: sticky;
   top: 0;
   z-index: 2;
   background: #fff;
 }
+
+/* ============================================================
+   [NOVO] ADIÇÕES — não substituem nada acima.
+   Aceita .active como sinônimo de .ativo. O painel-shell.js
+   cria modais com classList.add('active'), mas o CSS base só
+   conhece .ativo. Esta linha adiciona o alias.
+   ============================================================ */
+.modal-overlay.active { display: flex; }
