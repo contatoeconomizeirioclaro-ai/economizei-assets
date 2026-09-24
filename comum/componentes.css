@@ -94,21 +94,70 @@
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 0.5rem;
 }
+
+/* ===== CARD DE PRODUTO — alinhado com o preview do painel ===== */
 .produto-card {
   background: #fff;
-  border: 1px solid var(--gray-200, #e2e8f0);
-  border-radius: 0.75rem; padding: 0.4rem;
-  text-align: center; display: flex; flex-direction: column; height: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: .75rem;
+  padding: .4rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: 0 2px 8px rgba(15,23,42,.05);
+  transition: box-shadow .15s ease, transform .15s ease;
 }
+.produto-card:hover {
+  box-shadow: 0 6px 16px rgba(15,23,42,.10);
+  transform: translateY(-2px);
+}
+
 .produto-card img {
-  width: 100%; aspect-ratio: 1; object-fit: cover;
-  border-radius: 0.5rem; cursor: pointer;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: .5rem;
+  cursor: pointer;
+  display: block;
 }
-.card-content-produto { flex: 1; display: flex; flex-direction: column; }
-.produto-nome { font-weight: 600; font-size: 0.75rem; margin: 0.2rem 0; }
-.produto-preco { color: var(--primary, #0a66c2); font-weight: 700; font-size: 0.8rem; }
-.produto-card .btn-escolher,
-.produto-card .btn-adicionar-simples { margin-top: auto; width: 100%; }
+
+.produto-card .produto-sem-imagem {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #f1f5f9;
+  border-radius: .5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 24px;
+}
+
+.card-content-produto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: .35rem .25rem 0;
+}
+
+.produto-nome {
+  font-weight: 600;
+  font-size: .75rem;
+  color: #0f172a;
+  line-height: 1.25;
+  margin: .2rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.produto-preco {
+  color: var(--primary, #0a66c2);
+  font-weight: 700;
+  font-size: .8rem;
+  min-height: 1.1em;
+}
 
 .categoria-group { margin-bottom: 1rem; }
 .categoria-titulo-modal {
@@ -293,12 +342,36 @@ textarea.input-pedido {
 
 .btn-escolher,
 .btn-adicionar-simples {
-  background: var(--primary, #0a66c2); color: #fff;
-  border: none; border-radius: 2rem; padding: 0.3rem;
-  font-size: 0.7rem; font-weight: 600; cursor: pointer;
+  margin-top: auto;
+  width: 100%;
+  border: 1px solid var(--primary, #0a66c2);
+  background: #fff;
+  color: var(--primary, #0a66c2);
+  border-radius: 999px;
+  padding: .5rem .6rem;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  transition: background .15s ease, color .15s ease;
+}
+.btn-escolher:hover:not(:disabled),
+.btn-adicionar-simples:hover:not(:disabled) {
+  background: var(--primary, #0a66c2);
+  color: #fff;
 }
 .btn-escolher:disabled,
-.btn-adicionar-simples:disabled { background: #94a3b8; cursor: not-allowed; }
+.btn-adicionar-simples:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  background: #fff;
+  color: #94a3b8;
+  border-color: #cbd5e1;
+}
 
 .btn-aplicar-cupom {
   background: var(--primary, #0a66c2); color: #fff;
