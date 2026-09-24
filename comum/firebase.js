@@ -21,8 +21,7 @@
         return;
     }
     if (!firebase.apps.length) firebase.initializeApp(cfg);
-   firebase.firestore().settings({ experimentalAutoDetectLongPolling: true });
-
+firebase.firestore().settings({ experimentalAutoDetectLongPolling: true, merge: true });
     global.EconomizeiFirebase = {
         db: firebase.firestore(),
         auth: firebase.auth(),
