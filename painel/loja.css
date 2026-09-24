@@ -279,7 +279,7 @@
    [NOVO] PADRONIZAÇÃO DOS MODAIS DO PAINEL
    ============================================================ */
 
-/* 1. Conteúdo rola dentro do modal + respiro do topo */
+/* 1. Conteúdo rola; padding-top zerado pro header colar no topo */
 .produto-modal-conteudo,
 .cadastro-modal-conteudo,
 .campanha-modal-conteudo,
@@ -288,9 +288,10 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   max-height: calc(100dvh - 64px);
+  padding-top: 0;
 }
 
-/* 2. Header fixo no topo, sem offset negativo */
+/* 2. Header sticky no topo, com padding-top próprio */
 .produto-modal .modal-header,
 .cadastro-modal .modal-header,
 .campanha-modal .modal-header,
@@ -299,9 +300,13 @@
   top: 0;
   z-index: 2;
   background: #fff;
+  padding: var(--spacing-xl) 0 var(--spacing-md);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 }
 
-/* 3. Título ocupa o espaço, botão × vai para o canto direito */
+/* 3. Título flexiona, × vai pra direita */
 .produto-modal .modal-header > div:first-child,
 .cadastro-modal .modal-header > div:first-child,
 .campanha-modal .modal-header > div:first-child,
@@ -310,14 +315,8 @@
   min-width: 0;
 }
 
-/* 4. Mobile: mesmo comportamento */
+/* 4. Mobile */
 @media (max-width: 640px) {
-  .produto-modal .modal-header,
-  .cadastro-modal .modal-header,
-  .campanha-modal .modal-header,
-  .entrega-modal .modal-header {
-    top: 0;
-  }
   .produto-modal-conteudo,
   .cadastro-modal-conteudo,
   .campanha-modal-conteudo,
@@ -325,4 +324,114 @@
   .repetir-dados-modal-conteudo {
     max-height: calc(100dvh - 20px - 130px);
   }
+  .produto-modal .modal-header,
+  .cadastro-modal .modal-header,
+  .campanha-modal .modal-header,
+  .entrega-modal .modal-header {
+    padding: var(--spacing-lg) 0 var(--spacing-sm);
+  }
+}
+
+/* ============================================================
+   [NOVO] SELETOR DE TIPO DE PRODUTO (do pedidos, faltava no loja)
+   ============================================================ */
+.tipo-produto-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: .75rem;
+}
+.tipo-card {
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: .75rem;
+  row-gap: .15rem;
+  align-items: center;
+  text-align: left;
+  border: 1px solid #dbe3ee;
+  border-left: 4px solid transparent;
+  background: #fff;
+  color: #334155;
+  border-radius: .85rem;
+  padding: .8rem 1rem;
+  cursor: pointer;
+  transition: .2s;
+  box-shadow: 0 2px 8px rgba(15,23,42,.04);
+  font: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.tipo-card .tipo-icone {
+  grid-row: 1 / -1;
+  width: 2.2rem;
+  height: 2.2rem;
+  min-width: 2.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: .7rem;
+  background: #f1f5f9;
+  font-size: 1.1rem;
+  line-height: 1;
+  margin: 0;
+}
+.tipo-card .tipo-titulo {
+  font-size: .9rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+  display: block;
+  width: auto;
+  margin: 0;
+}
+.tipo-card .tipo-desc {
+  font-size: .75rem;
+  color: #64748b;
+  line-height: 1.25;
+  display: block;
+  width: auto;
+}
+.tipo-card:hover {
+  border-color: #93c5fd;
+  transform: translateY(-1px);
+}
+.tipo-card.selected {
+  background: #eff6ff;
+  border-color: #60a5fa;
+  border-left-color: #0a66c2;
+  box-shadow: 0 3px 10px rgba(10,102,194,.12);
+}
+.tipo-card.selected .tipo-icone { background: #dbeafe; }
+.tipo-card.selected .tipo-titulo { color: #0a66c2; }
+@media (max-width: 640px) {
+  .tipo-produto-cards { grid-template-columns: 1fr; gap: .5rem; }
+}
+
+/* ============================================================
+   [NOVO] BOTÃO X DE REMOVER IMAGEM (reforço)
+   ============================================================ */
+.imagem-produto-preview-item .btn-remover-imagem {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.9);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+.imagem-produto-preview-item .btn-remover-imagem:hover {
+  background: #dc2626;
+  transform: scale(1.05);
 }
