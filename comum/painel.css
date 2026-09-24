@@ -643,21 +643,3 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
 }
 #modalLogin .btn-fechar-modal:active,
 #modalPerfil .btn-fechar-modal:active { transform: scale(0.92); }
-
-/* ===== BOTÃO GOOGLE: altura fixa só no login do hub ===== */
-#modalLogin .btn-google {
-  height: 44px; padding: 0 16px; box-sizing: border-box;
-  display: inline-flex; align-items: center; justify-content: center;
-  gap: var(--spacing-sm); line-height: 1; white-space: nowrap;
-}
-#modalLogin .btn-google img {
-  width: 18px !important; height: 18px !important;
-  max-width: 18px; max-height: 18px;
-  flex: 0 0 auto; display: block;
-}
-
-/* ===== FLASH DA TELA DE LOGIN (só módulos) =====
-   Enquanto o painel-auth não aplica o inline style "display: flex",
-   a tela de login fica escondida. Quando ele aplica, o inline style
-   ganha de qualquer CSS e mostra normalmente. */
-#areaLogin:not([style*="display: flex"]) { display: none; }
