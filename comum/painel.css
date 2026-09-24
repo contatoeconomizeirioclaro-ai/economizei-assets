@@ -78,11 +78,10 @@ body {
 
 /* ===== LOGIN ===== */
 #areaLogin {
-  min-height: 100vh; display: none; align-items: center; justify-content: center;
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
   padding: var(--spacing-xl);
   background: linear-gradient(135deg, #f8fafc 0%, #e3f2fd 100%);
 }
-#areaLogin.active { display: flex; }
 .login-card {
   background: white; padding: var(--spacing-2xl); border-radius: 20px;
   box-shadow: var(--shadow-lg); width: 100%; max-width: 400px;
@@ -91,23 +90,13 @@ body {
 .login-card h2 { color: var(--primary); margin-bottom: var(--spacing-xl); font-weight: 800; font-size: 1.4rem; }
 .login-card p.hint { color: var(--text-muted); font-size: 12px; margin-bottom: var(--spacing-lg); }
 .btn-google {
-  background: white; border: 1px solid #ddd; padding: 0 16px;
-  height: 44px; border-radius: 30px;
+  background: white; border: 1px solid #ddd; padding: var(--spacing-md); border-radius: 30px;
   width: 100%; margin-bottom: var(--spacing-md); cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-sm);
-  font-weight: 600; font-size: 13px; transition: 0.2s ease;
-  font-family: inherit; box-sizing: border-box; line-height: 1;
-  white-space: nowrap; vertical-align: middle;
+  display: flex; align-items: center; justify-content: center; gap: var(--spacing-sm);
+  font-weight: 600; font-size: 13px; transition: 0.2s ease; font-family: inherit;
 }
 .btn-google:hover { background: #f1f5f9; border-color: var(--primary); }
-.btn-google img {
-  width: 18px !important;
-  height: 18px !important;
-  max-width: 18px;
-  max-height: 18px;
-  flex: 0 0 auto;
-  display: block;
-}
+.btn-google img { width: 18px; height: 18px; }
 
 /* ===== HEADER / TOPO ===== */
 .topo-painel {
@@ -229,70 +218,6 @@ body {
 .tab-painel { display: none; }
 .tab-painel.active { display: block; animation: fadeIn 0.2s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-/* ===== TABS DOS MODAIS (hub: login/perfil) ===== */
-/* O hub coloca .tabs-container e .tab-content direto dentro de .modal-conteudo,
-   sem .modal-body. Como o modais.css põe overflow:hidden no .modal-conteudo,
-   aqui o .tab-content vira a área rolável, e o .tabs-container fica fixo. */
-.tabs-container {
-  display: flex; gap: .5rem; background: var(--gray-100);
-  border-radius: 2rem; padding: .25rem; margin-bottom: 1.5rem;
-}
-.tab-btn {
-  flex: 1; text-align: center; padding: .5rem; border-radius: 2rem;
-  cursor: pointer; font-weight: 600; font-size: .85rem;
-  color: var(--text-muted); border: none; background: none;
-  font-family: inherit; transition: 0.2s ease;
-}
-.tab-btn.active { background: white; color: var(--primary); box-shadow: var(--shadow-sm); }
-.tab-content { display: none; animation: fadeIn 0.3s ease; }
-.tab-content.active { display: block; }
-
-/* Modais do hub: layout flex + scroll no tab-content */
-.modal-conteudo > .tabs-container {
-  flex: 0 0 auto;
-  margin-left: 1.25rem;
-  margin-right: 1.25rem;
-}
-.modal-conteudo > .tab-content {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
-  padding-bottom: 1.25rem;
-}
-.modal-conteudo > .tab-content > *:first-child { margin-top: 0; }
-.modal-conteudo > .tab-content > *:last-child  { margin-bottom: 0; }
-
-/* ===== BOTÃO FECHAR DOS MODAIS DO HUB ===== */
-/* O hub usa .btn-fechar-modal (nome antigo do CSS inline).
-   O modais.css tem .modal-close-btn (nome novo). Alias para os dois
-   funcionarem sem precisar mexer no HTML do Blogger. */
-.btn-fechar-modal {
-  background: transparent;
-  border: none;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  border-radius: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
-  flex-shrink: 0;
-  padding: 0;
-  font-family: inherit;
-}
-.btn-fechar-modal:hover {
-  background: var(--gray-100);
-  color: var(--text);
-}
-.btn-fechar-modal:active { transform: scale(0.92); }
 
 /* ===== FORMULÁRIOS ===== */
 .form-edicao {
@@ -662,3 +587,77 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   .topo-painel, .acoes-direita, .tabs-principais, .filtros-container { display: none; }
   .form-edicao, .item-lista { box-shadow: none; border: 1px solid #ddd; }
 }
+
+/* ============================================================
+   [NOVO] ADIÇÕES — não substituem nada acima.
+   Tudo escopado por #modalLogin / #modalPerfil, então NÃO vaza
+   para os módulos (pedidos, loja, transporte).
+   ============================================================ */
+
+/* ===== TABS DOS MODAIS DO HUB ===== */
+#modalLogin .tabs-container,
+#modalPerfil .tabs-container {
+  display: flex; gap: .5rem; background: var(--gray-100);
+  border-radius: 2rem; padding: .25rem;
+  flex: 0 0 auto;
+  margin: 0 1.25rem 1.5rem;
+}
+#modalLogin .tab-btn,
+#modalPerfil .tab-btn {
+  flex: 1; text-align: center; padding: .5rem; border-radius: 2rem;
+  cursor: pointer; font-weight: 600; font-size: .85rem;
+  color: var(--text-muted); border: none; background: none;
+  font-family: inherit; transition: 0.2s ease;
+}
+#modalLogin .tab-btn.active,
+#modalPerfil .tab-btn.active {
+  background: white; color: var(--primary); box-shadow: var(--shadow-sm);
+}
+#modalLogin .tab-content,
+#modalPerfil .tab-content {
+  display: none;
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  padding: 0 1.25rem 1.25rem;
+}
+#modalLogin .tab-content.active,
+#modalPerfil .tab-content.active { display: block; }
+#modalLogin .tab-content > *:first-child,
+#modalPerfil .tab-content > *:first-child { margin-top: 0; }
+#modalLogin .tab-content > *:last-child,
+#modalPerfil .tab-content > *:last-child  { margin-bottom: 0; }
+
+/* ===== BOTÃO × DO HUB (.btn-fechar-modal) ===== */
+#modalLogin .btn-fechar-modal,
+#modalPerfil .btn-fechar-modal {
+  background: transparent; border: none;
+  width: 36px; height: 36px; min-width: 36px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; line-height: 1; cursor: pointer;
+  color: var(--text-muted);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
+  flex-shrink: 0; padding: 0; font-family: inherit;
+}
+#modalLogin .btn-fechar-modal:hover,
+#modalPerfil .btn-fechar-modal:hover {
+  background: var(--gray-100); color: var(--text);
+}
+#modalLogin .btn-fechar-modal:active,
+#modalPerfil .btn-fechar-modal:active { transform: scale(0.92); }
+
+/* ===== BOTÃO GOOGLE: altura fixa só no login do hub ===== */
+#modalLogin .btn-google {
+  height: 44px; padding: 0 16px; box-sizing: border-box;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--spacing-sm); line-height: 1; white-space: nowrap;
+}
+#modalLogin .btn-google img {
+  width: 18px !important; height: 18px !important;
+  max-width: 18px; max-height: 18px;
+  flex: 0 0 auto; display: block;
+}
+
+/* ===== FLASH DA TELA DE LOGIN (só módulos) ===== */
+/* Enquanto o painel-auth não aplica o inline style "display: flex",
+   a tela de login fica escondida. Quando ele aplica, o inline style
+   ganha de qualquer CSS e mostra normalmente. */
+#areaLogin:not([style*="display: flex"]) { display: none; }
