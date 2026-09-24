@@ -35,18 +35,18 @@
     else if (el) el.remove();
   }
 
- Cards.registrarModulo('loja', {
-  label: 'Ver produtos',
-  ariaLabel: 'Ver produtos da loja',
-  icone: 'fa-solid fa-store',
-  onClick: function (idx) { return 'Economizei.Loja.abrirModal(' + idx + ')'; }
-});
+  Cards.registrarModulo('loja', {
+    label: 'Ver produtos',
+    ariaLabel: 'Ver produtos da loja',
+    icone: 'fa-solid fa-store',
+    onClick: function (idx) { return 'Economizei.Loja.abrirModal(' + idx + ')'; }
+  });
 
-Cards.registrarBadge('loja', {
-  label: 'Módulo Loja',
-  icone: 'fa-solid fa-store',
-  desc: 'Este estabelecimento oferece uma vitrine digital para você comprar online.'
-});
+  Cards.registrarBadge('loja', {
+    label: 'Módulo Loja',
+    icone: 'fa-solid fa-store',
+    desc: 'Este estabelecimento oferece uma vitrine digital para você comprar online.'
+  });
 
   function abrirModal(idx) {
     var est = Cards.dadosProcessados[idx];
@@ -590,7 +590,7 @@ Cards.registrarBadge('loja', {
         var e = parseInt(p.estoque);
         if (!isNaN(e) && e !== null && e !== undefined) esgotado = e <= 0;
       }
-      var imgHtml = imgPrinc ? '<img src="' + imgPrinc + '" loading="lazy" alt="' + Core.sanitize(p.nome) + '" onclick="Economizei.Loja.abrirImagemFull(' + JSON.stringify(p).replace(/"/g, '&quot;') + ')" style="cursor:pointer;">' : '<div style="width:100%;aspect-ratio:1;background:#f1f5f9;border-radius:.5rem;display:flex;align-items:center;justify-content:center;">📷</div>';
+      var imgHtml = imgPrinc ? '<img src="' + imgPrinc + '" loading="lazy" alt="' + Core.sanitize(p.nome) + '" onclick="Economizei.Loja.abrirImagemFull(' + JSON.stringify(p).replace(/"/g, '&quot;') + ')" style="cursor:pointer;">' : '<div class="produto-sem-imagem" aria-label="Sem imagem"><i class="fas fa-image" aria-hidden="true"></i></div>';
       var precoTxt = '';
       if (temV) {
         var ps = p.variacoes.map(function (v) { return parseFloat(v.preco) || 0; });
@@ -609,8 +609,8 @@ Cards.registrarBadge('loja', {
         estH = eg === null ? '<div style="font-size:.65rem;color:#64748b;">Estoque: Ilimitado</div>' : '<div style="font-size:.65rem;color:' + (eg <= 5 ? '#dc3545' : '#64748b') + ';">Estoque: ' + eg + '</div>';
       }
       var btn = '';
-      if (temV) btn = '<button class="btn-escolher" data-prod-id="' + p.id + '" data-tipo="variavel" ' + (esgotado ? 'disabled' : '') + '>' + (esgotado ? 'Indisponível' : 'Escolher') + '</button>';
-      else btn = '<div class="produto-quantidade-simples"><button class="qtd-btn-simples" data-prod-id="' + p.id + '" data-delta="-1" aria-label="Diminuir">−</button><input type="number" id="qtd_simples_' + p.id + '" value="1" min="1" style="width:3rem;text-align:center;" aria-label="Quantidade"><button class="qtd-btn-simples" data-prod-id="' + p.id + '" data-delta="1" aria-label="Aumentar">+</button></div><button class="btn-adicionar-simples" data-prod-id="' + p.id + '" data-preco="' + (parseFloat(p.preco) || 0) + '" ' + (esgotado ? 'disabled' : '') + '>' + (esgotado ? 'Indisponível' : 'Adicionar') + '</button>';
+      if (temV) btn = '<button class="btn-escolher" data-prod-id="' + p.id + '" data-tipo="variavel" ' + (esgotado ? 'disabled' : '') + '><i class="fas fa-cart-plus" aria-hidden="true"></i> ' + (esgotado ? 'Indisponível' : 'Escolher') + '</button>';
+      else btn = '<div class="produto-quantidade-simples"><button class="qtd-btn-simples" data-prod-id="' + p.id + '" data-delta="-1" aria-label="Diminuir">−</button><input type="number" id="qtd_simples_' + p.id + '" value="1" min="1" style="width:3rem;text-align:center;" aria-label="Quantidade"><button class="qtd-btn-simples" data-prod-id="' + p.id + '" data-delta="1" aria-label="Aumentar">+</button></div><button class="btn-adicionar-simples" data-prod-id="' + p.id + '" data-preco="' + (parseFloat(p.preco) || 0) + '" ' + (esgotado ? 'disabled' : '') + '><i class="fas fa-cart-plus" aria-hidden="true"></i> ' + (esgotado ? 'Indisponível' : 'Adicionar') + '</button>';
       return '<div class="produto-card" data-prod-id="' + p.id + '">' + imgHtml +
         '<div class="card-content-produto"><div class="produto-nome">' + Core.sanitize(p.nome) + '</div><div class="produto-preco">' + (of && !of.apenasAlgumas && of.promocao.tipo !== 'quantidade' ? '<s style="color:#94a3b8;font-size:.72rem;margin-right:.25rem;">' + precoTxt + '</s> R$ ' + of.precoPromocional.toFixed(2) : precoTxt) + '</div>' + promH + estH + '</div>' + btn + '</div>';
     }
