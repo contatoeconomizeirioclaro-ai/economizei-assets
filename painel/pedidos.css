@@ -367,8 +367,5 @@
 
 /* ============================================================
    [NOVO] ADIÇÕES — não substituem nada acima.
-   Corrige o corte de conteúdo no modal de produto. O
-   .produto-modal-conteudo não tinha overflow-y:auto, então
-   o conteúdo era travado pelo overflow:hidden do .modal-conteudo.
    ============================================================ */
 .produto-modal-conteudo { overflow-y: auto; }
