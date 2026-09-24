@@ -221,6 +221,9 @@ body {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* ===== TABS DOS MODAIS (hub: login/perfil) ===== */
+/* O hub coloca .tabs-container e .tab-content direto dentro de .modal-conteudo,
+   sem .modal-body. Como o modais.css põe overflow:hidden no .modal-conteudo,
+   aqui o .tab-content vira a área rolável, e o .tabs-container fica fixo. */
 .tabs-container {
   display: flex; gap: .5rem; background: var(--gray-100);
   border-radius: 2rem; padding: .25rem; margin-bottom: 1.5rem;
@@ -235,14 +238,16 @@ body {
 .tab-content { display: none; animation: fadeIn 0.3s ease; }
 .tab-content.active { display: block; }
 
-/* Modais do hub: conteúdo direto sob .modal-conteudo (sem .modal-body).
-   modais.css moveu o padding do modal-conteudo para o modal-body,
-   e o hub não usa essa estrutura — por isso o padding é reposto aqui. */
+/* Modais do hub: layout flex + scroll no tab-content */
 .modal-conteudo > .tabs-container {
+  flex: 0 0 auto;
   margin-left: 1.25rem;
   margin-right: 1.25rem;
 }
 .modal-conteudo > .tab-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   padding-left: 1.25rem;
   padding-right: 1.25rem;
   padding-bottom: 1.25rem;
