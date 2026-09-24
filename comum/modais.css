@@ -360,8 +360,6 @@
   );
 }
 
-/* Wrapper interno (grupos.js usa <div id="listaWhatsapp"> etc.)
-   Faz o div intermediário carregar o espaçamento entre itens. */
 .modal-conteudo.modal-multis .modal-body > div,
 .modal-conteudo.modal-lista .modal-body > div {
   display: flex;
@@ -568,10 +566,7 @@
   }
 }
 
-/* Modo app: desconta a barra inferior nativa.
-   Reaproveita a mesma detecção e variável que os modais de módulo usam
-   (grupos.js já aplica html.modo-app-inicial / body.modo-app via isAppMode()) —
-   não depende de o app injetar nada via JS. */
+/* Modo app: desconta a barra inferior nativa. */
 :root {
   --reserva-barra-app: env(safe-area-inset-bottom, 0px);
 }
@@ -596,4 +591,29 @@ body.modo-app .modal-conteudo {
 
 .modal-footer {
   padding-bottom: max(1rem, var(--reserva-barra-app, 0px));
+}
+
+/* ============================================================
+   [NOVO] EXTENSÕES DO PAINEL
+   ============================================================ */
+
+/* ===== EYEBROW (subtítulo acima do título do modal) ===== */
+.modal-eyebrow {
+  display: block;
+  margin-bottom: .2rem;
+  color: var(--gray-500, #64748b);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* ===== VARIANTE: HEADER STICKY ===== */
+/* Modais altos (cadastro de produto, campanha, entrega) mantêm
+   o header visível enquanto o body rola. */
+.modal-conteudo.modal-sticky-header .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
 }
