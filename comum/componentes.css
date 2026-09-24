@@ -326,6 +326,16 @@ textarea.input-pedido {
   background: #fff; color: #334155;
   box-sizing: border-box;
 }
+/* Esconde as setinhas nativas do input (aumenta/diminui só pelos +/-) */
+.produto-quantidade-simples input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.produto-quantidade-simples input[type="number"]::-webkit-outer-spin-button,
+.produto-quantidade-simples input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
 /* ===== BOTÕES DE AÇÃO ===== */
 .btn-pedido-cta {
@@ -371,6 +381,20 @@ textarea.input-pedido {
   background: #fff;
   color: #94a3b8;
   border-color: #cbd5e1;
+}
+
+/* Focus não quebra a forma pill dos botões */
+.btn-escolher:focus-visible,
+.btn-adicionar-simples:focus-visible,
+.btn-pedido-cta:focus-visible {
+  outline: 2px solid var(--primary, #0a66c2);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+.btn-escolher:focus,
+.btn-adicionar-simples:focus,
+.btn-pedido-cta:focus {
+  border-radius: 999px;
 }
 
 .btn-aplicar-cupom {
