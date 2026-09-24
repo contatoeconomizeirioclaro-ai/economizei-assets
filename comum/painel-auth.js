@@ -30,7 +30,8 @@
     usuarioAtual: null,
     iniciado: false,
     timeoutAnonimo: null,
-    jaEntrou: false
+    jaEntrou: false,
+    loginEmAndamento: false
   };
 
   function log() {
@@ -105,7 +106,8 @@
       fecharModalPerfil();
     }
 
-if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errado' && motivo !== 'erro') {      log('Chamando signOut() por causa do motivo:', motivo);
+    if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errado' && motivo !== 'erro') {
+      log('Chamando signOut() por causa do motivo:', motivo);
       setTimeout(function () { FB.auth.signOut(); }, 200);
     }
   }
@@ -204,9 +206,12 @@ if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errad
   }
 
   function tratarHub(user) {
+    var eraLogado = !!state.usuarioAtual;
     state.usuarioAtual = user;
+
     if (!user) {
       log('Hub — anônimo');
+      if (eraLogado) EU.mostrarToast('Você saiu da sua conta.', 'sucesso');
       atualizarBotaoLoginHub(null);
       if (typeof state.aoEntrar === 'function') {
         Promise.resolve(state.aoEntrar(null, null)).catch(function () {});
@@ -225,17 +230,26 @@ if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errad
   }
 
   function loginGoogle() {
+    if (state.loginEmAndamento) return;
+    state.loginEmAndamento = true;
     EU.showLoading('Autenticando...');
     FB.auth.signInWithPopup(FB.provider)
-      .then(function () { fecharModalLogin(); })
+      .then(function () {
+        fecharModalLogin();
+        EU.mostrarToast('Login realizado!', 'sucesso');
+      })
       .catch(function (e) {
         var msg = traduzirErroAuth(e.code);
         if (msg) EU.mostrarToast(msg, 'erro');
       })
-      .finally(function () { EU.hideLoading(); });
+      .finally(function () {
+        state.loginEmAndamento = false;
+        EU.hideLoading();
+      });
   }
 
   function loginEmail() {
+    if (state.loginEmAndamento) return;
     var emailEl = $id('emailLogin');
     var senhaEl = $id('senhaLogin');
     if (!emailEl || !senhaEl) return;
@@ -243,14 +257,21 @@ if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errad
     var senha = senhaEl.value;
     if (!email || !senha) { EU.mostrarToast('Preencha e-mail e senha.', 'erro'); return; }
     if (!EU.validarEmail(email)) { EU.mostrarToast('E-mail inválido.', 'erro'); return; }
+    state.loginEmAndamento = true;
     EU.showLoading('Autenticando...');
     FB.auth.signInWithEmailAndPassword(email, senha)
-      .then(function () { fecharModalLogin(); })
+      .then(function () {
+        fecharModalLogin();
+        EU.mostrarToast('Login realizado!', 'sucesso');
+      })
       .catch(function (e) {
         var msg = traduzirErroAuth(e.code);
         if (msg) EU.mostrarToast(msg, 'erro');
       })
-      .finally(function () { EU.hideLoading(); });
+      .finally(function () {
+        state.loginEmAndamento = false;
+        EU.hideLoading();
+      });
   }
 
   function recuperarSenha() {
@@ -280,6 +301,12 @@ if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errad
   }
 
   function wireLoginUI() {
+    // O hub tem handlers inline próprios para todos esses botões.
+    // Se wirearmos de novo, cada clique dispara dois signInWithPopup /
+    // signInWithEmailAndPassword concorrentes — um popup fica pendurado
+    // e o loading não some quando deveria. Pulamos o hub.
+    if (state.contexto === 'hub') return;
+
     var btnGoogle = $id('btnLoginGoogle') || $id('btnGoogleLogin');
     if (btnGoogle && !btnGoogle.__authWired) {
       btnGoogle.__authWired = true;
