@@ -1,7 +1,7 @@
 /* ==============================================================
    ECONOMIZEI! RIO CLARO — MODELO DE LOJISTA
    Fonte única dos prefixos de módulo e das regras de estado do
-   lojista (pendente / ativo / vencendo / vencido / bloqueado).
+   lojista (sem-cadastro / pendente / ativo / vencendo / vencido / bloqueado).
 
    Usado por: painel master, hub do empreendedor, painel-auth.js,
               e todos os módulos (via painel-auth.js).
@@ -85,13 +85,14 @@
   }
 
   // Regra central. Os valores possíveis são:
-  //   'pendente'  — cadastro sem estabelecimentoId (aguardando aprovação)
-  //   'bloqueado' — bloqueadoManualmente === true
-  //   'vencido'   — data de vencimento já passou
-  //   'vencendo'  — faltam ≤ 10 dias
-  //   'ativo'     — tudo em ordem
+  //   'sem-cadastro' — dados vazios/nulos (doc não existe no Firestore)
+  //   'pendente'     — cadastro sem estabelecimentoId (aguardando aprovação)
+  //   'bloqueado'    — bloqueadoManualmente === true
+  //   'vencido'      — data de vencimento já passou
+  //   'vencendo'     — faltam ≤ 10 dias
+  //   'ativo'        — tudo em ordem
   function estadoDoLojista(dados) {
-    if (!dados) return 'pendente';
+    if (!dados) return 'sem-cadastro';
     if (!dados.estabelecimentoId) return 'pendente';
     if (dados.bloqueadoManualmente === true) return 'bloqueado';
     var dias = diasParaVencer(dados);
@@ -106,18 +107,20 @@
   // 'classe' casa com os badges do master/hub.
   function rotuloDoEstado(estado) {
     var mapa = {
-      pendente:  { tipo: 'pendente',  label: 'Aguardando aprovação', classe: 'badge-neutral', cor: 'neutral', mensagem: 'Seu cadastro está em análise.' },
-      ativo:     { tipo: 'ativo',     label: 'Ativo',                classe: 'badge-ok',      cor: 'ok',      mensagem: '' },
-      vencendo:  { tipo: 'vencendo',  label: 'Vencendo em breve',    classe: 'badge-warn',    cor: 'warn',    mensagem: 'Sua assinatura vence em breve.' },
-      vencido:   { tipo: 'vencido',   label: 'Vencido',              classe: 'badge-danger',  cor: 'danger',  mensagem: 'Sua assinatura venceu.' },
-      bloqueado: { tipo: 'bloqueado', label: 'Bloqueado',            classe: 'badge-danger',  cor: 'danger',  mensagem: 'Seu acesso está suspenso.' }
+      'sem-cadastro': { tipo: 'sem-cadastro', label: 'Sem cadastro',        classe: 'badge-neutral', cor: 'neutral', mensagem: 'Sua conta não possui cadastro de lojista.' },
+      pendente:       { tipo: 'pendente',     label: 'Aguardando aprovação', classe: 'badge-neutral', cor: 'neutral', mensagem: 'Seu cadastro está em análise.' },
+      ativo:          { tipo: 'ativo',        label: 'Ativo',               classe: 'badge-ok',      cor: 'ok',      mensagem: '' },
+      vencendo:       { tipo: 'vencendo',     label: 'Vencendo em breve',   classe: 'badge-warn',    cor: 'warn',    mensagem: 'Sua assinatura vence em breve.' },
+      vencido:        { tipo: 'vencido',      label: 'Vencido',             classe: 'badge-danger',  cor: 'danger',  mensagem: 'Sua assinatura venceu.' },
+      bloqueado:      { tipo: 'bloqueado',    label: 'Bloqueado',           classe: 'badge-danger',  cor: 'danger',  mensagem: 'Seu acesso está suspenso.' }
     };
     return mapa[estado] || mapa.ativo;
   }
 
   // Atalho: devolve true/false se o cara pode usar o painel.
   function podeAcessar(dados) {
-    return estadoDoLojista(dados) === 'ativo' || estadoDoLojista(dados) === 'vencendo';
+    var estado = estadoDoLojista(dados);
+    return estado === 'ativo' || estado === 'vencendo';
   }
 
   // ------------------------------------------------------------------
