@@ -43,6 +43,7 @@
   box-sizing: border-box;
 }
 .modal-overlay.ativo,
+.modal-overlay.active,
 .modal-overlay[style*="display: flex"],
 .modal-overlay[style*="display:flex"] {
   display: flex;
