@@ -656,8 +656,8 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   flex: 0 0 auto; display: block;
 }
 
-/* ===== FLASH DA TELA DE LOGIN (só módulos) ===== */
-/* Enquanto o painel-auth não aplica o inline style "display: flex",
+/* ===== FLASH DA TELA DE LOGIN (só módulos) =====
+   Enquanto o painel-auth não aplica o inline style "display: flex",
    a tela de login fica escondida. Quando ele aplica, o inline style
    ganha de qualquer CSS e mostra normalmente. */
 #areaLogin:not([style*="display: flex"]) { display: none; }
