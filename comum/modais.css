@@ -617,8 +617,3 @@ body.modo-app .modal-conteudo {
   z-index: 2;
   background: #fff;
 }
-
-/* ===== ADIÇÃO: aceita .active como sinônimo de .ativo =====
-   O painel-shell.js cria modais com classList.add('active'),
-   mas o CSS base só conhece .ativo. Esta linha adiciona o alias. */
-.modal-overlay.active { display: flex; }
