@@ -92,6 +92,7 @@
     align-items: center;
     z-index: 2000;
 }
+.modal-overlay.active { display: flex; }
 .modal-conteudo {
     background: white;
     border-radius: 1.25rem;
