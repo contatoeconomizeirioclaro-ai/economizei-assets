@@ -214,7 +214,7 @@ Economizei.Pedido = (function () {
   function garantirModalScanner() {
     if (document.getElementById('modalScanner')) return;
     var html =
-      '<div class="modal-overlay" id="modalScanner" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modalScannerTitulo">' +
+      '<div class="modal-overlay" id="modalScanner" role="dialog" aria-modal="true" aria-labelledby="modalScannerTitulo">' +
         '<div class="modal-conteudo modal-modulo">' +
           '<div class="modal-header">' +
             '<h3 id="modalScannerTitulo"><i class="fa-solid fa-qrcode" aria-hidden="true"></i> Escanear QR Code da Mesa</h3>' +
@@ -274,7 +274,7 @@ Economizei.Pedido = (function () {
               pararScanner();
               var sc = document.getElementById('modalScanner');
               if (sc && sc.__ctrl) sc.__ctrl.fechar();
-              else if (sc) sc.style.display = 'none';
+              else if (sc) sc.classList.remove('active');
             } else { UI.mostrarToast('QR Code não contém número de mesa.'); }
           },
           function (error) {}
