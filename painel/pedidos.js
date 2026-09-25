@@ -206,7 +206,7 @@ async function atualizarStatus(id, novoStatus) {
 }
 async function excluirPedido(id) {
   var cod = '#' + id.slice(0, 6).toUpperCase();
-  if (!confirm('Excluir o pedido ' + cod + '? Essa ação não pode ser desfeita.')) return;
+  if (!await EU.confirmar('Excluir o pedido ' + cod + '? Essa ação não pode ser desfeita.')) return;
   EU.showLoading('Excluindo...');
   try { await db.collection('pedidos').doc(id).delete(); EU.mostrarToast('Pedido ' + cod + ' excluído.', 'sucesso'); }
   catch (e) { EU.mostrarToast(e.message, 'erro'); }
@@ -237,7 +237,7 @@ async function compartilharMotoboy(id) {
   await db.collection('tokensMotoboy').doc(token).set({ pedidoId: id, expiraEm: Date.now() + 24 * 60 * 60 * 1000, dadosEntrega: { clienteNome: p.clienteNome, clienteTelefone: p.clienteTelefone, endereco: p.endereco, observacao: p.observacao, estabelecimentoNome: p.estabelecimentoNome } });
   var link = window.location.origin + '/p/entregador.html?token=' + encodeURIComponent(token);
   await navigator.clipboard.writeText(link);
-  if (confirm('Link copiado! Deseja abrir o WhatsApp para enviar ao motoboy?')) window.open('https://wa.me/' + EU.formatarWhatsapp(p.clienteTelefone) + '?text=' + encodeURIComponent('Olá! Link da entrega: ' + link), '_blank');
+  if (await EU.confirmar('Link copiado! Deseja abrir o WhatsApp para enviar ao motoboy?')) window.open('https://wa.me/' + EU.formatarWhatsapp(p.clienteTelefone) + '?text=' + encodeURIComponent('Olá! Link da entrega: ' + link), '_blank');
 }
 function notificarNovoPedido(p) {
   Shell.mostrarPopupNovo({
@@ -556,7 +556,7 @@ async function toggleDisponibilidadeProduto(id, disp) {
 async function excluirItemCardapio(id) {
   var doc = await db.collection('lojistas').doc(emailAtual).collection('cardapio').doc(id).get();
   var nome = doc.exists ? (doc.data().nome || 'este item') : 'este item';
-  if (!confirm('Excluir "' + nome + '"? Essa ação não pode ser desfeita.')) return;
+  if (!await EU.confirmar('Excluir "' + nome + '"? Essa ação não pode ser desfeita.')) return;
   EU.showLoading('Excluindo...');
   try { await db.collection('lojistas').doc(emailAtual).collection('cardapio').doc(id).delete(); await carregarCardapio(); EU.mostrarToast('"' + nome + '" removido.', 'sucesso'); }
   catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
@@ -748,7 +748,7 @@ async function editarSaborModal(id, isDuplicar) {
 async function excluirSabor(id) {
   var doc = await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).get();
   var nome = doc.exists ? (doc.data().nome || 'este sabor') : 'este sabor';
-  if (!confirm('Excluir "' + nome + '"? Essa ação não pode ser desfeita.')) return;
+  if (!await EU.confirmar('Excluir "' + nome + '"? Essa ação não pode ser desfeita.')) return;
   await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).delete();
   carregarSabores();
   EU.mostrarToast('"' + nome + '" removido.', 'sucesso');
@@ -804,7 +804,7 @@ async function editarExtraModal(id, isDuplicar) {
 async function excluirExtra(id) {
   var doc = await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).get();
   var nome = doc.exists ? (doc.data().nome || 'este adicional') : 'este adicional';
-  if (!confirm('Excluir "' + nome + '"? Essa ação não pode ser desfeita.')) return;
+  if (!await EU.confirmar('Excluir "' + nome + '"? Essa ação não pode ser desfeita.')) return;
   await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).delete();
   carregarExtras();
   EU.mostrarToast('"' + nome + '" removido.', 'sucesso');
@@ -861,7 +861,7 @@ function editarFreteModal(id, loc, taxa, ativo, isDuplicar) {
 async function excluirFrete(id) {
   var doc = await db.collection('lojistas').doc(emailAtual).collection('fretes').doc(id).get();
   var loc = doc.exists ? (doc.data().localidade || 'esta taxa') : 'esta taxa';
-  if (!confirm('Excluir a taxa de "' + loc + '"? Essa ação não pode ser desfeita.')) return;
+  if (!await EU.confirmar('Excluir a taxa de "' + loc + '"? Essa ação não pode ser desfeita.')) return;
   await db.collection('lojistas').doc(emailAtual).collection('fretes').doc(id).delete();
   carregarFretes();
   EU.mostrarToast('Taxa "' + loc + '" removida.', 'sucesso');
@@ -928,7 +928,7 @@ async function toggleAtivoCupom(id, ativo) {
 async function excluirCupom(id) {
   var doc = await db.collection('lojistas').doc(emailAtual).collection('cupons').doc(id).get();
   var cod = doc.exists ? (doc.data().codigo || 'este cupom') : 'este cupom';
-  if (!confirm('Excluir o cupom "' + cod + '"? Essa ação não pode ser desfeita.')) return;
+  if (!await EU.confirmar('Excluir o cupom "' + cod + '"? Essa ação não pode ser desfeita.')) return;
   await db.collection('lojistas').doc(emailAtual).collection('cupons').doc(id).delete();
   carregarCupons();
   EU.mostrarToast('Cupom "' + cod + '" removido.', 'sucesso');
@@ -1167,7 +1167,7 @@ async function toggleAtivoPromocao(id, ativo) {
 async function excluirPromocao(id) {
   var doc = await db.collection('lojistas').doc(emailAtual).collection('promocoes').doc(id).get();
   var nome = doc.exists ? (doc.data().nome || 'esta promoção') : 'esta promoção';
-  if (!confirm('Excluir a promoção "' + nome + '"? Essa ação não pode ser desfeita.')) return;
+  if (!await EU.confirmar('Excluir a promoção "' + nome + '"? Essa ação não pode ser desfeita.')) return;
   try { await db.collection('lojistas').doc(emailAtual).collection('promocoes').doc(id).delete(); await carregarPromocoes(); EU.mostrarToast('Promoção "' + nome + '" removida.', 'sucesso'); } catch (e) { EU.mostrarToast(e.message, 'erro'); }
 }
 async function editarPromocao(id, isDuplicar) {
@@ -1230,7 +1230,7 @@ async function excluirMesa(id, numero) {
     var snap = await db.collection('pedidos').where('estabelecimentoId', '==', estId).where('numeroMesa', '==', String(numero)).where('status', 'in', ['pendente','confirmado','em_preparo','saiu_entrega']).get();
     if (!snap.empty) { EU.mostrarToast('Essa mesa tem pedido em andamento.', 'erro'); return; }
   } catch (e) {}
-  if (!confirm('Excluir a Mesa ' + numero + '? Essa ação não pode ser desfeita.')) return;
+  if (!await EU.confirmar('Excluir a Mesa ' + numero + '? Essa ação não pode ser desfeita.')) return;
   await db.collection('lojistas').doc(emailAtual).collection('mesas').doc(id).delete();
   carregarMesas();
   EU.mostrarToast('Mesa ' + numero + ' removida.', 'sucesso');

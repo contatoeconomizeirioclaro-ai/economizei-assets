@@ -1125,10 +1125,11 @@ Economizei.Pedido = (function () {
     }
   }
   function removerItem(id) {
-    if (confirm('Remover este item do carrinho?')) {
+    return EU.confirmar('Remover este item do carrinho?', { titulo: 'Remover item', confirmar: 'Remover' }).then(function (confirmado) {
+      if (!confirmado) return;
       carrinho = carrinho.filter(function (i) { return i.id !== id; });
       atualizarCarrinhoVisual(); recalcularTotal(); atualizarBadgeCarrinho();
-    }
+    });
   }
   function atualizarBadgeCarrinho() {
     var total = carrinho.reduce(function (acc, i) { return acc + i.quantidade; }, 0);

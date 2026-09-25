@@ -386,12 +386,8 @@ Economizei.UI = (function () {
   var Core = Economizei.Core;
   var modalAcessivel = EU.criarModalAcessivel();
 
-  function mostrarToast(msg) {
-    var t = document.createElement('div');
-    t.className = 'toast'; t.textContent = msg;
-    t.setAttribute('role','alert'); t.setAttribute('aria-live','assertive');
-    document.body.appendChild(t);
-    setTimeout(function () { t.remove(); }, 2400);
+  function mostrarToast(msg, tipo) {
+    return EU.mostrarToast(msg, tipo);
   }
 
   function abrirModalWhatsapp(index) {
@@ -559,6 +555,7 @@ Economizei.Cards = (function () {
       return;
     }
     badgesRegistrados[String(estilo).toLowerCase().trim()] = definicao;
+    renderizarBadges();
   }
 
   function montarBotaoModulo(estilo, idx) {

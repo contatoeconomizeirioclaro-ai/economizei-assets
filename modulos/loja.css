@@ -203,47 +203,7 @@ body.modo-app #modalLoja.loja-padronizada .modal-body {
   .modal-variacao-full .modal-total { margin-bottom: .65rem; }
 }
 
-/* Badge de módulo (específico da identificação visual no card) */
-.badge-modulo-slot {
-  height: 1.9rem; min-height: 1.9rem; flex: 0 0 1.9rem;
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 0 .1rem; overflow: visible;
-}
-.badge-modulo-slot .badge-modulo-card { margin: 0; }
-.badge-modulo-card {
-  position: relative; display: inline-flex; align-items: center; justify-content: center;
-  gap: .35rem; margin: .15rem auto .35rem; max-width: 100%;
-  padding: .28rem .7rem;
-  border: 1px solid #bfdbfe; border-radius: 999px;
-  background: #eff6ff; color: #1d4ed8;
-  font: 600 .68rem/1.2 system-ui, sans-serif;
-  cursor: help; white-space: nowrap; text-align: center;
-  transition: all .18s ease;
-}
-.badge-modulo-card:hover,
-.badge-modulo-card:focus-visible,
-.badge-modulo-card.tooltip-aberto {
-  background: #dbeafe; border-color: #60a5fa; color: #1e40af;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, .13); outline: none;
-}
-.badge-modulo-card i { font-size: .7rem; }
-.tooltip-modulo-flutuante {
-  position: fixed; z-index: 30000;
-  width: min(300px, calc(100vw - 1rem));
-  padding: .65rem .75rem;
-  border: 1px solid rgba(15, 23, 42, .22); border-radius: .65rem;
-  background: #0f172a; color: #fff;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, .24);
-  font: 500 .76rem/1.4 system-ui, sans-serif;
-  text-align: left; pointer-events: none;
-  opacity: 0; transform: translateY(3px);
-  transition: opacity .14s ease, transform .14s ease;
-}
-.tooltip-modulo-flutuante.visivel { opacity: 1; transform: translateY(0); }
-@media (max-width: 640px) {
-  .badge-modulo-card { font-size: .65rem; padding: .3rem .6rem; }
-  .tooltip-modulo-flutuante { font-size: .78rem; padding: .7rem .8rem; }
-}
+/* Badges de módulo são compartilhados em comum/componentes.css. */
 
 /* Botão de fechar do header do modal Loja */
 #modalLoja.loja-padronizada .modal-header > .modal-close-btn {

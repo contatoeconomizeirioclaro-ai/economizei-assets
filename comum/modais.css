@@ -212,6 +212,12 @@
     0 8px 20px -4px rgba(10, 102, 194, 0.4);
 }
 .btn-modal-primario:active { transform: translateY(0); }
+.btn-modal-perigo {
+  background: #b91c1c;
+  box-shadow: 0 1px 2px rgba(185,28,28,.2), 0 4px 12px -4px rgba(185,28,28,.3);
+}
+.btn-modal-perigo:hover { background: #991b1b; }
+
 
 .btn-modal-secundario {
   background: #fff;

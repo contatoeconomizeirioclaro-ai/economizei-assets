@@ -4,6 +4,8 @@
    Depende de tokens.css e modais.css (carregar ANTES).
    ============================================================ */
 
+@import url("feedback.css");
+
 /* ===== IDENTIDADE DE LOJA ===== */
 .modal-estabelecimento-brand {
   display: flex; align-items: center; gap: 0.55rem;
@@ -625,6 +627,18 @@ textarea.input-pedido {
   background: #dbeafe; border-color: #2563eb;
   outline: 2px solid rgba(37, 99, 235, 0.2); outline-offset: 2px;
 }
+.badge-modulo-card.tooltip-aberto { background: #dbeafe; border-color: #60a5fa; color: #1e40af; box-shadow: 0 0 0 3px rgba(59,130,246,.13); }
+.badge-modulo-card i { font-size: .7rem; }
+.tooltip-modulo-flutuante {
+  position: fixed; z-index: 30000; width: min(300px, calc(100vw - 1rem));
+  padding: .65rem .75rem; border: 1px solid rgba(15,23,42,.22); border-radius: .65rem;
+  background: #0f172a; color: #fff; box-shadow: 0 10px 24px rgba(15,23,42,.24);
+  font: 500 .76rem/1.4 system-ui, sans-serif; text-align: left; pointer-events: none;
+  opacity: 0; transform: translateY(3px); transition: opacity .14s ease, transform .14s ease;
+}
+.tooltip-modulo-flutuante.visivel { opacity: 1; transform: translateY(0); }
+@media (max-width: 640px) { .tooltip-modulo-flutuante { font-size: .78rem; padding: .7rem .8rem; } }
+@media (prefers-reduced-motion: reduce) { .tooltip-modulo-flutuante { transition: none; } }
 
 /* ===== AJUSTES MOBILE ===== */
 @media (max-width: 768px) {
