@@ -634,9 +634,9 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   gap: 4px;
   margin: 12px 16px 0;
   padding: 4px;
-  border: 1px solid var(--border, #e2e8f0);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--gray-100, #f1f5f9);
+  background: var(--gray-100);
   flex: 0 0 auto;
 }
 :is(#modalLogin, #modalPerfil) .tab-btn {
@@ -647,22 +647,22 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   border: 0;
   border-radius: 9px;
   background: transparent;
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted);
   font: inherit;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: background .18s ease, color .18s ease, box-shadow .18s ease, transform .15s ease;
 }
-:is(#modalLogin, #modalPerfil) .tab-btn:hover { color: var(--primary, #0a66c2); }
+:is(#modalLogin, #modalPerfil) .tab-btn:hover { color: var(--primary); }
 :is(#modalLogin, #modalPerfil) .tab-btn.active {
-  background: #fff;
-  color: var(--primary, #0a66c2);
-  box-shadow: 0 1px 4px rgba(15, 23, 42, .12);
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: var(--shadow-tab-active);
 }
 :is(#modalLogin, #modalPerfil) .tab-btn:focus-visible,
 :is(#modalLogin, #modalPerfil) .btn-fechar-modal:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, .28);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 :is(#modalLogin, #modalPerfil) .tab-content {
@@ -684,9 +684,9 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
 #modalLogin .btn-google {
   min-height: 44px;
   margin-bottom: 14px;
-  border-color: #d7dee8;
+  border-color: var(--border-soft);
   border-radius: 11px;
-  color: var(--text, #1e293b);
+  color: var(--text);
 }
 :is(#modalLogin, #modalPerfil) .btn-fechar-modal {
   display: inline-grid;
@@ -696,10 +696,10 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   height: 36px;
   padding: 0;
   margin-left: auto;
-  border: 1px solid var(--border, #e2e8f0);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: #fff;
-  color: var(--text-muted, #64748b);
+  background: var(--surface);
+  color: var(--text-muted);
   font: inherit;
   font-size: 21px;
   line-height: 1;
@@ -707,9 +707,9 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
 :is(#modalLogin, #modalPerfil) .btn-fechar-modal:hover {
-  border-color: #cbd5e1;
-  background: var(--gray-100, #f1f5f9);
-  color: var(--text, #1e293b);
+  border-color: var(--border-strong);
+  background: var(--gray-100);
+  color: var(--text);
 }
 @media (max-width: 480px) {
   :is(#modalLogin, #modalPerfil) > .modal-conteudo { width: 100%; max-height: 90dvh; border-radius: 18px; }
@@ -730,14 +730,14 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   gap: 10px;
   margin: 0;
   padding: 10px 12px;
-  border: 1px solid var(--border, #e2e8f0);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface);
   font-size: .82rem;
 }
 #modalPerfil .perfil-info-linha strong {
   min-width: 0;
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted);
   font-size: .7rem;
   letter-spacing: .03em;
   text-transform: uppercase;
@@ -751,16 +751,16 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   min-height: 44px;
   margin-top: 16px;
   padding: 10px 14px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--danger-subtle-border);
   border-radius: 11px;
-  background: #fff1f2;
-  color: #b91c1c;
+  background: var(--danger-subtle-bg);
+  color: var(--danger-strong-text);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
   transition: background .18s ease, transform .15s ease;
 }
-#modalPerfil .btn-sair-perfil:hover { background: #ffe4e6; }
+#modalPerfil .btn-sair-perfil:hover { background: var(--danger-subtle-hover); }
 #modalPerfil .btn-whatsapp {
   display: flex;
   align-items: center;
@@ -769,7 +769,7 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   min-height: 44px;
   padding: 10px 14px;
   border-radius: 11px;
-  color: #fff !important;
+  color: var(--on-brand) !important;
   font-weight: 700;
   text-decoration: none;
 }

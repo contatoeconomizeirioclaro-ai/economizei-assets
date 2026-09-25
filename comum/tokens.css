@@ -15,6 +15,18 @@
     --gray-700: #334155;
     --gray-800: #1e293b;
 
+    /* Tokens semânticos compartilhados pelos modais do painel. */
+    --surface: #ffffff;
+    --on-brand: #ffffff;
+    --border-soft: #d7dee8;
+    --border-strong: #cbd5e1;
+    --focus-ring: rgba(37, 99, 235, 0.28);
+    --shadow-tab-active: 0 1px 4px rgba(15, 23, 42, 0.12);
+    --danger-subtle-bg: #fff1f2;
+    --danger-subtle-border: #fecaca;
+    --danger-strong-text: #b91c1c;
+    --danger-subtle-hover: #ffe4e6;
+
     --shadow-xs: 0 1px 2px 0 rgba(0,0,0,0.05);
     --shadow-sm: 0 1px 3px 0 rgba(0,0,0,0.1);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
