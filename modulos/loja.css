@@ -161,7 +161,7 @@
 }
 @keyframes lojaGira { to { transform: rotate(360deg); } }
 
-/* ===== MODAL DE VARIAÇÃO (exclusivo da Loja) ===== */
+/* ===== MODAL DE VARIAÇÃO ===== */
 .modal-variacao-full {
   width: min(94vw, 900px) !important;
   max-width: 900px !important;
