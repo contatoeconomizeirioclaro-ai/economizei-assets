@@ -435,3 +435,53 @@
   background: #dc2626;
   transform: scale(1.05);
 }
+
+/* ============================================================
+   [NOVO] AJUSTES FINAIS — LOJA
+   ============================================================ */
+
+/* 1. Remover os "números aleatórios" (badges circulares com número) */
+.campanha-numero,
+.campanha-lista-numero {
+  display: none !important;
+}
+
+/* 2. Modal de cupons/promoções: header sticky cola no topo */
+.campanha-modal .modal-conteudo.campanha-modal-conteudo {
+  padding: 0 !important;
+  overflow-y: auto;
+  max-height: calc(100dvh - 64px);
+}
+.campanha-modal .modal-conteudo.campanha-modal-conteudo > .modal-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: #fff !important;
+  padding: 20px 24px 14px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid #e2e8f0;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+.campanha-modal .modal-conteudo.campanha-modal-conteudo > *:not(.modal-header) {
+  padding: 20px 24px !important;
+}
+.campanha-modal .modal-conteudo.campanha-modal-conteudo > *:not(.modal-header) > *:first-child {
+  margin-top: 0;
+}
+.campanha-modal .modal-conteudo.campanha-modal-conteudo > *:not(.modal-header) > *:last-child {
+  margin-bottom: 0;
+}
+
+/* 3. Mobile */
+@media (max-width: 640px) {
+  .campanha-modal .modal-conteudo.campanha-modal-conteudo > .modal-header {
+    padding: 16px 16px 12px !important;
+  }
+  .campanha-modal .modal-conteudo.campanha-modal-conteudo > *:not(.modal-header) {
+    padding: 16px !important;
+  }
+  .campanha-modal .modal-conteudo.campanha-modal-conteudo {
+    max-height: calc(100dvh - 20px - 130px);
+  }
+}
