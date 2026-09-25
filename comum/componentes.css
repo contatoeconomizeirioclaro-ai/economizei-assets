@@ -90,14 +90,21 @@
   padding: 0 0.3rem; margin-left: 0.3rem; vertical-align: middle;
 }
 
-/* ===== GRID DE PRODUTOS ===== */
+/* ===== GRID DE PRODUTOS — compartilhado por Loja e Pedidos ===== */
 .produtos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  align-items: stretch;
+  gap: .75rem;
+}
+@media (max-width: 520px) {
+  .produtos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/* ===== CARD DE PRODUTO — alinhado com o preview do painel ===== */
+/* ===== CARD DE PRODUTO ===== */
 .produto-card {
   background: #fff;
   border: 1px solid #e2e8f0;
@@ -328,7 +335,6 @@ textarea.input-pedido {
   background: #fff; color: #334155;
   box-sizing: border-box;
 }
-/* Esconde as setinhas nativas do input (aumenta/diminui só pelos +/-) */
 .produto-quantidade-simples input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
@@ -385,7 +391,6 @@ textarea.input-pedido {
   border-color: #cbd5e1;
 }
 
-/* Focus não quebra a forma pill dos botões */
 .btn-escolher:focus-visible,
 .btn-adicionar-simples:focus-visible,
 .btn-pedido-cta:focus-visible {
