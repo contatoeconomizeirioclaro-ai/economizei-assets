@@ -95,8 +95,9 @@ grupos/
 
 modulos/
   _base.css           ← moldura específica de módulo
-  loja.js             ← módulo Loja
-  loja.css            ← CSS específico do Loja
+  loja.js             ← administração do painel lojista
+  loja.css            ← estilos do painel lojista
+  loja-publica.css    ← estilos da vitrine pública
   pedidos.js
   pedidos.css
   transporte.js
@@ -126,7 +127,8 @@ modulos/
   </script>
 
   <!-- Módulos (um <script> por módulo que a página usa) -->
-  <script src=".../modulos/loja.js"></script>
+  <!-- Script público: carregar após grupos.js e antes de carregarDados(). -->
+  <script src="https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/js/economizei-loja.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -194,6 +196,8 @@ variável em `modulos/*.css`.**
 | `comum/modais.css` | Moldura genérica de qualquer modal (overlay, header, footer, X, tons) |
 | `comum/componentes.css` | Peças reutilizáveis dentro de módulos (abas, cards, botões) |
 | `modulos/_base.css` | Moldura específica de módulo (largura, fullscreen, barra do app) |
+| `modulos/loja.css` | Estilos do painel lojista |
+| `modulos/loja-publica.css` | Interface pública da vitrine Loja |
 | `modulos/*.css` | Só o que é exclusivo daquele módulo |
 | `comum/modulos.js` | (legado) sistema de registro antigo — não usar em código novo |
 | `grupos/grupos.js` | Core atual — contém `registrarModulo`, `registrarBadge`, `configurar`, `carregarDados` |

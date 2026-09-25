@@ -534,6 +534,23 @@ Economizei.Cards = (function () {
       return;
     }
     modulosRegistrados[String(estilo).toLowerCase().trim()] = definicao;
+    // Scripts de módulo podem ser carregados após os cards; atualize o CTA já renderizado.
+    document.querySelectorAll('.card[data-estilo]').forEach(function (card) {
+      if (String(card.dataset.estilo || '').toLowerCase().trim() !== String(estilo).toLowerCase().trim()) return;
+      var expanded = card.nextElementSibling;
+      var secao = expanded && expanded.querySelector('.modulo-section');
+      if (!secao) return;
+      var idx = parseInt(card.dataset.index, 10);
+      var botao = document.createElement('button');
+      botao.type = 'button';
+      botao.className = 'btn-acao btn-modulo';
+      botao.dataset.modulo = String(estilo).toLowerCase().trim();
+      botao.setAttribute('aria-label', definicao.ariaLabel || definicao.label || 'Abrir');
+      botao.setAttribute('onclick', definicao.onClick(idx));
+      if (definicao.icone) { var icone = document.createElement('i'); icone.className = definicao.icone; icone.setAttribute('aria-hidden', 'true'); botao.appendChild(icone); }
+      botao.appendChild(document.createTextNode(definicao.label || 'Abrir'));
+      secao.replaceChildren(botao);
+    });
   }
 
   function registrarBadge(estilo, definicao) {
@@ -613,7 +630,7 @@ Economizei.Cards = (function () {
       if (!slot) {
         slot = document.createElement('div');
         slot.className = 'badge-modulo-slot';
-        slot.setAttribute('aria-hidden', 'true');
+        slot.setAttribute('aria-hidden', 'false');
         var titulo = content.querySelector('.card-title');
         if (titulo) content.insertBefore(slot, titulo); else content.appendChild(slot);
       }
