@@ -617,3 +617,10 @@ body.modo-app .modal-conteudo {
   z-index: 2;
   background: #fff;
 }
+
+/* ============================================================
+   [NOVO] ADIÇÃO: aceita .active como sinônimo de .ativo
+   O hub (painel-do-empreendedor) abre os modais via
+   classList.add('active'). Sem esta linha, o modal não abre.
+   ============================================================ */
+.modal-overlay.active { display: flex; }
