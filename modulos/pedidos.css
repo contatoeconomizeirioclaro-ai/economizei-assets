@@ -18,23 +18,15 @@
 .btn-tamanho-modal.ativo,
 .btn-selecionar-sabor.selecionado { box-shadow: 0 0 0 3px rgba(10, 102, 194, .16); }
 
-/* Grid do catálogo no modal consumido pela página Onde Comer. */
+/* Grid do catálogo no modal consumido pela página Onde Comer.
+   As colunas do .produtos-grid agora vêm de comum/componentes.css. */
 #modalPedidoRest > .modal-conteudo,
 #modalPedidoRest > .modal-conteudo > .modal-body,
 #modalPedidoRest #tabProdutos,
-#modalPedidoRest .categoria-group,
-#modalPedidoRest .produtos-grid {
+#modalPedidoRest .categoria-group {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-}
-#modalPedidoRest .produtos-grid {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
-  align-items: stretch;
-  gap: .75rem;
-}
-@media (max-width: 520px) {
-  #modalPedidoRest .produtos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .modal-extras-pontual,
