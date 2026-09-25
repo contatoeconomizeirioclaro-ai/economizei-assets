@@ -42,11 +42,8 @@
   padding: 16px;
   box-sizing: border-box;
 }
-.modal-overlay.ativo,
-.modal-overlay[style*="display: flex"],
-.modal-overlay[style*="display:flex"] {
-  display: flex;
-}
+/* A visibilidade é controlada exclusivamente por .modal-overlay.active,
+   definida em tokens.css. Não usar .ativo nem display inline. */
 
 .modal-conteudo {
   position: relative;
