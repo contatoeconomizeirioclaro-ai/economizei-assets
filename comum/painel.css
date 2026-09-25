@@ -624,12 +624,12 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
 
 
 /* ===== AUTENTICAÇÃO DO PAINEL (login / cadastro) ===== */
-#modalLogin > .modal-conteudo {
+:is(#modalLogin, #modalPerfil) > .modal-conteudo {
   width: min(100%, 480px);
   max-height: min(85dvh, 720px);
   overflow: hidden;
 }
-#modalLogin .tabs-container {
+:is(#modalLogin, #modalPerfil) .tabs-container {
   display: flex;
   gap: 4px;
   margin: 12px 16px 0;
@@ -639,7 +639,7 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   background: var(--gray-100, #f1f5f9);
   flex: 0 0 auto;
 }
-#modalLogin .tab-btn {
+:is(#modalLogin, #modalPerfil) .tab-btn {
   flex: 1 1 0;
   min-width: 0;
   min-height: 40px;
@@ -654,18 +654,18 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   cursor: pointer;
   transition: background .18s ease, color .18s ease, box-shadow .18s ease, transform .15s ease;
 }
-#modalLogin .tab-btn:hover { color: var(--primary, #0a66c2); }
-#modalLogin .tab-btn.active {
+:is(#modalLogin, #modalPerfil) .tab-btn:hover { color: var(--primary, #0a66c2); }
+:is(#modalLogin, #modalPerfil) .tab-btn.active {
   background: #fff;
   color: var(--primary, #0a66c2);
   box-shadow: 0 1px 4px rgba(15, 23, 42, .12);
 }
-#modalLogin .tab-btn:focus-visible,
-#modalLogin .btn-fechar-modal:focus-visible {
+:is(#modalLogin, #modalPerfil) .tab-btn:focus-visible,
+:is(#modalLogin, #modalPerfil) .btn-fechar-modal:focus-visible {
   outline: 3px solid rgba(37, 99, 235, .28);
   outline-offset: 2px;
 }
-#modalLogin .tab-content {
+:is(#modalLogin, #modalPerfil) .tab-content {
   display: none;
   flex: 1 1 auto;
   min-height: 0;
@@ -673,7 +673,7 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   padding: 16px;
   overscroll-behavior: contain;
 }
-#modalLogin .tab-content.active {
+:is(#modalLogin, #modalPerfil) .tab-content.active {
   display: block;
   animation: painelAuthAparecer .18s ease-out both;
 }
@@ -688,7 +688,7 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   border-radius: 11px;
   color: var(--text, #1e293b);
 }
-#modalLogin .btn-fechar-modal {
+:is(#modalLogin, #modalPerfil) .btn-fechar-modal {
   display: inline-grid;
   place-items: center;
   flex: 0 0 36px;
@@ -706,17 +706,74 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   cursor: pointer;
   transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
-#modalLogin .btn-fechar-modal:hover {
+:is(#modalLogin, #modalPerfil) .btn-fechar-modal:hover {
   border-color: #cbd5e1;
   background: var(--gray-100, #f1f5f9);
   color: var(--text, #1e293b);
 }
 @media (max-width: 480px) {
-  #modalLogin > .modal-conteudo { width: 100%; max-height: 90dvh; border-radius: 18px; }
-  #modalLogin .tabs-container { margin-right: 12px; margin-left: 12px; }
-  #modalLogin .tab-content { padding: 14px 12px; }
+  :is(#modalLogin, #modalPerfil) > .modal-conteudo { width: 100%; max-height: 90dvh; border-radius: 18px; }
+  :is(#modalLogin, #modalPerfil) .tabs-container { margin-right: 12px; margin-left: 12px; }
+  :is(#modalLogin, #modalPerfil) .tab-content { padding: 14px 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  #modalLogin .tab-btn, #modalLogin .btn-fechar-modal { transition-duration: .01ms !important; }
-  #modalLogin .tab-content.active { animation-duration: .01ms !important; }
+  :is(#modalLogin, #modalPerfil) .tab-btn, :is(#modalLogin, #modalPerfil) .btn-fechar-modal { transition-duration: .01ms !important; }
+  :is(#modalLogin, #modalPerfil) .tab-content.active { animation-duration: .01ms !important; }
+}
+
+/* Conteúdo específico da aba Dados do Perfil do lojista. */
+#modalPerfil #perfilInfo { display: grid; gap: 8px; }
+#modalPerfil .perfil-info-linha {
+  display: grid;
+  grid-template-columns: minmax(88px, .65fr) minmax(0, 1.35fr);
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  background: #fff;
+  font-size: .82rem;
+}
+#modalPerfil .perfil-info-linha strong {
+  min-width: 0;
+  color: var(--text-muted, #64748b);
+  font-size: .7rem;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+#modalPerfil .perfil-info-linha > span { min-width: 0; text-align: right; overflow-wrap: anywhere; }
+#modalPerfil .perfil-foto { display: block; margin: 4px auto 16px; }
+#modalPerfil .modulos-disponiveis { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+#modalPerfil .badge-modulo { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+#modalPerfil .btn-sair-perfil {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 10px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 11px;
+  background: #fff1f2;
+  color: #b91c1c;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .18s ease, transform .15s ease;
+}
+#modalPerfil .btn-sair-perfil:hover { background: #ffe4e6; }
+#modalPerfil .btn-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  color: #fff !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+@media (max-width: 420px) {
+  #modalPerfil .perfil-info-linha { grid-template-columns: 1fr; gap: 4px; }
+  #modalPerfil .perfil-info-linha > span { text-align: left; }
 }
