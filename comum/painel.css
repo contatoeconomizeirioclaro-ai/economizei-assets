@@ -4,6 +4,9 @@
    Depende de: tokens.css, modais.css
    ============================================================ */
 
+@import url("feedback.css");
+@import url("painel-modulos.css");
+
 /* ===== VARIÁVEIS ESPECÍFICAS DO PAINEL ===== */
 :root {
   --bg: #f8fafc;
@@ -301,15 +304,7 @@ body {
 input:checked + .slider { background-color: var(--primary); }
 input:checked + .slider:before { transform: translateX(22px); }
 
-/* ===== TOAST ===== */
-.toast {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  background: #1e293b; color: white; padding: 10px 20px; border-radius: 30px;
-  z-index: 10002; font-size: 13px; font-weight: 500; max-width: 90%; text-align: center;
-  pointer-events: none; opacity: 0.95;
-}
-.toast.erro { background: #dc3545; }
-.toast.sucesso { background: #10b981; }
+/* Toast compartilhado: comum/feedback.css */
 
 /* ===== POPUP NOVO ===== */
 .popup-novo {

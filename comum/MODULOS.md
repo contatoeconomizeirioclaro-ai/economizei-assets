@@ -95,8 +95,9 @@ grupos/
 
 modulos/
   _base.css           ← moldura específica de módulo
-  loja.js             ← módulo Loja
-  loja.css            ← CSS específico do Loja
+  loja.js             ← administração do painel lojista
+  loja.css            ← estilos do painel lojista
+  loja-publica.css    ← estilos da vitrine pública
   pedidos.js
   pedidos.css
   transporte.js
@@ -126,7 +127,8 @@ modulos/
   </script>
 
   <!-- Módulos (um <script> por módulo que a página usa) -->
-  <script src=".../modulos/loja.js"></script>
+  <!-- Script público: carregar após grupos.js e antes de carregarDados(). -->
+  <script src="https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/js/economizei-loja.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -194,7 +196,21 @@ variável em `modulos/*.css`.**
 | `comum/modais.css` | Moldura genérica de qualquer modal (overlay, header, footer, X, tons) |
 | `comum/componentes.css` | Peças reutilizáveis dentro de módulos (abas, cards, botões) |
 | `modulos/_base.css` | Moldura específica de módulo (largura, fullscreen, barra do app) |
+| `modulos/loja.css` | Estilos do painel lojista |
+| `modulos/loja-publica.css` | Interface pública da vitrine Loja |
 | `modulos/*.css` | Só o que é exclusivo daquele módulo |
 | `comum/modulos.js` | (legado) sistema de registro antigo — não usar em código novo |
 | `grupos/grupos.js` | Core atual — contém `registrarModulo`, `registrarBadge`, `configurar`, `carregarDados` |
 | `modulos/*.js` | Lógica + HTML do modal de cada módulo |
+
+
+## Camada visual comum e arquivos de domínio
+
+- `tokens.css`, `modais.css` e `componentes.css` são a base visual compartilhada pelas páginas públicas e módulos.
+- `feedback.css` é a única fonte para toasts; chame `EconomizeiUtils.mostrarToast(mensagem, tipo)` (`info`, `sucesso` ou `erro`) em todos os módulos.
+- `componentes.css` é o único dono do badge de módulo e de seu tooltip. Módulos registram metadados por `Economizei.Cards.registrarBadge()` e não recriam o badge via observer próprio.
+- `comum/painel.css` importa `feedback.css` e `painel-modulos.css`; previews, campanhas, upload de imagens e controles de modal repetidos entre Loja/Pedidos ficam em `painel-modulos.css`.
+- `painel/{modulo}.css` e `modulos/{modulo}.css` contêm somente layout, componentes e estados que pertencem àquele domínio. Não duplicar regras comuns como `.toast`, badge, CTA genérico ou modal base.
+- Confirmações assíncronas usam `EconomizeiUtils.confirmar(mensagem, opcoes)`, com retorno `Promise<boolean>`, no lugar de `window.confirm()`; mensagens informativas usam `mostrarToast()`.
+
+O script `js/economizei-loja.js` é a vitrine pública; `modulos/loja.js` é código do painel. Páginas de grupo devem carregar o primeiro após `grupos.js` quando possuem `ESTILO=loja`.

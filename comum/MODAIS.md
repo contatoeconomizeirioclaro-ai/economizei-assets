@@ -238,3 +238,16 @@ O **JS** precisa garantir (via `EconomizeiUtils.criarModalAcessivel()`):
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/comum/tokens.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/comum/modais.css">
 ```
+
+
+## Confirmações assíncronas comuns
+
+Para confirmar exclusões e outras ações, não use o diálogo nativo do navegador. Use o modal visual compartilhado, que prende o foco, fecha com `Escape`, restaura o foco e resolve `true` apenas no botão de confirmação:
+
+```javascript
+if (!await EconomizeiUtils.confirmar('Excluir este item? Essa ação não pode ser desfeita.', {
+  titulo: 'Confirmar exclusão', confirmar: 'Excluir'
+})) return;
+```
+
+A API retorna `Promise<boolean>`. Em handlers não assíncronos, encadeie `.then(function (confirmado) { ... })`.

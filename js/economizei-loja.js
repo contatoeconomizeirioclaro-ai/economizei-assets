@@ -13,469 +13,33 @@
     // O módulo continua externo e injeta somente a camada visual do
     // próprio modal. O shell Blogger permanece na página hospedeira.
     // ============================================================
-    function instalarEstiloVisualLoja() {
-        if (document.getElementById('economizei-loja-visual-compartilhado')) return;
-        var style = document.createElement('style');
-        style.id = 'economizei-loja-visual-compartilhado';
-        style.textContent = `
-            #modalLoja.loja-padronizada > .modal-conteudo.fullscreen {
-                width:100%; height:100%; max-width:100%; max-height:100%;
-                margin:0; border-radius:0; overflow:hidden;
-            }
-            #modalLoja.loja-padronizada .modal-header {
-                padding:.75rem 1rem;
-                border-bottom:1px solid var(--gray-200);
-                display:flex; justify-content:space-between; align-items:center;
-                background:#fff;
-            }
-            #modalLoja.loja-padronizada .modal-estabelecimento-brand {
-                display:flex; align-items:center; justify-content:flex-start; gap:.55rem;
-                min-width:0; flex:1; text-align:left;
-            }
-            #modalLoja.loja-padronizada .modal-estabelecimento-logo {
-                width:42px; height:42px; min-width:42px; flex:0 0 42px;
-                border-radius:50%; overflow:hidden;
-                background:var(--primary-light); border:2px solid var(--primary);
-                display:flex; align-items:center; justify-content:center;
-                color:var(--primary); font-size:.9rem; font-weight:800;
-            }
-            #modalLoja.loja-padronizada .modal-estabelecimento-logo img {
-                width:100%; height:100%; object-fit:cover; display:block;
-            }
-            #modalLoja.loja-padronizada .modal-estabelecimento-meta {
-                min-width:0; display:flex; flex-direction:column; gap:.1rem;
-            }
-            #modalLoja.loja-padronizada .modal-estabelecimento-meta h3 {
-                margin:0; color:var(--gray-800); font-size:1rem; line-height:1.2;
-                white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-            }
-            #modalLoja.loja-padronizada .modal-estabelecimento-status {
-                display:inline-flex; align-items:center; gap:.3rem;
-                font-size:.7rem; font-weight:700; color:var(--gray-500);
-            }
-            #modalLoja.loja-padronizada .modal-estabelecimento-status::before {
-                content:""; width:7px; height:7px; border-radius:50%; background:#94a3b8;
-            }
-            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-aberta { color:#15803d; }
-            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-aberta::before { background:#22c55e; }
-            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-pausada { color:#b45309; }
-            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-pausada::before { background:#f59e0b; }
-            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-fechada { color:#b91c1c; }
-            #modalLoja.loja-padronizada .modal-estabelecimento-status.status-fechada::before { background:#ef4444; }
-            #modalLoja.loja-padronizada .modal-header > .btn-modal-fechar {
-                width:2.25rem; height:2.25rem; min-width:2.25rem; padding:0;
-                margin-left:auto; border-radius:50%; display:inline-flex;
-                align-items:center; justify-content:center; font-size:0; line-height:1;
-            }
-            #modalLoja.loja-padronizada .modal-header > .btn-modal-fechar::before {
-                content:"\\00D7"; font-size:1.45rem; font-weight:500;
-            }
-            #modalLoja.loja-padronizada .modal-tabs {
-                display:flex; background:var(--gray-100); border-radius:3rem;
-                margin:0 .5rem .5rem; padding:.2rem;
-            }
-            #modalLoja.loja-padronizada .modal-tab {
-                flex:1; min-height:2rem; padding:.4rem; border:none; background:none;
-                color:var(--gray-700); font-weight:700; border-radius:2rem;
-                cursor:pointer; transition:var(--transition); font-size:.8rem;
-            }
-            #modalLoja.loja-padronizada .modal-tab.active {
-                background:#fff; color:var(--primary); box-shadow:0 1px 3px rgba(0,0,0,.1);
-            }
-            #modalLoja.loja-padronizada .modal-body {
-                padding:.75rem; overflow-y:auto; flex:1; min-height:0;
-            }
-            #modalLoja.loja-padronizada #statusLojaMsgLoja {
-                display:flex; align-items:center; justify-content:center; gap:.35rem;
-                min-height:2.8rem; box-sizing:border-box;
-                border-radius:.75rem!important; padding:.65rem .75rem!important;
-                margin-bottom:.75rem!important; text-align:center!important;
-                font-weight:600!important;
-            }
-            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-aberta {
-                background:#f0fdf4!important; border-color:#86efac!important; color:#166534!important;
-            }
-            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-pausada {
-                background:#fffbeb!important; border-color:#fcd34d!important; color:#92400e!important;
-            }
-            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-fechada {
-                background:#fef2f2!important; border-color:#fca5a5!important; color:#991b1b!important;
-            }
-            #modalLoja.loja-padronizada .modal-status-label {
-                display:inline-flex; align-items:center; gap:.35rem;
-                margin:0; font-size:.8rem; text-transform:none; font-weight:700;
-                white-space:nowrap;
-            }
-            #modalLoja.loja-padronizada .modal-status-label::before {
-                content:""; width:8px; height:8px; min-width:8px; border-radius:50%; background:#94a3b8;
-            }
-            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-aberta .modal-status-label::before { background:#22c55e; }
-            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-pausada .modal-status-label::before { background:#f59e0b; }
-            #modalLoja.loja-padronizada #statusLojaMsgLoja.status-fechada .modal-status-label::before { background:#ef4444; }
-            #modalLoja.loja-padronizada .modal-status-text { display:inline; font-size:.8rem; line-height:1.35; font-weight:650; }
-            .modal-close-btn {
-                background:var(--gray-100,#f1f5f9); border:1px solid var(--gray-200,#e2e8f0);
-                width:2rem; height:2rem; min-width:2rem; border-radius:50%;
-                display:flex; align-items:center; justify-content:center;
-                font-size:1.1rem; line-height:1; cursor:pointer; color:var(--gray-600,#475569);
-                transition:background .2s,color .2s; flex-shrink:0; padding:0;
-            }
-            .modal-close-btn:hover { background:var(--gray-200,#e2e8f0); color:var(--gray-800,#1e293b); }
-            .popup-confirmacao .popup-confirmacao-close {
-                position:static; background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.55); color:#fff;
-            }
-            .popup-confirmacao .popup-confirmacao-close:hover { background:rgba(255,255,255,.3); color:#fff; }
-            #modalLoja.loja-padronizada .categoria-group { margin-bottom:1rem; }
-            #modalLoja.loja-padronizada .categoria-titulo-modal {
-                font-size:1rem; font-weight:700; color:var(--primary);
-                margin:.3rem 0 .5rem; border-left:3px solid var(--primary);
-                padding-left:.5rem; cursor:pointer; user-select:none;
-            }
-            #modalLoja.loja-padronizada .produtos-grid {
-                display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:.5rem;
-            }
-            #modalLoja.loja-padronizada .produto-card {
-                background:#fff; border:1px solid var(--gray-200);
-                border-radius:.75rem; padding:.4rem; text-align:center;
-                display:flex; flex-direction:column; height:100%;
-            }
-            #modalLoja.loja-padronizada .produto-card img {
-                width:100%; aspect-ratio:1; object-fit:cover;
-                border-radius:.5rem; cursor:pointer;
-            }
-            #modalLoja.loja-padronizada .card-content-produto {
-                flex:1; display:flex; flex-direction:column; min-width:0;
-            }
-            #modalLoja.loja-padronizada .produto-nome {
-                font-weight:600; font-size:.75rem; margin:.2rem 0;
-                overflow-wrap:anywhere;
-            }
-            #modalLoja.loja-padronizada .produto-preco {
-                color:var(--primary); font-weight:700; font-size:.8rem;
-            }
-            #modalLoja.loja-padronizada .btn-escolher,
-            #modalLoja.loja-padronizada .btn-adicionar-simples {
-                background:var(--primary); color:#fff; border:none; border-radius:2rem;
-                padding:.3rem; font-size:.7rem; font-weight:600; cursor:pointer;
-                margin-top:auto; width:100%; min-height:2rem;
-            }
-            #modalLoja.loja-padronizada .btn-escolher:disabled,
-            #modalLoja.loja-padronizada .btn-adicionar-simples:disabled {
-                background:#94a3b8; cursor:not-allowed;
-            }
-            #modalLoja.loja-padronizada .carrinho-layout {
-                display:flex; flex-wrap:wrap; gap:1rem; align-items:stretch;
-            }
-            #modalLoja.loja-padronizada .carrinho-col-esquerda {
-                flex:2; min-width:200px; background:#fff; border-radius:1rem;
-                padding:.5rem; border:1px solid var(--gray-200);
-            }
-            #modalLoja.loja-padronizada .carrinho-col-direita {
-                flex:1; min-width:180px; background:var(--gray-100);
-                border-radius:1rem; padding:.75rem; align-self:stretch;
-            }
-            #modalLoja.loja-padronizada .cliente-info {
-                background:#fff; border-radius:1rem; padding:.5rem;
-                border:1px solid var(--gray-200); margin-top:.5rem;
-            }
-            #modalLoja.loja-padronizada .total-loja { font-size:1rem; font-weight:700; color:var(--primary); }
-            #modalLoja.loja-padronizada .btn-pedido-cta {
-                background:var(--primary); color:#fff; border:none; padding:.75rem;
-                border-radius:2rem; font-weight:600; width:100%; cursor:pointer;
-                font-size:.9rem; transition:var(--transition);
-            }
-            #modalLoja.loja-padronizada .btn-pedido-cta:hover { background:var(--primary-dark); }
-            #modalLoja.loja-padronizada .btn-pedido-cta:disabled {
-                background:#94a3b8; cursor:not-allowed;
-            }
-            #modalLoja.loja-padronizada .sem-troco-label {
-                display:flex; align-items:center; gap:.5rem; width:100%;
-                margin:.4rem 0 .55rem; padding:.55rem .65rem; border:1px solid #cbd5e1;
-                border-radius:.65rem; background:#f8fafc; color:#334155; font-size:.78rem;
-                font-weight:600; line-height:1.3; cursor:pointer;
-            }
-            #modalLoja.loja-padronizada .sem-troco-label:hover { border-color:var(--primary); background:#eff6ff; }
-            #modalLoja.loja-padronizada .sem-troco-label input[type="checkbox"] {
-                width:1.1rem; height:1.1rem; margin:0; flex:0 0 auto; accent-color:var(--primary); cursor:pointer;
-            }
-            #modalLoja.loja-padronizada .sem-troco-label input[type="checkbox"]:focus-visible {
-                outline:2px solid var(--primary); outline-offset:2px;
-            }
-            #modalLoja.loja-padronizada .sem-troco-label:has(input:checked) {
-                border-color:#22c55e; background:#f0fdf4; color:#166534;
-            }
-            #modalLoja.loja-padronizada .cart-tab-badge {
-                display:inline-flex; align-items:center; justify-content:center;
-                background:#ef4444; color:#fff; font-size:.6rem; font-weight:700;
-                border-radius:9999px; min-width:1rem; height:1rem; padding:0 .3rem;
-                margin-left:.3rem; vertical-align:middle;
-            }
-            html.modo-app-inicial, body.modo-app {
-                --reserva-barra-app:max(130px,env(safe-area-inset-bottom,0px));
-            }
-            html.modo-app-inicial #modalLoja.loja-padronizada > .modal-conteudo.fullscreen,
-            body.modo-app #modalLoja.loja-padronizada > .modal-conteudo.fullscreen {
-                height:calc(100dvh - var(--reserva-barra-app));
-                max-height:calc(100dvh - var(--reserva-barra-app));
-                margin:0;
-            }
-            html.modo-app-inicial #modalLoja.loja-padronizada .modal-body,
-            body.modo-app #modalLoja.loja-padronizada .modal-body {
-                padding-bottom:max(.75rem,var(--reserva-barra-app))!important;
-            }
-            html.modo-app-inicial #modalLoja.loja-padronizada .modal-config-footer,
-            body.modo-app #modalLoja.loja-padronizada .modal-config-footer {
-                padding-bottom:max(1rem,var(--reserva-barra-app),env(safe-area-inset-bottom))!important;
-            }
-            .modal-imagem-full.loja-padronizada .container-imagem {
-                box-sizing:border-box;
-                padding-bottom:max(1rem,var(--reserva-barra-app,0px),env(safe-area-inset-bottom))!important;
-            }
-            .modal-imagem-full.loja-padronizada .lado-direito {
-                display:grid!important;
-                grid-template-columns:minmax(2rem,auto) minmax(3rem,5rem) minmax(2rem,auto) minmax(150px,1fr)!important;
-                align-content:start!important; align-items:center!important;
-                justify-content:stretch!important; gap:.75rem!important;
-                overflow-y:auto!important;
-                padding-bottom:max(1rem,var(--reserva-barra-app,0px),env(safe-area-inset-bottom))!important;
-            }
-            .modal-imagem-full.loja-padronizada .lado-direito > .produto-nome,
-            .modal-imagem-full.loja-padronizada .lado-direito > .tamanho-botoes-modal,
-            .modal-imagem-full.loja-padronizada .lado-direito > .preco,
-            .modal-imagem-full.loja-padronizada .lado-direito > .descricao {
-                grid-column:1/-1;
-            }
-            .modal-imagem-full.loja-padronizada .lado-direito > .produto-quantidade-simples {
-                grid-column:1/4; justify-content:flex-start!important; margin:0!important;
-            }
-            .modal-imagem-full.loja-padronizada .lado-direito > #addImagem {
-                grid-column:4; width:100%!important; margin:0!important;
-            }
-            @media (max-width:768px) {
-                #modalLoja.loja-padronizada .modal-header { padding:.65rem .75rem; }
-                #modalLoja.loja-padronizada .modal-estabelecimento-logo { width:38px; height:38px; min-width:38px; flex-basis:38px; }
-                #modalLoja.loja-padronizada .modal-estabelecimento-meta h3 { font-size:.9rem; }
-                #modalLoja.loja-padronizada .modal-estabelecimento-status { font-size:.65rem; }
-                #modalLoja.loja-padronizada .modal-tabs { margin:0 .25rem .35rem; }
-                #modalLoja.loja-padronizada .modal-tab { min-height:2rem; padding:.3rem; font-size:.7rem; }
-                #modalLoja.loja-padronizada .modal-body { padding:.6rem; }
-                #modalLoja.loja-padronizada .produtos-grid { grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:.4rem; }
-                #modalLoja.loja-padronizada .carrinho-layout { gap:.6rem; }
-                #modalLoja.loja-padronizada .carrinho-col-esquerda,
-                #modalLoja.loja-padronizada .carrinho-col-direita { min-width:100%; }
-                #modalLoja.loja-padronizada .modal-header > .btn-modal-fechar { width:2rem; height:2rem; min-width:2rem; }
-            }
-            @media (max-width:700px) {
-                .modal-imagem-full.loja-padronizada .container-imagem {
-                    flex-direction:column!important; align-items:stretch!important;
-                }
-                .modal-imagem-full.loja-padronizada .lado-esquerdo {
-                    height:46vh!important; min-height:180px; flex:0 0 46vh!important; padding:.5rem!important;
-                }
-                .modal-imagem-full.loja-padronizada .lado-direito {
-                    display:flex!important; flex-direction:column!important; min-width:0;
-                    width:100%; height:auto; flex:1 1 auto; gap:.5rem; padding:.75rem!important;
-                }
-                .modal-imagem-full.loja-padronizada .lado-direito > .produto-quantidade-simples {
-                    width:100%; justify-content:center!important; grid-column:auto;
-                }
-                .modal-imagem-full.loja-padronizada .lado-direito > #addImagem {
-                    width:100%!important; margin-top:.25rem!important; grid-column:auto;
-                }
-            }
-            @media (pointer:coarse) {
-                #modalLoja.loja-padronizada .modal-tab,
-                #modalLoja.loja-padronizada .btn-escolher,
-                #modalLoja.loja-padronizada .btn-adicionar-simples,
-                #modalLoja.loja-padronizada .btn-pedido-cta,
-                #modalLoja.loja-padronizada .btn-modal-fechar { min-height:44px; }
-                #modalLoja.loja-padronizada .modal-header > .btn-modal-fechar { min-height:44px; min-width:44px; }
-            }
-
-            /* Identificação do módulo no card público */
-            .badge-modulo-slot {
-                height:1.9rem; min-height:1.9rem; flex:0 0 1.9rem;
-                display:flex; align-items:center; justify-content:center;
-                margin:0 0 .1rem; overflow:visible;
-            }
-            .badge-modulo-slot .badge-modulo-card { margin:0; }
-            .badge-modulo-card {
-                position:relative; display:inline-flex; align-items:center; justify-content:center;
-                gap:.35rem; margin:.15rem auto .35rem; max-width:100%;
-                padding:.28rem .7rem; border:1px solid #bfdbfe; border-radius:999px;
-                background:#eff6ff; color:#1d4ed8; font:600 .68rem/1.2 system-ui,sans-serif;
-                cursor:help; white-space:nowrap; text-align:center; transition:all .18s ease;
-            }
-            .badge-modulo-card:hover, .badge-modulo-card:focus-visible,
-            .badge-modulo-card.tooltip-aberto {
-                background:#dbeafe; border-color:#60a5fa; color:#1e40af;
-                box-shadow:0 0 0 3px rgba(59,130,246,.13); outline:none;
-            }
-            .badge-modulo-card i { font-size:.7rem; }
-            .tooltip-modulo-flutuante {
-                position:fixed; z-index:30000; width:min(300px,calc(100vw - 1rem));
-                padding:.65rem .75rem; border:1px solid rgba(15,23,42,.22); border-radius:.65rem;
-                background:#0f172a; color:#fff; box-shadow:0 10px 24px rgba(15,23,42,.24);
-                font:500 .76rem/1.4 system-ui,sans-serif; text-align:left; pointer-events:none;
-                opacity:0; transform:translateY(3px); transition:opacity .14s ease,transform .14s ease;
-            }
-            .tooltip-modulo-flutuante.visivel { opacity:1; transform:translateY(0); }
-            @media(max-width:640px) {
-                .badge-modulo-card { font-size:.65rem; padding:.3rem .6rem; }
-                .tooltip-modulo-flutuante { font-size:.78rem; padding:.7rem .8rem; }
-            }
-        `;
-        document.head.appendChild(style);
+    function instalarEstiloLojaPublica() {
+        if (document.getElementById('economizei-loja-publica-css')) return;
+        var link = document.createElement('link');
+        link.id = 'economizei-loja-publica-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/gh/contatoeconomizeirioclaro-ai/economizei-assets@main/modulos/loja-publica.css';
+        document.head.appendChild(link);
     }
-    instalarEstiloVisualLoja();
+    instalarEstiloLojaPublica();
 
-    // ===== IDENTIFICAÇÃO DO MÓDULO NOS CARDS PÚBLICOS =====
-    function instalarIdentificacaoModulosCards() {
-        if (window.__economizeiIdentificacaoModulosCards) return;
-        window.__economizeiIdentificacaoModulosCards = true;
 
-        var configuracoes = {
-            pedidos: { label: 'Módulo Pedidos', icone: 'fa-utensils', descricao: 'Este cadastro permite fazer pedidos online.' },
-            loja: { label: 'Módulo Loja', icone: 'fa-store', descricao: 'Este estabelecimento oferece uma vitrine digital para você comprar online.' },
-            transporte: { label: 'Módulo Transporte', icone: 'fa-taxi', descricao: 'Este cadastro permite solicitar corridas/fretes online.' },
-            orcamentos: { label: 'Módulo Orçamentos', icone: 'fa-file-invoice-dollar', descricao: 'Este cadastro permite solicitar orçamentos online.' },
-            agendamentos: { label: 'Módulo Agendamentos', icone: 'fa-calendar-check', descricao: 'Este cadastro permite realizar agendamentos online.' },
-            hospedagem: { label: 'Módulo Hospedagem', icone: 'fa-bed', descricao: 'Este cadastro permite fazer reservas de hospedagem online.' }
-        };
-        var tooltipAberto = null;
 
-        function normalizar(valor) {
-            return String(valor || '').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        }
-
-        function obterModulo(card) {
-            var estilo = normalizar(card.dataset.estilo);
-            var aliases = {
-                pedido: 'pedidos', pedidos: 'pedidos',
-                loja: 'loja', 'loja online': 'loja', ecommerce: 'loja',
-                transporte: 'transporte', taxi: 'transporte', taxis: 'transporte',
-                orcamento: 'orcamentos', orcamentos: 'orcamentos',
-                agendamento: 'agendamentos', agendamentos: 'agendamentos',
-                hospedagem: 'hospedagem'
-            };
-            if (aliases[estilo]) return aliases[estilo];
-
-            return '';
-        }
-
-        function fecharTooltip() {
-            if (!tooltipAberto) return;
-            if (tooltipAberto.botao) {
-                tooltipAberto.botao.classList.remove('tooltip-aberto');
-                tooltipAberto.botao.setAttribute('aria-expanded', 'false');
-                tooltipAberto.botao.removeAttribute('aria-describedby');
-            }
-            if (tooltipAberto.elemento && tooltipAberto.elemento.parentNode) tooltipAberto.elemento.remove();
-            tooltipAberto = null;
-        }
-
-        function posicionarTooltip() {
-            if (!tooltipAberto || !tooltipAberto.botao || !tooltipAberto.elemento) return;
-            var botao = tooltipAberto.botao;
-            var tooltip = tooltipAberto.elemento;
-            var rect = botao.getBoundingClientRect();
-            var margem = 8;
-            var largura = tooltip.offsetWidth;
-            var esquerda = rect.left + (rect.width / 2) - (largura / 2);
-            esquerda = Math.max(margem, Math.min(esquerda, window.innerWidth - largura - margem));
-            var topo = rect.top - tooltip.offsetHeight - margem;
-            if (topo < margem) topo = rect.bottom + margem;
-            tooltip.style.left = esquerda + 'px';
-            tooltip.style.top = Math.max(margem, topo) + 'px';
-        }
-
-        function abrirTooltip(botao, modulo) {
-            fecharTooltip();
-            var meta = configuracoes[modulo];
-            if (!meta) return;
-            var tooltip = document.createElement('div');
-            tooltip.className = 'tooltip-modulo-flutuante';
-            tooltip.id = 'tooltip-' + modulo + '-' + Date.now();
-            tooltip.setAttribute('role', 'tooltip');
-            tooltip.textContent = meta.descricao;
-            document.body.appendChild(tooltip);
-            botao.classList.add('tooltip-aberto');
-            botao.setAttribute('aria-expanded', 'true');
-            tooltipAberto = { botao: botao, elemento: tooltip };
-            botao.setAttribute('aria-describedby', tooltip.id);
-            posicionarTooltip();
-            requestAnimationFrame(function() { if (tooltipAberto && tooltipAberto.elemento === tooltip) tooltip.classList.add('visivel'); });
-        }
-
-        function vincularBotao(botao, modulo) {
-            botao.addEventListener('mouseenter', function() { abrirTooltip(botao, modulo); });
-            botao.addEventListener('mouseleave', fecharTooltip);
-            botao.addEventListener('focus', function() { abrirTooltip(botao, modulo); });
-            botao.addEventListener('blur', fecharTooltip);
-            botao.addEventListener('click', function(event) {
-                event.preventDefault();
-                event.stopPropagation();
-                abrirTooltip(botao, modulo);
-            });
-            botao.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
-            });
-        }
-
-        function renderizarSelos() {
-            document.querySelectorAll('.card').forEach(function(card) {
-                var content = card.querySelector('.card-content');
-                if (!content) return;
-                var slot = content.querySelector('.badge-modulo-slot');
-                if (!slot) {
-                    slot = document.createElement('div');
-                    slot.className = 'badge-modulo-slot';
-                    slot.setAttribute('aria-hidden', 'true');
-                    var tituloInicial = content.querySelector('.card-title');
-                    if (tituloInicial) content.insertBefore(slot, tituloInicial);
-                    else content.appendChild(slot);
-                }
-                var modulo = obterModulo(card);
-                var existente = slot.querySelector('.badge-modulo-card') || content.querySelector('.badge-modulo-card');
-                if (existente && existente.parentNode !== slot) slot.appendChild(existente);
-                if (!modulo) {
-                    if (existente) existente.remove();
-                    return;
-                }
-                if (existente && existente.dataset.modulo === modulo) return;
-                if (existente) existente.remove();
-                var meta = configuracoes[modulo];
-                var ariaAtual = card.getAttribute('aria-label') || '';
-                if (ariaAtual.indexOf(meta.label) === -1) card.setAttribute('aria-label', ariaAtual + ', ' + meta.label);
-                var botao = document.createElement('button');
-                botao.type = 'button';
-                botao.className = 'badge-modulo-card';
-                botao.dataset.modulo = modulo;
-                botao.title = meta.descricao;
-                botao.setAttribute('aria-label', meta.label + '. Clique para saber mais.');
-                botao.setAttribute('aria-expanded', 'false');
-                botao.innerHTML = '<i class="fas ' + meta.icone + '" aria-hidden="true"></i><span>' + meta.label + '</span>';
-                slot.appendChild(botao);
-                vincularBotao(botao, modulo);
-            });
-        }
-
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('.badge-modulo-card')) fecharTooltip();
-        }, true);
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') fecharTooltip();
-        }, true);
-        window.addEventListener('resize', fecharTooltip);
-        window.addEventListener('scroll', fecharTooltip, true);
-        var lista = document.getElementById('lista') || document.body;
-        if (window.MutationObserver) {
-            var observer = new MutationObserver(renderizarSelos);
-            observer.observe(lista, { childList: true, subtree: true });
-        }
-        renderizarSelos();
+    function mostrarFeedbackAdicionarLoja(prodId) {
+        var botoes = document.querySelectorAll('#modalLoja .btn-adicionar-simples[data-prod-id], #modalLoja .btn-escolher[data-prod-id]');
+        Array.prototype.forEach.call(botoes, function(botao) {
+            if (botao.dataset.prodId !== String(prodId)) return;
+            var textoOriginal = botao.dataset.textoOriginal || botao.textContent;
+            botao.dataset.textoOriginal = textoOriginal;
+            botao.classList.add('is-added');
+            botao.textContent = 'Adicionado ✓';
+            window.setTimeout(function() {
+                if (!botao.isConnected) return;
+                botao.classList.remove('is-added');
+                botao.textContent = textoOriginal;
+            }, 1300);
+        });
     }
-    instalarIdentificacaoModulosCards();
 
 // MÓDULO LOJA – COMPLETO (CORRIGIDO)
 // ============================================================
@@ -483,6 +47,7 @@
 window.abrirModalLoja = function(idx) {
     var Core = Economizei.Core;
     var UI = Economizei.UI;
+    var EU = window.EconomizeiUtils;
     var Cards = Economizei.Cards;
     var COLUNAS = Economizei.Horario.COLUNAS;
 
@@ -505,6 +70,7 @@ window.abrirModalLoja = function(idx) {
     var unsubscribeCardapio = null;
     var unsubscribeFretes = null;
     var unsubscribeStatusLoja = null;
+    var escHandlerLoja = null;
 
     // ===== FUNÇÃO AUXILIAR: normalizar imagens =====
     function normalizarImagens(imagens) {
@@ -647,16 +213,36 @@ window.abrirModalLoja = function(idx) {
         overlay.className = 'popup-confirmacao';
         overlay.setAttribute('role', 'dialog');
         overlay.setAttribute('aria-modal', 'true');
-        overlay.setAttribute('aria-label', opcoes.titulo);
+        overlay.setAttribute('aria-label', Core.sanitize(opcoes.titulo || 'Pedido enviado'));
+        var codigo = String(opcoes.codigo || '');
         overlay.innerHTML = '<div class="popup-confirmacao-card">' +
-            '<div class="popup-confirmacao-header"><h3>' + opcoes.titulo + '</h3><button type="button" class="modal-close-btn popup-confirmacao-close" onclick="this.closest(\'.popup-confirmacao\').remove()" aria-label="Fechar">×</button></div>' +
+            '<div class="popup-confirmacao-header"><h3>' + Core.sanitize(opcoes.titulo || 'Pedido enviado') + '</h3><button type="button" class="modal-close-btn popup-confirmacao-close" data-fechar-confirmacao aria-label="Fechar">×</button></div>' +
             '<div class="popup-confirmacao-body"><p>Seu pedido foi enviado com sucesso!</p>' +
-            '<div class="popup-confirmacao-codigo"><p class="label">Código</p><p class="valor">#' + opcoes.codigo + '</p>' +
-            '<button class="btn-adicionar-filtro" style="background:white;color:var(--primary);border:1px solid var(--primary);padding:0.5rem 1rem;margin-top:0.5rem;" onclick="navigator.clipboard.writeText(\'' + opcoes.codigo + '\').then(()=>alert(\'Código copiado!\'))">📋 Copiar código</button></div>' +
-            '<div class="popup-confirmacao-botoes">' + opcoes.botoes + '</div></div>' +
-            '<div class="popup-confirmacao-footer"><button class="btn-modal-fechar" onclick="this.closest(\'.popup-confirmacao\').remove(); ' + (opcoes.onClose || '') + '">Fechar</button></div></div>';
+            '<div class="popup-confirmacao-codigo"><p class="label">Código</p><p class="valor">#' + Core.sanitize(codigo) + '</p>' +
+            '<button type="button" class="btn-adicionar-filtro btn-copiar-codigo" data-codigo-copiar="' + Core.sanitize(codigo) + '">📋 Copiar código</button></div>' +
+            '<div class="popup-confirmacao-botoes">' + (opcoes.botoes || '') + '</div></div>' +
+            '<div class="popup-confirmacao-footer"><button type="button" class="btn-modal-fechar" data-fechar-confirmacao>Fechar</button></div></div>';
         document.body.appendChild(overlay);
-        UI.trapFocus(overlay);
+        var ctrl = EU.criarModalAcessivel();
+        ctrl.abrir(overlay, function() {
+            overlay.remove();
+            if (opcoes.onClose) { try { new Function(opcoes.onClose).call(window); } catch (e) {} }
+        });
+        overlay.querySelectorAll('[data-fechar-confirmacao]').forEach(function(botao) {
+            botao.addEventListener('click', function() { ctrl.fechar(); });
+        });
+        var copiar = overlay.querySelector('[data-codigo-copiar]');
+        if (copiar) copiar.addEventListener('click', function() {
+            if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                UI.mostrarToast('Não foi possível copiar o código neste navegador.', 'erro');
+                return;
+            }
+            navigator.clipboard.writeText(copiar.dataset.codigoCopiar).then(function() {
+                UI.mostrarToast('Código copiado!', 'sucesso');
+            }).catch(function() {
+                UI.mostrarToast('Não foi possível copiar o código.', 'erro');
+            });
+        });
     }
 
     // ===== IMAGEM EM TELA CHEIA =====
@@ -678,7 +264,15 @@ window.abrirModalLoja = function(idx) {
 
         var currentIndex = 0;
         var modal = document.createElement('div');
+        var navegacaoTeclado = null;
+        function fecharModalImagemLoja() {
+            if (!modal.parentNode) return;
+            if (navegacaoTeclado) document.removeEventListener('keydown', navegacaoTeclado);
+            modal.remove();
+            UI.restoreFocus();
+        }
         modal.className = 'modal-imagem-full loja-padronizada';
+        modal.style.zIndex = '10020';
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
         modal.setAttribute('aria-label', 'Imagem de ' + produto.nome);
@@ -703,7 +297,7 @@ window.abrirModalLoja = function(idx) {
             var estoqueNumerico = obterEstoqueNumerico(estoqueDaImagem);
             var estoqueImagemHtml = estoqueNumerico === null ? '<div class="estoque-imagem" style="font-size:.8rem;color:#cbd5e1;">Estoque disponível: Ilimitado</div>' : '<div class="estoque-imagem" style="font-size:.8rem;color:#cbd5e1;">Estoque disponível: ' + estoqueNumerico + '</div>';
             var html = '<div class="container-imagem" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; width:100%; height:100%; background:#000; position:relative;">' +
-                '<button type="button" class="modal-close-btn fechar" onclick="this.closest(\'.modal-imagem-full\').remove()" aria-label="Fechar imagem" style="position:absolute; top:1rem; right:1rem; color:white; font-size:1.45rem; cursor:pointer; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,.35); width:2.25rem; height:2.25rem; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10;">×</button>' +
+                '<button type="button" class="modal-close-btn fechar" data-fechar-imagem aria-label="Fechar imagem" style="position:absolute; top:1rem; right:1rem; color:white; font-size:1.45rem; cursor:pointer; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,.35); width:2.25rem; height:2.25rem; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10;">×</button>' +
                 '<div class="lado-esquerdo" style="flex:2; min-width:200px; text-align:center; padding:1rem; display:flex; flex-direction:column; justify-content:center; height:100%; position:relative;">' +
                 (imagens.length > 1 ? '<button type="button" id="imagemAnterior" class="imagem-navegacao imagem-navegacao-anterior" aria-label="Imagem anterior" title="Imagem anterior (seta para a esquerda)">‹</button><button type="button" id="imagemSeguinte" class="imagem-navegacao imagem-navegacao-seguinte" aria-label="Próxima imagem" title="Próxima imagem (seta para a direita)">›</button>' : '') +
                 '<img src="' + imagens[currentIndex] + '" class="imagem-principal" alt="' + produto.nome + '" style="max-width:100%; max-height:70vh; object-fit:contain; margin:auto;">' +
@@ -740,6 +334,8 @@ window.abrirModalLoja = function(idx) {
             if (imagemAnterior) imagemAnterior.addEventListener('click', function() { navegarImagem(-1); });
             if (imagemSeguinte) imagemSeguinte.addEventListener('click', function() { navegarImagem(1); });
 
+            var fecharImagemBtn = modal.querySelector('[data-fechar-imagem]');
+            if (fecharImagemBtn) fecharImagemBtn.addEventListener('click', fecharModalImagemLoja);
             var qtdInput = modal.querySelector('#qtdImg');
             var menosBtn = modal.querySelector('#menosQtdImg');
             var maisBtn = modal.querySelector('#maisQtdImg');
@@ -806,7 +402,8 @@ window.abrirModalLoja = function(idx) {
                     });
                 }
                 atualizarCarrinhoLoja();
-                UI.mostrarToast('Produto adicionado ao carrinho');
+                mostrarFeedbackAdicionarLoja(produto.id);
+        UI.mostrarToast('Produto adicionado ao carrinho', 'sucesso');
                 modal.remove();
                 UI.restoreFocus();
             });
@@ -823,8 +420,8 @@ window.abrirModalLoja = function(idx) {
                 e.preventDefault();
                 navegarImagem(1);
             } else if (e.key === 'Escape') {
-                modal.remove();
-                document.removeEventListener('keydown', navegacaoTeclado);
+                e.stopImmediatePropagation();
+                fecharModalImagemLoja();
             }
         };
         document.addEventListener('keydown', navegacaoTeclado);
@@ -863,6 +460,7 @@ function abrirModalVariacoes(produto) {
     var modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.style.display = 'flex';
+    modal.style.zIndex = '10020';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-label', 'Escolher variação de ' + produto.nome);
@@ -871,7 +469,7 @@ function abrirModalVariacoes(produto) {
     var imagensPrimeiraVariacao = obterImagensVariacao(primeiraComEstoque);
     var imagemInicialVariacao = imagensPrimeiraVariacao[0] || obterImagemPrincipalProduto(produto) || 'https://via.placeholder.com/300';
     modal.innerHTML = '<div class="modal-conteudo modal-variacao-full">' +
-        '<div class="modal-header"><div><span class="modal-eyebrow">Escolha uma opção</span><h3>' + Core.sanitize(produto.nome) + '</h3></div><button class="btn-modal-fechar" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Fechar">✕</button></div>' +
+        '<div class="modal-header"><div><span class="modal-eyebrow">Escolha uma opção</span><h3>' + Core.sanitize(produto.nome) + '</h3></div><button type="button" class="btn-modal-fechar" data-fechar-variacao aria-label="Fechar">✕</button></div>' +
         '<div class="modal-config-body">' +
         '<main class="modal-config-main">' +
         '<div class="modal-step"><div class="modal-step-number">1</div><div class="modal-step-content"><div class="modal-step-heading"><div><h4>Escolha a variação</h4><p>Selecione uma opção em cada grupo.</p></div><span class="modal-required">Obrigatório</span></div><div id="atributosContainer" class="modal-options-list"></div></div></div>' +
@@ -887,6 +485,22 @@ function abrirModalVariacoes(produto) {
         '</div>';
 
     document.body.appendChild(modal);
+    function fecharVariacaoLoja() {
+        if (!modal.parentNode) return;
+        if (handlerEscapeVariacao) document.removeEventListener('keydown', handlerEscapeVariacao, true);
+        modal.remove();
+        UI.restoreFocus();
+    }
+    var handlerEscapeVariacao = function(e) {
+        if (e.key === 'Escape' && modal.parentNode) {
+            e.stopImmediatePropagation();
+            fecharVariacaoLoja();
+        }
+    };
+    modal.style.zIndex = '10020';
+    modal.querySelector('[data-fechar-variacao]').addEventListener('click', fecharVariacaoLoja);
+    modal.addEventListener('click', function(e) { if (e.target === modal) fecharVariacaoLoja(); });
+    document.addEventListener('keydown', handlerEscapeVariacao, true);
     UI.trapFocus(modal);
 
     var atributosContainer = document.getElementById('atributosContainer');
@@ -1092,9 +706,9 @@ function abrirModalVariacoes(produto) {
             });
         }
         atualizarCarrinhoLoja();
-        UI.mostrarToast('Produto adicionado ao carrinho');
-        modal.remove();
-        UI.restoreFocus();
+        mostrarFeedbackAdicionarLoja(produto.id);
+        UI.mostrarToast('Produto adicionado ao carrinho', 'sucesso');
+        fecharVariacaoLoja();
     };
 
     renderizarAtributos();
@@ -1103,7 +717,7 @@ function abrirModalVariacoes(produto) {
     // ===== RENDERIZAÇÃO DE PRODUTOS =====
     function renderizarProdutosLoja(produtos) {
         if (!produtos || produtos.length === 0) {
-            return '<p style="text-align:center;padding:2rem;">Nenhum produto disponível.</p>';
+            return '<div class="loja-estado loja-estado-vazio" role="status"><span class="loja-estado-icone" aria-hidden="true">⌕</span><strong>Vitrine vazia por enquanto</strong><p>Esta loja ainda não publicou produtos. Volte mais tarde para conferir as novidades.</p></div>';
         }
         var categorias = {};
         produtos.forEach(function(p) {
@@ -1114,7 +728,7 @@ function abrirModalVariacoes(produto) {
         var html = '';
         for (var cat in categorias) {
             html += '<div class="categoria-group">' +
-                '<div class="categoria-titulo-modal" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === \'none\' ? \'grid\' : \'none\';">' + Core.sanitize(cat) + ' ▼</div>' +
+                '<button type="button" class="categoria-titulo-modal" aria-expanded="true">' + Core.sanitize(cat) + '</button>' +
                 '<div class="produtos-grid">';
             categorias[cat].forEach(function(prod) {
                 html += gerarHTMLProdutoLoja(prod);
@@ -1147,7 +761,7 @@ function abrirModalVariacoes(produto) {
 
         var imgHtml = imagemPrincipal ?
             '<img src="' + imagemPrincipal + '" loading="lazy" alt="' + Core.sanitize(prod.nome) + '" onclick="window.abrirModalImagemFullLoja(' + JSON.stringify(prod).replace(/"/g, '&quot;') + ')" style="cursor:pointer;">' :
-            '<div style="width:100%;aspect-ratio:1;background:#f1f5f9;border-radius:0.5rem;display:flex;align-items:center;justify-content:center;">📷</div>';
+            '<div class="produto-sem-imagem" aria-hidden="true">▧</div>';
 
         var precoExibido = '';
         if (temVariacoes) {
@@ -1476,7 +1090,7 @@ function abrirModalVariacoes(produto) {
         var container = document.getElementById('carrinhoLista');
         if (!container) return;
         if (carrinho.length === 0) {
-            container.innerHTML = '<p style="text-align:center;padding:1rem;">Carrinho vazio</p>';
+            container.innerHTML = '<div class="loja-estado loja-carrinho-vazio" role="status"><span class="loja-estado-icone" aria-hidden="true">🛒</span><strong>Seu carrinho está vazio</strong><p>Explore os produtos e adicione seus favoritos para continuar.</p></div>';
             recalcularTotalLoja();
             atualizarBadgeCarrinhoLoja();
             return;
@@ -1555,18 +1169,60 @@ function abrirModalVariacoes(produto) {
             });
         }
         atualizarCarrinhoLoja();
-        UI.mostrarToast('Produto adicionado ao carrinho');
+        mostrarFeedbackAdicionarLoja(produto.id);
+        UI.mostrarToast('Produto adicionado ao carrinho', 'sucesso');
     }
 
     function removerDoCarrinhoLoja(id, variacaoId) {
-        if (!confirm('Remover este item do carrinho?')) return;
-        carrinho = carrinho.filter(function(i) {
-            if (variacaoId) {
-                return !(i.id === id && i.variacaoId === variacaoId);
-            }
-            return i.id !== id;
+        var item = carrinho.find(function(i) {
+            return i.id === id && (variacaoId ? i.variacaoId === variacaoId : !i.variacaoId);
         });
-        atualizarCarrinhoLoja();
+        if (!item) return;
+        var overlay = document.createElement('div');
+        overlay.className = 'modal-overlay loja-confirmacao-overlay';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-label', 'Confirmar remoção do carrinho');
+        var conteudo = document.createElement('div');
+        conteudo.className = 'modal-conteudo modal-sm loja-confirmacao-card';
+        var header = document.createElement('div');
+        header.className = 'modal-header';
+        var titulo = document.createElement('h3');
+        titulo.textContent = 'Remover item?';
+        var corpo = document.createElement('div');
+        corpo.className = 'modal-body';
+        corpo.textContent = 'Deseja remover “' + item.nome + '” do carrinho?';
+        var acoes = document.createElement('div');
+        acoes.className = 'modal-footer';
+        var cancelar = document.createElement('button');
+        cancelar.type = 'button';
+        cancelar.className = 'btn-modal-secundario';
+        cancelar.textContent = 'Manter item';
+        var confirmar = document.createElement('button');
+        confirmar.type = 'button';
+        confirmar.className = 'btn-modal-primario loja-remover-confirmar';
+        confirmar.textContent = 'Remover';
+        header.appendChild(titulo);
+        acoes.appendChild(cancelar);
+        acoes.appendChild(confirmar);
+        conteudo.appendChild(header);
+        conteudo.appendChild(corpo);
+        conteudo.appendChild(acoes);
+        overlay.appendChild(conteudo);
+        document.body.appendChild(overlay);
+        var ctrl = EU.criarModalAcessivel();
+        ctrl.abrir(overlay, function() { overlay.remove(); });
+        cancelar.addEventListener('click', function() { ctrl.fechar(); });
+        confirmar.addEventListener('click', function() {
+            carrinho = carrinho.filter(function(i) {
+                if (variacaoId) return !(i.id === id && i.variacaoId === variacaoId);
+                return i.id !== id;
+            });
+            atualizarCarrinhoLoja();
+            ctrl.fechar();
+            UI.mostrarToast('Item removido do carrinho.', 'sucesso');
+        });
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) ctrl.fechar(); });
     }
 
     function alterarQuantidadeLoja(id, qtd, variacaoId) {
@@ -1600,6 +1256,9 @@ function abrirModalVariacoes(produto) {
                 badge.textContent = total;
                 badge.style.display = 'inline-block';
                 badge.setAttribute('aria-label', total + ' itens no carrinho');
+                badge.classList.remove('pop');
+                void badge.offsetWidth;
+                badge.classList.add('pop');
             } else {
                 badge.style.display = 'none';
             }
@@ -1891,9 +1550,18 @@ function abrirModalVariacoes(produto) {
         if (unsubscribeCardapio) { unsubscribeCardapio(); unsubscribeCardapio = null; }
         if (unsubscribeFretes) { unsubscribeFretes(); unsubscribeFretes = null; }
         if (unsubscribeStatusLoja) { unsubscribeStatusLoja(); unsubscribeStatusLoja = null; }
+        if (escHandlerLoja) {
+            document.removeEventListener('keydown', escHandlerLoja, true);
+            escHandlerLoja = null;
+        }
         var modal = document.getElementById('modalLoja');
-        if (modal) modal.remove();
+        if (modal && !modal.dataset.fechando) {
+            modal.dataset.fechando = 'true';
+            modal.classList.add('fechando');
+            window.setTimeout(function() { if (modal.parentNode) modal.remove(); }, 180);
+        }
         UI.restoreFocus();
+        if (modal && modal.dataset.fechando) modal.style.display = 'flex';
     };
 
     // ===== ATUALIZAR IDENTIDADE VISUAL DA LOJA =====
@@ -2036,7 +1704,20 @@ function abrirModalVariacoes(produto) {
                     var container = document.getElementById('produtosContainer');
                     if (container) {
                         container.innerHTML = renderizarProdutosLoja(produtos);
+                        container.querySelectorAll('.categoria-titulo-modal').forEach(function(botaoCategoria) {
+                            botaoCategoria.addEventListener('click', function() {
+                                var grupo = botaoCategoria.nextElementSibling;
+                                var expandir = botaoCategoria.getAttribute('aria-expanded') !== 'true';
+                                if (grupo) grupo.style.display = expandir ? 'grid' : 'none';
+                                botaoCategoria.setAttribute('aria-expanded', String(expandir));
+                                botaoCategoria.classList.toggle('recolhida', !expandir);
+                            });
+                        });
                     }
+                }, function(err) {
+                    var container = document.getElementById('produtosContainer');
+                    if (container) container.innerHTML = '<div class="loja-estado loja-estado-erro" role="alert"><span class="loja-estado-icone" aria-hidden="true">!</span><strong>Não foi possível carregar os produtos</strong><p>Verifique sua conexão e tente novamente.</p></div>';
+                    console.error('[Loja] Erro ao sincronizar produtos:', err);
                 });
 
             carregarPromocoesLoja();
@@ -2079,7 +1760,7 @@ function abrirModalVariacoes(produto) {
                 '<div class="modal-body">' +
                 '<div id="tabProdutos" class="modal-tab-content active">' +
                 '<div id="statusLojaMsgLoja" style="display:none; background:#fef3c7; border:1px solid #f59e0b; border-radius:0.75rem; padding:0.75rem; margin-bottom:0.75rem; text-align:center; font-weight:600; color:#92400e;" role="alert"></div>' +
-                '<div id="produtosContainer">Carregando produtos...</div>' +
+                '<div id="produtosContainer" aria-live="polite"><div class="loja-estado loja-estado-carregando" role="status"><span class="loja-spinner" aria-hidden="true"></span><strong>Carregando produtos</strong><p>Estamos atualizando a vitrine desta loja.</p></div></div>' +
                 '</div>' +
                 '<div id="tabCarrinho" class="modal-tab-content">' +
                 '<div class="carrinho-layout">' +
@@ -2231,23 +1912,54 @@ function abrirModalVariacoes(produto) {
                 });
             }
 
-            UI.trapFocus(document.getElementById('modalLoja'));
+            var modalLojaEl = document.getElementById('modalLoja');
+            UI.trapFocus(modalLojaEl);
+            if (modalLojaEl) {
+                modalLojaEl.addEventListener('click', function(e) {
+                    if (e.target === modalLojaEl) fecharModalLoja();
+                });
+            }
 
-            // Fechar com ESC
-            document.addEventListener('keydown', function escHandler(e) {
-                if (e.key === 'Escape') {
-                    var modal = document.getElementById('modalLoja');
-                    if (modal && modal.style.display !== 'none') {
-                        fecharModalLoja();
-                        document.removeEventListener('keydown', escHandler);
-                    }
-                }
-            });
+            // O listener delega o encerramento ao módulo para também cancelar os listeners Firebase.
+            escHandlerLoja = function(e) {
+                if (e.key !== 'Escape' || !document.getElementById('modalLoja')) return;
+                if (document.querySelector('.modal-overlay.active:not(#modalLoja), .loja-confirmacao-overlay, .popup-confirmacao, .modal-variacao-full, .modal-imagem-full')) return;
+                fecharModalLoja();
+            };
+            document.addEventListener('keydown', escHandlerLoja, true);
 
         })
         .catch(function(err) {
+            var container = document.getElementById('produtosContainer');
+            if (container) container.innerHTML = '<div class="loja-estado loja-estado-erro" role="alert"><span class="loja-estado-icone" aria-hidden="true">!</span><strong>Não foi possível carregar a loja</strong><p>Verifique sua conexão e tente novamente em instantes.</p></div>';
             UI.mostrarToast('Erro ao carregar dados: ' + err.message, 'erro');
         });
 };
+
+    // O core só renderiza o botão de ação quando o módulo se registra.
+    // O antigo script público criava o modal, mas não registrava o CTA.
+    var cardsLoja = window.Economizei && window.Economizei.Cards;
+    if (cardsLoja && typeof cardsLoja.registrarModulo === 'function') {
+        var definicaoLojaPublica = {
+            label: 'Ver produtos',
+            ariaLabel: 'Ver produtos da loja online',
+            icone: 'fa-solid fa-store',
+            onClick: function(idx) { return 'window.abrirModalLoja(' + idx + ')'; }
+        };
+        ['loja', 'loja online', 'ecommerce', 'e-commerce'].forEach(function(estilo) {
+            cardsLoja.registrarModulo(estilo, definicaoLojaPublica);
+            if (typeof cardsLoja.registrarBadge === 'function') {
+                cardsLoja.registrarBadge(estilo, {
+                    label: 'Módulo Loja',
+                    icone: 'fa-solid fa-store',
+                    desc: 'Este estabelecimento oferece uma vitrine digital para você comprar online.'
+                });
+            }
+        });
+        window.Economizei.Loja = window.Economizei.Loja || {};
+        window.Economizei.Loja.abrirModal = window.abrirModalLoja;
+    } else {
+        console.error('[economizei-loja] Core de grupos não encontrado. Carregue este script após grupos.js.');
+    }
     // ============================================================
 })();

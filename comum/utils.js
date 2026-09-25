@@ -328,6 +328,40 @@
     return { fechar: function () { ctrl.fechar(); }, elemento: overlay };
   }
 
+  // ---------- CONFIRMAÇÃO VISUAL COMPARTILHADA ----------
+  function confirmar(mensagem, opcoes) {
+    opcoes = opcoes || {};
+    return new Promise(function (resolve) {
+      var overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-labelledby', 'economizei-confirmacao-titulo');
+      overlay.setAttribute('aria-describedby', 'economizei-confirmacao-mensagem');
+
+      var conteudo = document.createElement('div');
+      conteudo.className = 'modal-conteudo modal-sm modal-confirmar';
+      conteudo.innerHTML = '<div class="modal-header"><h3 id="economizei-confirmacao-titulo"></h3></div>' +
+        '<div class="modal-body"><span class="icone-destaque" aria-hidden="true">!</span><p id="economizei-confirmacao-mensagem"></p></div>' +
+        '<div class="modal-footer"><button type="button" class="btn-modal-secundario" data-confirmacao-cancelar></button>' +
+        '<button type="button" class="btn-modal-primario btn-modal-perigo" data-confirmacao-ok></button></div>';
+      conteudo.querySelector('#economizei-confirmacao-titulo').textContent = opcoes.titulo || 'Confirmar ação';
+      conteudo.querySelector('#economizei-confirmacao-mensagem').textContent = mensagem || 'Deseja continuar?';
+      conteudo.querySelector('[data-confirmacao-cancelar]').textContent = opcoes.cancelar || 'Cancelar';
+      conteudo.querySelector('[data-confirmacao-ok]').textContent = opcoes.confirmar || 'Confirmar';
+      overlay.appendChild(conteudo);
+      document.body.appendChild(overlay);
+
+      var resultado = false;
+      var controle = criarModalAcessivel();
+      function encerrar(valor) { resultado = valor; controle.fechar(); }
+      conteudo.querySelector('[data-confirmacao-cancelar]').addEventListener('click', function () { encerrar(false); });
+      conteudo.querySelector('[data-confirmacao-ok]').addEventListener('click', function () { encerrar(true); });
+      overlay.addEventListener('click', function (event) { if (event.target === overlay) encerrar(false); });
+      controle.abrir(overlay, function () { overlay.remove(); resolve(resultado); });
+    });
+  }
+
   // ============================================================
   // TOAST / LOADING
   // ============================================================
@@ -339,7 +373,11 @@
     t.setAttribute('aria-live', 'assertive');
     t.textContent = msg;
     document.body.appendChild(t);
-    setTimeout(function () { t.remove(); }, 3000);
+    window.setTimeout(function () {
+      if (!t.isConnected) return;
+      t.classList.add('is-leaving');
+      window.setTimeout(function () { t.remove(); }, 180);
+    }, 2820);
     return t;
   }
 
@@ -387,8 +425,9 @@
     // QR Code
     gerarURLQRCode,
     gerarImagemQRCode,
-    // Modal acessível
+    // Modal acessível e confirmação visual comum
     criarModalAcessivel,
+    confirmar,
     // Compartilhados entre módulos
     salvarDadosClienteLocal,
     carregarDadosClienteLocal,

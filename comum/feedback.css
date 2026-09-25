@@ -1,0 +1,66 @@
+/* ============================================================
+   ECONOMEIZEI — FEEDBACK VISUAL COMPARTILHADO
+   Única fonte para toasts exibidos em páginas públicas, módulos e painéis.
+   ============================================================ */
+
+.toast {
+  position: fixed;
+  z-index: 12000;
+  inset-inline-start: 50%;
+  inset-block-end: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  width: max-content;
+  max-width: min(92vw, 34rem);
+  padding: .78rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: .9rem;
+  background: #172033;
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .22);
+  font: 650 .82rem/1.4 system-ui, sans-serif;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  opacity: .98;
+  transform: translate(-50%, 0);
+  animation: feedback-toast-enter .2s ease-out both;
+}
+
+.toast.sucesso {
+  background: #166534;
+  border-color: rgba(187, 247, 208, .35);
+}
+
+.toast.erro {
+  background: #991b1b;
+  border-color: rgba(254, 202, 202, .35);
+}
+
+.toast.is-leaving {
+  animation: feedback-toast-exit .18s ease-in both;
+}
+
+@keyframes feedback-toast-enter {
+  from { opacity: 0; transform: translate(-50%, .55rem); }
+  to { opacity: .98; transform: translate(-50%, 0); }
+}
+
+@keyframes feedback-toast-exit {
+  to { opacity: 0; transform: translate(-50%, .35rem); }
+}
+
+@media (max-width: 480px) {
+  .toast {
+    max-width: calc(100vw - 2rem);
+    padding: .72rem .9rem;
+    font-size: .8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast.is-leaving {
+    animation: none;
+    transform: translateX(-50%);
+  }
+}
