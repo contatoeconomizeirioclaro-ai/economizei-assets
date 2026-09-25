@@ -181,7 +181,8 @@
       elementoFocoAnterior = document.activeElement;
       modalAtivoEl = modalEl;
       onFechar = callbackFechar || null;
-      modalEl.style.display = 'flex';
+      modalEl.style.removeProperty('display');
+      modalEl.classList.add('active');
       document.addEventListener('keydown', trapFocusHandler);
       const focaveis = obterFocaveis(modalEl);
       if (focaveis.length > 0) focaveis[0].focus();
@@ -193,7 +194,8 @@
 
     function fechar() {
       if (!modalAtivoEl) return;
-      modalAtivoEl.style.display = 'none';
+      modalAtivoEl.classList.remove('active');
+      modalAtivoEl.style.removeProperty('display');
       if (onFechar) onFechar();
       document.removeEventListener('keydown', trapFocusHandler);
       if (elementoFocoAnterior && typeof elementoFocoAnterior.focus === 'function') {
