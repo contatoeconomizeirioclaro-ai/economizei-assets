@@ -573,6 +573,18 @@ function carregarPedidos() {
     document.getElementById('faturamentoTotal').textContent = 'R$ ' + faturamento.toFixed(2);
     document.getElementById('ticketMedio').textContent = 'R$ ' + (pedidosArray.length ? (faturamento / pedidosArray.length).toFixed(2) : '0.00');
     atualizarBadgePendentes();
+  }, function (error) {
+    unsubscribePedidos = null;
+    pedidosAtuais = [];
+    var lista = document.getElementById('listaPedidos');
+    if (lista) lista.innerHTML = '<div class="estado-feedback estado-feedback-erro" role="alert"><strong>Não foi possível carregar os pedidos.</strong><span>Verifique a conexão e atualize a página ou altere o período para tentar novamente.</span></div>';
+    ['totalPedidos', 'faturamentoTotal', 'ticketMedio'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = id === 'faturamentoTotal' || id === 'ticketMedio' ? 'R$ 0,00' : '0';
+    });
+    atualizarBadgePendentes();
+    console.error('[Painel Loja] Falha ao escutar pedidos do Firestore.', error);
+    EU.mostrarToast('Não foi possível carregar os pedidos. Verifique a conexão e tente novamente.', 'erro');
   });
 }
 function renderizarPedidos(pedidos) {

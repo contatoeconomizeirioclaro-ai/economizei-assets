@@ -582,3 +582,42 @@ body.modo-app .dashboard-content { padding-bottom: 130px; }
   .topo-painel, .acoes-direita, .tabs-principais, .filtros-container { display: none; }
   .form-edicao, .item-lista { box-shadow: none; border: 1px solid #ddd; }
 }
+
+
+/* ===== ESTADO DE ERRO COMPARTILHADO (listas em tempo real) ===== */
+.estado-feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  min-height: 150px;
+  padding: 1.25rem;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius, 12px);
+  background: var(--card-bg, #fff);
+  color: var(--text-muted, #64748b);
+  text-align: center;
+  line-height: 1.5;
+  grid-column: 1 / -1;
+}
+.estado-feedback strong { color: var(--text, #1e293b); font-size: .95rem; }
+.estado-feedback span { max-width: 38rem; font-size: .85rem; }
+.estado-feedback-erro { border-color: #fecaca; background: #fff7f7; }
+.estado-feedback-erro strong { color: #b91c1c; }
+
+/* Estados de teclado e pressão coerentes em todos os painéis. */
+.btn-primary:focus-visible,
+.btn-secundario:focus-visible,
+.btn-pequeno:focus-visible,
+.tab-principal:focus-visible,
+.filtros-container select:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .28);
+  outline-offset: 2px;
+}
+.btn-primary:active:not(:disabled),
+.btn-secundario:active:not(:disabled),
+.btn-pequeno:active:not(:disabled) { transform: translateY(1px); }
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary, .btn-secundario, .btn-pequeno, .item-lista { transition-duration: .01ms !important; }
+}
