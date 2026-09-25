@@ -21,6 +21,22 @@ Todo modal usa esta estrutura:
 </div>
 ```
 
+## Estado de visibilidade
+
+Todo overlay de modal usa exclusivamente a classe **`active`** para abrir e fechar:
+
+```javascript
+modal.classList.add('active');    // abrir
+modal.classList.remove('active'); // fechar
+```
+
+O estado fechado é o padrão (`.modal-overlay { display: none; }`) e o estado aberto
+é definido por `.modal-overlay.active { display: flex; }` em `tokens.css`. Não use
+`ativo`, `style="display: flex"`, `style="display: none"` ou alternâncias entre
+classes e estilos inline para controlar a visibilidade. Para modais que precisam
+de foco preso e fechamento por `Escape`, use `EconomizeiUtils.criarModalAcessivel()`;
+ele já aplica a mesma convenção.
+
 ## Como escolher
 
 Cada modal combina **um tamanho** + **uma família** (opcional) + **um tom** (opcional).
