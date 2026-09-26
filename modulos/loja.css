@@ -1,13 +1,12 @@
 /* ============================================================
    MÓDULO LOJA — CSS específico (vitrine pública)
-   Toda a camada de card, botão, carrinho e inputs vem de:
+   Toda a camada base vem de:
      comum/tokens.css
      comum/modais.css
      comum/componentes.css
-   Aqui só fica o que é EXCLUSIVO da Loja.
    ============================================================ */
 
-/* ===== OVERLAY E CONTEÚDO FULLSCREEN ===== */
+/* ── Overlay e conteúdo fullscreen do modal Loja ── */
 #modalLoja.loja-padronizada {
   position: fixed;
   inset: 0;
@@ -34,8 +33,6 @@
   display: flex;
   flex-direction: column;
 }
-
-/* ===== HEADER (identidade do estabelecimento) ===== */
 #modalLoja.loja-padronizada .modal-header {
   padding: .75rem 1rem;
   flex-shrink: 0;
@@ -58,8 +55,6 @@
   background: var(--gray-100, #f1f5f9);
   color: var(--gray-700, #334155);
 }
-
-/* ===== TABS / BODY ===== */
 #modalLoja.loja-padronizada .modal-tabs { flex-shrink: 0; }
 #modalLoja.loja-padronizada .modal-body {
   flex: 1;
@@ -67,7 +62,7 @@
   overflow-y: auto;
 }
 
-/* ===== BANNER DE STATUS DA LOJA ===== */
+/* ── Banner de status da loja (aviso do lojista) ── */
 #modalLoja.loja-padronizada #statusLojaMsgLoja {
   display: flex;
   align-items: center;
@@ -124,7 +119,7 @@
   font-weight: 650;
 }
 
-/* ===== ESTADO VAZIO / CARREGANDO / ERRO ===== */
+/* ── Estado vazio / carregando / erro ── */
 #modalLoja.loja-padronizada .loja-estado {
   display: grid;
   min-height: 12rem;
@@ -161,163 +156,7 @@
 }
 @keyframes lojaGira { to { transform: rotate(360deg); } }
 
-/* ===== MODAL DE VARIAÇÃO ===== */
-.modal-variacao-full {
-  width: min(94vw, 900px) !important;
-  max-width: 900px !important;
-  max-height: min(90vh, 760px) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
-  border-radius: 1.25rem !important;
-}
-.modal-variacao-full .modal-header { padding: 1rem 1.25rem; flex-shrink: 0; }
-.modal-variacao-full .modal-header h3 { margin: .15rem 0 0; font-size: 1.15rem; }
-.modal-variacao-full .modal-config-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 255px;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  overflow-y: auto;
-  align-items: start;
-  flex: 1;
-  min-height: 0;
-}
-.modal-variacao-full .modal-step {
-  display: flex;
-  gap: .75rem;
-  padding: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  background: #fff;
-  margin-bottom: .75rem;
-}
-.modal-variacao-full .modal-step-number {
-  width: 1.8rem;
-  height: 1.8rem;
-  min-width: 1.8rem;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--primary, #0a66c2);
-  color: #fff;
-  font-weight: 800;
-  font-size: .8rem;
-}
-.modal-variacao-full .modal-step-content { min-width: 0; flex: 1; }
-.modal-variacao-full .modal-step-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
-.modal-variacao-full .modal-step-heading h4 { margin: 0; color: #0f172a; font-size: .95rem; }
-.modal-variacao-full .modal-step-heading p { margin: .2rem 0 0; color: #64748b; font-size: .75rem; }
-.modal-variacao-full .modal-required {
-  white-space: nowrap;
-  border-radius: 999px;
-  padding: .25rem .55rem;
-  font-size: .65rem;
-  font-weight: 800;
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-.modal-variacao-full .modal-options-list { margin-top: .75rem; }
-.modal-variacao-full .modal-option-group { padding: .75rem 0; border-top: 1px solid #e2e8f0; }
-.modal-variacao-full .modal-option-group:first-child { border-top: 0; padding-top: 0; }
-.modal-variacao-full .modal-option-label {
-  display: block;
-  margin-bottom: .45rem;
-  color: #334155;
-  font-size: .78rem;
-  font-weight: 800;
-}
-.modal-variacao-full .modal-option-buttons { display: flex; flex-wrap: wrap; gap: .5rem; }
-.modal-variacao-full .modal-option-buttons .btn-tamanho-modal {
-  padding: .55rem .75rem !important;
-  background: #f8fafc !important;
-  border: 1px solid #cbd5e1 !important;
-  color: #334155 !important;
-  min-height: 2.25rem;
-}
-.modal-variacao-full .modal-option-buttons .btn-tamanho-modal.ativo {
-  background: var(--primary, #0a66c2) !important;
-  border-color: var(--primary, #0a66c2) !important;
-  color: #fff !important;
-  box-shadow: 0 0 0 3px rgba(10, 102, 194, .16);
-}
-.modal-variacao-full .modal-order-summary {
-  position: sticky;
-  top: 0;
-  border: 1px solid #dbeafe;
-  border-radius: 1rem;
-  background: #f8fbff;
-  padding: 1rem;
-  min-width: 0;
-}
-.modal-variacao-full .modal-order-summary h4 { margin: 0 0 .75rem; color: #0f172a; font-size: .85rem; }
-.modal-variacao-full .variation-summary-image {
-  width: 100%;
-  height: 150px;
-  object-fit: contain;
-  border-radius: .75rem;
-  background: #e2e8f0;
-  margin-bottom: .85rem;
-  cursor: pointer;
-}
-.modal-variacao-full .variation-summary-description {
-  margin: 0 0 .75rem;
-  color: #64748b;
-  font-size: .72rem;
-  line-height: 1.4;
-}
-.modal-variacao-full #variacaoInfo {
-  display: flex;
-  flex-direction: column;
-  gap: .25rem;
-  padding: .65rem;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: .75rem;
-  text-align: left;
-  color: #334155;
-  font-size: .78rem;
-  font-weight: 700;
-}
-.modal-variacao-full .variation-quantity {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: .4rem;
-  margin-top: .75rem;
-}
-.modal-variacao-full .variation-quantity button {
-  width: 1.9rem;
-  height: 1.9rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 50%;
-  background: #fff;
-  color: #334155;
-  font-weight: 800;
-  cursor: pointer;
-}
-.modal-variacao-full .variation-quantity input {
-  width: 3.2rem;
-  padding: .35rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 2rem;
-  text-align: center;
-}
-.modal-variacao-full .modal-config-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  background: #fff;
-  border-top: 1px solid #e2e8f0;
-  flex-shrink: 0;
-}
-.modal-variacao-full .modal-total { display: flex; flex-direction: column; gap: .2rem; }
-.modal-variacao-full .modal-total span { color: #64748b; font-size: .72rem; }
-.modal-variacao-full .modal-total strong { color: var(--primary, #0a66c2); font-size: 1.25rem; }
-
-/* ===== MODAL DE IMAGEM EM TELA CHEIA ===== */
+/* ── Modal de imagem em tela cheia ── */
 .modal-imagem-full.loja-padronizada {
   position: fixed;
   inset: 0;
@@ -361,9 +200,7 @@
   transform: translateY(-50%) scale(.94);
 }
 
-/* ============================================================
-   MODO APP — reserva da barra inferior
-   ============================================================ */
+/* ── Modo app: reserva da barra inferior ── */
 html.modo-app-inicial #modalLoja.loja-padronizada > .modal-conteudo.fullscreen,
 body.modo-app #modalLoja.loja-padronizada > .modal-conteudo.fullscreen {
   height: calc(100dvh - var(--reserva-barra-app));
@@ -374,39 +211,17 @@ html.modo-app-inicial #modalLoja.loja-padronizada .modal-body,
 body.modo-app #modalLoja.loja-padronizada .modal-body {
   padding-bottom: max(.75rem, var(--reserva-barra-app)) !important;
 }
-html.modo-app-inicial .modal-variacao-full,
-body.modo-app .modal-variacao-full {
-  max-height: calc(100dvh - var(--reserva-barra-app)) !important;
-}
-html.modo-app-inicial .modal-variacao-full .modal-config-footer,
-body.modo-app .modal-variacao-full .modal-config-footer {
-  padding-bottom: max(1rem, var(--reserva-barra-app)) !important;
-}
 
-/* ============================================================
-   RESPONSIVO
-   ============================================================ */
+/* ── Responsivo ── */
 @media (max-width: 700px) {
-  .modal-variacao-full {
-    width: calc(100vw - 1rem) !important;
-    max-height: calc(100dvh - 1rem) !important;
-    border-radius: 1rem !important;
+  .modal-imagem-full.loja-padronizada .imagem-navegacao {
+    width: 36px;
+    height: 50px;
+    font-size: 34px;
   }
-  .modal-variacao-full .modal-config-body { display: block; padding: .75rem; }
-  .modal-variacao-full .modal-step { padding: .75rem; gap: .55rem; }
-  .modal-variacao-full .modal-step-heading { display: block; }
-  .modal-variacao-full .modal-required { display: inline-block; margin-top: .45rem; }
-  .modal-variacao-full .modal-order-summary { position: static; margin-top: .75rem; }
-  .modal-variacao-full .variation-summary-image { height: 110px; }
-  .modal-variacao-full .modal-config-footer { display: block; padding: .75rem; }
-  .modal-variacao-full .modal-total { margin-bottom: .65rem; }
-
-  .modal-imagem-full.loja-padronizada .imagem-navegacao { width: 36px; height: 50px; font-size: 34px; }
 }
 
-/* ============================================================
-   ACESSIBILIDADE
-   ============================================================ */
+/* ── Acessibilidade ── */
 @media (prefers-reduced-motion: reduce) {
   #modalLoja.loja-padronizada .loja-spinner,
   .modal-imagem-full.loja-padronizada .imagem-navegacao {
