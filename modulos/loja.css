@@ -1,12 +1,9 @@
 /* ============================================================
    MÓDULO LOJA — CSS específico (vitrine pública)
-   Toda a camada base vem de:
-     comum/tokens.css
-     comum/modais.css
-     comum/componentes.css
+   Modal-config, modal-close-btn, modais → comum/modais.css
+   Produto-card, tabs, inputs, carrinho → comum/componentes.css
    ============================================================ */
 
-/* ── Overlay e conteúdo fullscreen do modal Loja ── */
 #modalLoja.loja-padronizada {
   position: fixed;
   inset: 0;
@@ -33,37 +30,10 @@
   display: flex;
   flex-direction: column;
 }
-
-/* ── Header: botão X ── */
 #modalLoja.loja-padronizada .modal-header {
   padding: .75rem 1rem;
   flex-shrink: 0;
 }
-#modalLoja.loja-padronizada .modal-header > .modal-close-btn {
-  width: 2.25rem;
-  height: 2.25rem;
-  min-width: 2.25rem;
-  padding: 0;
-  border-radius: 50%;
-  font-size: 1.45rem;
-  line-height: 1;
-  margin-left: auto;
-  flex: 0 0 auto;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  cursor: pointer;
-  color: var(--gray-500, #64748b);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-#modalLoja.loja-padronizada .modal-header > .modal-close-btn:hover {
-  background: var(--gray-100, #f1f5f9);
-  color: var(--gray-700, #334155);
-}
-
-/* ── Tabs / body ── */
 #modalLoja.loja-padronizada .modal-tabs { flex-shrink: 0; }
 #modalLoja.loja-padronizada .modal-body {
   flex: 1;
@@ -71,7 +41,7 @@
   overflow-y: auto;
 }
 
-/* ── Banner de status da loja (aviso do lojista) ── */
+/* ── Banner de status (aviso do lojista) ── */
 #modalLoja.loja-padronizada #statusLojaMsgLoja {
   display: flex;
   align-items: center;
@@ -127,6 +97,43 @@
   font-weight: 650;
 }
 
+/* ── Categoria: botão expandir/recolher ── */
+#modalLoja.loja-padronizada .categoria-titulo-modal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: .35rem 0;
+  border: 0;
+  border-left: 3px solid var(--primary, #0a66c2);
+  background: transparent;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary, #0a66c2);
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+}
+#modalLoja.loja-padronizada .categoria-titulo-modal::after {
+  content: "";
+  width: .48rem;
+  height: .48rem;
+  margin-right: .15rem;
+  border-right: 2px solid #64748b;
+  border-bottom: 2px solid #64748b;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform .2s ease;
+}
+#modalLoja.loja-padronizada .categoria-titulo-modal.recolhida::after {
+  transform: rotate(-45deg) translateY(2px);
+}
+#modalLoja.loja-padronizada .categoria-titulo-modal:focus-visible {
+  border-radius: .35rem;
+  outline: 3px solid rgba(59, 130, 246, .28);
+  outline-offset: 2px;
+}
+
 /* ── Estado vazio / carregando / erro ── */
 #modalLoja.loja-padronizada .loja-estado {
   display: grid;
@@ -166,49 +173,28 @@
 
 /* ── Modal de imagem em tela cheia ── */
 .modal-imagem-full.loja-padronizada {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 20000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100vw;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
+  position: fixed; inset: 0; background: #000; z-index: 20000;
+  display: flex; align-items: center; justify-content: center;
+  width: 100vw; height: 100vh; margin: 0; padding: 0;
 }
 .modal-imagem-full.loja-padronizada .imagem-navegacao {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 5;
-  width: 42px;
-  height: 58px;
-  border: 1px solid rgba(255, 255, 255, .35);
-  border-radius: 999px;
-  background: rgba(15, 23, 42, .72);
-  color: #fff;
-  font-size: 42px;
-  line-height: 42px;
-  font-family: Arial, sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background .15s ease, transform .15s ease;
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
+  width: 42px; height: 58px;
+  border: 1px solid rgba(255, 255, 255, .35); border-radius: 999px;
+  background: rgba(15, 23, 42, .72); color: #fff;
+  font-size: 42px; line-height: 42px; font-family: Arial, sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .15s ease, transform .15s ease;
 }
 .modal-imagem-full.loja-padronizada .imagem-navegacao:hover,
 .modal-imagem-full.loja-padronizada .imagem-navegacao:focus-visible {
-  background: var(--primary, #0a66c2);
-  outline: 2px solid #fff;
-  outline-offset: 2px;
+  background: var(--primary, #0a66c2); outline: 2px solid #fff; outline-offset: 2px;
 }
 .modal-imagem-full.loja-padronizada .imagem-navegacao:active {
   transform: translateY(-50%) scale(.94);
 }
 
-/* ── Modo app: reserva da barra inferior ── */
+/* ── Modo app ── */
 html.modo-app-inicial #modalLoja.loja-padronizada > .modal-conteudo.fullscreen,
 body.modo-app #modalLoja.loja-padronizada > .modal-conteudo.fullscreen {
   height: calc(100dvh - var(--reserva-barra-app));
@@ -220,20 +206,13 @@ body.modo-app #modalLoja.loja-padronizada .modal-body {
   padding-bottom: max(.75rem, var(--reserva-barra-app)) !important;
 }
 
-/* ── Responsivo ── */
 @media (max-width: 700px) {
-  .modal-imagem-full.loja-padronizada .imagem-navegacao {
-    width: 36px;
-    height: 50px;
-    font-size: 34px;
-  }
+  .modal-imagem-full.loja-padronizada .imagem-navegacao { width: 36px; height: 50px; font-size: 34px; }
 }
 
-/* ── Acessibilidade ── */
 @media (prefers-reduced-motion: reduce) {
   #modalLoja.loja-padronizada .loja-spinner,
   .modal-imagem-full.loja-padronizada .imagem-navegacao {
-    animation: none !important;
-    transition-duration: .01ms !important;
+    animation: none !important; transition-duration: .01ms !important;
   }
 }
