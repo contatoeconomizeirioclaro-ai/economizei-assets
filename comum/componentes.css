@@ -44,7 +44,6 @@
 .modal-estabelecimento-status.status-pausada::before { background: #f59e0b; }
 .modal-estabelecimento-status.status-fechada { color: #b91c1c; }
 .modal-estabelecimento-status.status-fechada::before { background: #ef4444; }
-.modal-header > .modal-close-btn { margin-left: auto; }
 
 .status-loja-banner {
   padding: 0.75rem 1rem;
@@ -121,7 +120,6 @@
   box-shadow: 0 6px 16px rgba(15,23,42,.10);
   transform: translateY(-2px);
 }
-
 .produto-card img {
   width: 100%;
   aspect-ratio: 1;
@@ -130,7 +128,6 @@
   cursor: pointer;
   display: block;
 }
-
 .produto-card .produto-sem-imagem {
   width: 100%;
   aspect-ratio: 1;
@@ -142,14 +139,12 @@
   color: #94a3b8;
   font-size: 24px;
 }
-
 .card-content-produto {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: .35rem .25rem 0;
 }
-
 .produto-nome {
   font-weight: 600;
   font-size: .75rem;
@@ -160,7 +155,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .produto-preco {
   color: var(--primary, #0a66c2);
   font-weight: 700;
@@ -168,16 +162,44 @@
   min-height: 1.1em;
 }
 
+/* ===== CATEGORIA — compartilhada por Loja e Pedidos ===== */
 .categoria-group { margin-bottom: 1rem; }
 .categoria-titulo-modal {
-  font-size: 1rem; font-weight: 700; color: var(--primary, #0a66c2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: .5rem;
   margin: 0.3rem 0 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 0;
   border-left: 3px solid var(--primary, #0a66c2);
-  padding-left: 0.5rem; cursor: pointer; user-select: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary, #0a66c2);
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
 }
-.btn-expandir-categoria {
-  background: none; border: none; font-size: 0.9rem;
-  cursor: pointer; color: var(--primary, #0a66c2);
+.categoria-titulo-modal::after {
+  content: "";
+  width: .48rem;
+  height: .48rem;
+  margin-right: .15rem;
+  border-right: 2px solid #64748b;
+  border-bottom: 2px solid #64748b;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform .2s ease;
+}
+.categoria-titulo-modal.recolhida::after {
+  transform: rotate(-45deg) translateY(2px);
+}
+.categoria-titulo-modal:focus-visible {
+  border-radius: .35rem;
+  outline: 3px solid rgba(59, 130, 246, .28);
+  outline-offset: 2px;
 }
 
 /* ===== ITEM DE CARRINHO ===== */
@@ -334,8 +356,6 @@ textarea.input-pedido {
   padding: 0.35rem; font-size: 0.8rem; font-weight: 700;
   background: #fff; color: #334155;
   box-sizing: border-box;
-}
-.produto-quantidade-simples input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
@@ -390,7 +410,6 @@ textarea.input-pedido {
   color: #94a3b8;
   border-color: #cbd5e1;
 }
-
 .btn-escolher:focus-visible,
 .btn-adicionar-simples:focus-visible,
 .btn-pedido-cta:focus-visible {
@@ -454,6 +473,12 @@ textarea.input-pedido {
   transform: translateY(-2px);
   box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1));
 }
+.btn-tamanho-modal:active,
+.extra-qtd button:active,
+.qtd-btn-simples:active,
+.btn-pedido-cta:active { transform: scale(.97); }
+.btn-tamanho-modal.ativo,
+.btn-selecionar-sabor.selecionado { box-shadow: 0 0 0 3px rgba(10, 102, 194, .16); }
 
 .btn-pequeno {
   background: none; border: 1px solid var(--gray-200, #e2e8f0);
@@ -499,7 +524,6 @@ textarea.input-pedido {
 .popup-confirmacao-codigo .valor {
   font-size: 1.5rem; font-weight: 700; color: var(--primary, #0a66c2);
 }
-
 .popup-confirmacao-codigo button,
 .popup-confirmacao-codigo .btn-adicionar-filtro,
 .popup-confirmacao-codigo .btn-copiar {
@@ -530,7 +554,6 @@ textarea.input-pedido {
   border-color: var(--primary-dark, #084d94);
   transform: translateY(-1px);
 }
-
 @media (pointer: coarse) {
   .popup-confirmacao-codigo button,
   .popup-confirmacao-codigo .btn-adicionar-filtro,
@@ -548,7 +571,6 @@ textarea.input-pedido {
   border-top: 1px solid var(--gray-200, #e2e8f0);
   background: var(--gray-100, #f1f5f9);
 }
-
 .popup-confirmacao-botoes button,
 .popup-confirmacao-botoes a.btn-acao,
 .popup-confirmacao-botoes .btn-adicionar-filtro,
@@ -589,7 +611,6 @@ textarea.input-pedido {
   box-shadow: 0 4px 10px rgba(10, 102, 194, 0.3);
   filter: brightness(1.05);
 }
-
 .popup-confirmacao-footer .btn-modal-fechar,
 .popup-confirmacao-footer button {
   background: #fff;
@@ -663,7 +684,6 @@ textarea.input-pedido {
     min-width: 0;
   }
 }
-
 @media (pointer: coarse) {
   .btn-pedido-cta,
   .btn-escolher,
