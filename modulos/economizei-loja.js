@@ -32,11 +32,11 @@
             var textoOriginal = botao.dataset.textoOriginal || botao.textContent;
             botao.dataset.textoOriginal = textoOriginal;
             botao.classList.add('is-added');
-            botao.textContent = 'Adicionado ✓';
+            botao.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> Adicionado ✓';
             window.setTimeout(function() {
                 if (!botao.isConnected) return;
                 botao.classList.remove('is-added');
-                botao.textContent = textoOriginal;
+                botao.innerHTML = textoOriginal;
             }, 1300);
         });
     }
@@ -102,9 +102,6 @@ window.abrirModalLoja = function(idx) {
         return estoque === null ? 'Ilimitado' : String(estoque);
     }
 
-    // A identidade visual do modal deve vir do cadastro correspondente em
-    // lojistas, como no módulo Pedidos. O campo principal é logoUrl;
-    // os demais nomes mantêm compatibilidade com cadastros antigos.
     function obterLogoDoCadastroLoja(data) {
         var candidatos = [data && data.logoUrl, data && data.logo, data && data.imagemLogo, data && data.imagem];
         for (var i = 0; i < candidatos.length; i++) {
@@ -272,7 +269,6 @@ window.abrirModalLoja = function(idx) {
             UI.restoreFocus();
         }
         modal.className = 'modal-imagem-full loja-padronizada';
-        modal.style.zIndex = '10020';
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
         modal.setAttribute('aria-label', 'Imagem de ' + produto.nome);
@@ -318,7 +314,9 @@ window.abrirModalLoja = function(idx) {
                 '<input type="number" id="qtdImg" value="1" min="1" style="width:60px; text-align:center; border:1px solid #444; border-radius:2rem; font-size:12px; padding:4px; background:#222; color:white;" aria-label="Quantidade">' +
                 '<button id="maisQtdImg" style="background:#333; color:white; border:none; border-radius:50%; width:26px; height:26px; font-size:14px; cursor:pointer;" aria-label="Aumentar quantidade">+</button>' +
                 '</div>' +
-                '<button class="btn-adicionar-simples" id="addImagem" style="background:#0a66c2; color:white; border:none; border-radius:2rem; padding:10px; font-size:14px; font-weight:600; cursor:pointer;">Adicionar ao carrinho</button>' +
+                '<button class="btn-pedido-cta" id="addImagem">' +
+                  '<i class="fas fa-cart-plus" aria-hidden="true"></i> Adicionar ao carrinho' +
+                '</button>' +
                 '</div></div>';
             modal.innerHTML = html;
 
@@ -403,7 +401,7 @@ window.abrirModalLoja = function(idx) {
                 }
                 atualizarCarrinhoLoja();
                 mostrarFeedbackAdicionarLoja(produto.id);
-        UI.mostrarToast('Produto adicionado ao carrinho', 'sucesso');
+                UI.mostrarToast('Produto adicionado ao carrinho', 'sucesso');
                 modal.remove();
                 UI.restoreFocus();
             });
@@ -413,307 +411,255 @@ window.abrirModalLoja = function(idx) {
         document.body.appendChild(modal);
         var navegacaoTeclado = function(e) {
             if (!document.body.contains(modal)) { document.removeEventListener('keydown', navegacaoTeclado); return; }
-            if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                navegarImagem(-1);
-            } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                navegarImagem(1);
-            } else if (e.key === 'Escape') {
-                e.stopImmediatePropagation();
-                fecharModalImagemLoja();
-            }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); navegarImagem(-1); }
+            else if (e.key === 'ArrowRight') { e.preventDefault(); navegarImagem(1); }
+            else if (e.key === 'Escape') { e.stopImmediatePropagation(); fecharModalImagemLoja(); }
         };
         document.addEventListener('keydown', navegacaoTeclado);
         UI.trapFocus(modal);
     }
 
-    // ===== MODAL DE VARIAÇÕES =====
-function abrirModalVariacoes(produto) {
-    var atributos = produto.atributos || [];
-    var variacoes = produto.variacoes || [];
-    if (variacoes.length === 0) {
-        UI.mostrarToast('Este produto não possui variações disponíveis.');
-        return;
-    }
-
-    var primeiraComEstoque = null;
-    for (var i = 0; i < variacoes.length; i++) {
-        var est = obterEstoqueNumerico(variacoes[i].estoque);
-        if (est === null || est > 0) {
-            primeiraComEstoque = variacoes[i];
-            break;
+    // ===== MODAL DE VARIAÇÕES (padrão modal-extras-pontual) =====
+    function abrirModalVariacoes(produto) {
+        var atributos = produto.atributos || [];
+        var variacoes = produto.variacoes || [];
+        if (variacoes.length === 0) {
+            UI.mostrarToast('Este produto não possui variações disponíveis.');
+            return;
         }
-    }
 
-    if (!primeiraComEstoque) {
-        UI.mostrarToast('Todas as variações estão esgotadas.');
-        return;
-    }
-
-    var selecaoAtual = {};
-    var variacaoSelecionadaAtual = primeiraComEstoque;
-    for (var attr in primeiraComEstoque.atributos) {
-        selecaoAtual[attr] = primeiraComEstoque.atributos[attr];
-    }
-
-    var modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.display = 'flex';
-    modal.style.zIndex = '10020';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
-    modal.setAttribute('aria-label', 'Escolher variação de ' + produto.nome);
-
-    // ===== LAYOUT PADRONIZADO DO MÓDULO PEDIDOS =====
-    var imagensPrimeiraVariacao = obterImagensVariacao(primeiraComEstoque);
-    var imagemInicialVariacao = imagensPrimeiraVariacao[0] || obterImagemPrincipalProduto(produto) || 'https://via.placeholder.com/300';
-    modal.innerHTML = '<div class="modal-conteudo modal-variacao-full">' +
-        '<div class="modal-header"><div><span class="modal-eyebrow">Escolha uma opção</span><h3>' + Core.sanitize(produto.nome) + '</h3></div><button type="button" class="btn-modal-fechar" data-fechar-variacao aria-label="Fechar">✕</button></div>' +
-        '<div class="modal-config-body">' +
-        '<main class="modal-config-main">' +
-        '<div class="modal-step"><div class="modal-step-number">1</div><div class="modal-step-content"><div class="modal-step-heading"><div><h4>Escolha a variação</h4><p>Selecione uma opção em cada grupo.</p></div><span class="modal-required">Obrigatório</span></div><div id="atributosContainer" class="modal-options-list"></div></div></div>' +
-        '</main>' +
-        '<aside class="modal-order-summary"><h4>Resumo da escolha</h4>' +
-        '<img id="variacaoImagem" class="variation-summary-image" src="' + imagemInicialVariacao + '" alt="' + Core.sanitize(produto.nome) + '" loading="lazy">' +
-        '<p class="variation-summary-description">' + Core.sanitize(produto.descricao || 'Sem descrição') + '</p>' +
-        '<div id="variacaoInfo"><strong>Preço unitário:</strong> ' + formatarValorPromocaoLoja(primeiraComEstoque.preco) + '<br><span>Quantidade: 1</span><br><span>Estoque disponível: ' + textoEstoqueDisponivel(primeiraComEstoque.estoque) + '</span></div>' +
-        '<div class="variation-quantity"><button id="variacaoMenosQtd" aria-label="Diminuir quantidade">−</button><input type="number" id="variacaoQtd" value="1" min="1" aria-label="Quantidade"><button id="variacaoMaisQtd" aria-label="Aumentar quantidade">+</button></div>' +
-        '</aside>' +
-        '</div>' +
-        '<div class="modal-config-footer"><div class="modal-total"><span>Total da escolha</span><strong id="variacaoTotal">R$ ' + (parseFloat(primeiraComEstoque.preco) || 0).toFixed(2) + '</strong></div><button class="btn-pedido-cta" id="btnAddVariacao">Adicionar ao carrinho</button></div>' +
-        '</div>';
-
-    document.body.appendChild(modal);
-    function fecharVariacaoLoja() {
-        if (!modal.parentNode) return;
-        if (handlerEscapeVariacao) document.removeEventListener('keydown', handlerEscapeVariacao, true);
-        modal.remove();
-        UI.restoreFocus();
-    }
-    var handlerEscapeVariacao = function(e) {
-        if (e.key === 'Escape' && modal.parentNode) {
-            e.stopImmediatePropagation();
-            fecharVariacaoLoja();
+        var primeiraComEstoque = null;
+        for (var i = 0; i < variacoes.length; i++) {
+            var est = obterEstoqueNumerico(variacoes[i].estoque);
+            if (est === null || est > 0) { primeiraComEstoque = variacoes[i]; break; }
         }
-    };
-    modal.style.zIndex = '10020';
-    modal.querySelector('[data-fechar-variacao]').addEventListener('click', fecharVariacaoLoja);
-    modal.addEventListener('click', function(e) { if (e.target === modal) fecharVariacaoLoja(); });
-    document.addEventListener('keydown', handlerEscapeVariacao, true);
-    UI.trapFocus(modal);
+        if (!primeiraComEstoque) {
+            UI.mostrarToast('Todas as variações estão esgotadas.');
+            return;
+        }
 
-    var atributosContainer = document.getElementById('atributosContainer');
-    var variacaoImagem = document.getElementById('variacaoImagem');
-    var variacaoInfo = document.getElementById('variacaoInfo');
-    var qtdInput = document.getElementById('variacaoQtd');
-    var btnAdd = document.getElementById('btnAddVariacao');
+        var selecaoAtual = {};
+        var variacaoSelecionadaAtual = primeiraComEstoque;
+        for (var attr in primeiraComEstoque.atributos) {
+            selecaoAtual[attr] = primeiraComEstoque.atributos[attr];
+        }
 
-    btnAdd.disabled = false;
+        var modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'Escolher variação de ' + produto.nome);
 
-    variacaoImagem.onclick = function() {
-        var prodClone = JSON.parse(JSON.stringify(produto));
-        var variacaoSelecionada = null;
-        for (var vi = 0; vi < variacoes.length; vi++) {
-            var candidata = variacoes[vi];
-            var corresponde = true;
-            for (var va in selecaoAtual) {
-                if (candidata.atributos[va] !== selecaoAtual[va]) {
-                    corresponde = false;
-                    break;
+        var imagemInicialVariacao = obterImagensVariacao(primeiraComEstoque)[0] || obterImagemPrincipalProduto(produto) || 'https://via.placeholder.com/300';
+
+        modal.innerHTML =
+          '<div class="modal-conteudo modal-extras-pontual">' +
+            '<div class="modal-header modal-header-config">' +
+              '<div>' +
+                '<span class="modal-eyebrow">PERSONALIZE SEU ITEM</span>' +
+                '<h3>' + Core.sanitize(produto.nome) + '</h3>' +
+              '</div>' +
+              '<button type="button" class="modal-close-btn" data-fechar-modal aria-label="Fechar">×</button>' +
+            '</div>' +
+            '<div class="modal-body modal-config-body">' +
+              '<div class="modal-config-main">' +
+                '<section class="modal-step">' +
+                  '<div class="modal-step-number">1</div>' +
+                  '<div class="modal-step-content">' +
+                    '<div class="modal-step-heading">' +
+                      '<div><h4>Escolha a variação</h4><p>Selecione uma opção em cada grupo.</p></div>' +
+                      '<span class="modal-required">Obrigatório</span>' +
+                    '</div>' +
+                    '<div id="atributosContainer" class="modal-options-list"></div>' +
+                  '</div>' +
+                '</section>' +
+              '</div>' +
+              '<aside class="modal-order-summary" aria-label="Resumo da escolha">' +
+                '<img id="variacaoImagem" class="custom-summary-image" src="' + imagemInicialVariacao + '" alt="' + Core.sanitize(produto.nome) + '" loading="lazy">' +
+                '<div class="summary-header"><span>Resumo do item</span><span class="summary-live">Atualizado</span></div>' +
+                '<div class="summary-row"><span>Produto</span><strong>' + Core.sanitize(produto.nome) + '</strong></div>' +
+                '<div class="summary-row"><span>Preço unitário</span><strong id="variacaoPrecoUnitario">—</strong></div>' +
+                '<div class="summary-row"><span>Quantidade</span><strong id="variacaoQuantidade">1</strong></div>' +
+                '<div class="summary-row"><span>Estoque</span><strong id="variacaoEstoque">—</strong></div>' +
+                '<div class="summary-tip">Confira suas escolhas aqui antes de adicionar ao carrinho.</div>' +
+              '</aside>' +
+            '</div>' +
+            '<div class="modal-footer modal-config-footer">' +
+              '<div class="modal-total"><span>Total do item</span><strong id="variacaoTotal">—</strong></div>' +
+              '<button type="button" class="btn-pedido-cta" id="btnAddVariacao">' +
+                '<i class="fas fa-cart-plus" aria-hidden="true"></i>' +
+                '<span>Adicionar ao carrinho</span><span class="modal-button-arrow">→</span>' +
+              '</button>' +
+            '</div>' +
+          '</div>';
+
+        document.body.appendChild(modal);
+        var ctrl = EU.criarModalAcessivel();
+        ctrl.abrir(modal, function() { modal.remove(); });
+        modal.__ctrl = ctrl;
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal || e.target.closest('[data-fechar-modal]')) ctrl.fechar();
+        }, true);
+
+        var atributosContainer = document.getElementById('atributosContainer');
+        var variacaoImagem = document.getElementById('variacaoImagem');
+        var btnAdd = document.getElementById('btnAddVariacao');
+
+        variacaoImagem.onclick = function() {
+            var prodClone = JSON.parse(JSON.stringify(produto));
+            var variacaoSelecionada = null;
+            for (var vi = 0; vi < variacoes.length; vi++) {
+                var candidata = variacoes[vi];
+                var corresponde = true;
+                for (var va in selecaoAtual) {
+                    if (candidata.atributos[va] !== selecaoAtual[va]) { corresponde = false; break; }
                 }
+                if (corresponde) { variacaoSelecionada = candidata; break; }
             }
-            if (corresponde) {
-                variacaoSelecionada = candidata;
-                break;
+            var imgs = obterImagensVariacao(variacaoSelecionada);
+            if (!imgs.length) imgs = obterImagensBaseProduto(produto);
+            prodClone.imagem = imgs[0] || obterImagemPrincipalProduto(produto) || '';
+            prodClone.imagens = imgs.slice(1);
+            if (variacaoSelecionada) {
+                prodClone.__precoSelecionado = parseFloat(variacaoSelecionada.preco) || 0;
+                prodClone.__estoqueSelecionado = variacaoSelecionada.estoque;
+                prodClone.__variacaoSelecionada = JSON.parse(JSON.stringify(variacaoSelecionada));
             }
-        }
-        var imagensSelecionadas = obterImagensVariacao(variacaoSelecionada);
-        if (imagensSelecionadas.length === 0) imagensSelecionadas = obterImagensBaseProduto(produto);
-        prodClone.imagem = imagensSelecionadas[0] || obterImagemPrincipalProduto(produto) || '';
-        prodClone.imagens = imagensSelecionadas.slice(1);
-        if (variacaoSelecionada) {
-            prodClone.__precoSelecionado = parseFloat(variacaoSelecionada.preco) || 0;
-            prodClone.__estoqueSelecionado = variacaoSelecionada.estoque;
-            prodClone.__variacaoSelecionada = JSON.parse(JSON.stringify(variacaoSelecionada));
-        }
-        abrirModalImagemFullLoja(prodClone);
-    };
+            abrirModalImagemFullLoja(prodClone);
+        };
 
-    function renderizarAtributos() {
-        atributosContainer.innerHTML = '';
-        atributos.forEach(function(attr) {
-            var div = document.createElement('div');
-            div.className = 'modal-option-group';
-            var label = document.createElement('span');
-            label.className = 'modal-option-label';
-            label.textContent = attr.nome;
-            div.appendChild(label);
+        function renderizarAtributos() {
+            atributosContainer.innerHTML = '';
+            atributos.forEach(function(attr) {
+                var grupoDiv = document.createElement('div');
+                grupoDiv.className = 'modal-option-group';
+                var label = document.createElement('span');
+                label.className = 'modal-option-label';
+                label.textContent = attr.nome;
+                grupoDiv.appendChild(label);
 
-            var opcoesDiv = document.createElement('div');
-            opcoesDiv.className = 'modal-option-buttons';
-            (attr.opcoes || []).forEach(function(opcao) {
-                var btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'btn-tamanho-modal';
-                if (selecaoAtual[attr.nome] === opcao) btn.classList.add('ativo');
-                btn.textContent = opcao;
-                btn.dataset.attr = attr.nome;
-                btn.dataset.opcao = opcao;
-                btn.onclick = function() {
-                    selecaoAtual[attr.nome] = opcao;
-                    opcoesDiv.querySelectorAll('.btn-tamanho-modal').forEach(function(b) {
-                        b.classList.toggle('ativo', b.dataset.opcao === opcao && b.dataset.attr === attr.nome);
+                var opcoesDiv = document.createElement('div');
+                opcoesDiv.className = 'modal-option-buttons';
+                (attr.opcoes || []).forEach(function(opcao) {
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn-tamanho-modal';
+                    if (selecaoAtual[attr.nome] === opcao) btn.classList.add('ativo');
+                    btn.textContent = opcao;
+                    btn.addEventListener('click', function() {
+                        selecaoAtual[attr.nome] = opcao;
+                        opcoesDiv.querySelectorAll('.btn-tamanho-modal').forEach(function(b) {
+                            b.classList.toggle('ativo', b.textContent === opcao);
+                        });
+                        atualizarVariacaoSelecionada();
                     });
-                    atualizarVariacaoSelecionada();
-                };
-                opcoesDiv.appendChild(btn);
+                    opcoesDiv.appendChild(btn);
+                });
+                grupoDiv.appendChild(opcoesDiv);
+                atributosContainer.appendChild(grupoDiv);
             });
-            div.appendChild(opcoesDiv);
-            atributosContainer.appendChild(div);
-        });
-    }
-
-    function atualizarVariacaoSelecionada() {
-        var encontrada = null;
-        for (var i = 0; i < variacoes.length; i++) {
-            var v = variacoes[i];
-            var match = true;
-            for (var attr in selecaoAtual) {
-                if (v.atributos[attr] !== selecaoAtual[attr]) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                encontrada = v;
-                break;
-            }
         }
 
-        if (encontrada) {
-            variacaoSelecionadaAtual = encontrada;
-            var preco = parseFloat(encontrada.preco) || 0;
-            var estoque = obterEstoqueNumerico(encontrada.estoque);
-            var imagensEncontradas = obterImagensVariacao(encontrada);
-            variacaoImagem.src = imagensEncontradas[0] || obterImagemPrincipalProduto(produto) || 'https://via.placeholder.com/150';
-            if (estoque === null) {
-                qtdInput.removeAttribute('max');
+        function atualizarVariacaoSelecionada() {
+            var encontrada = null;
+            for (var i = 0; i < variacoes.length; i++) {
+                var v = variacoes[i];
+                var match = true;
+                for (var attr in selecaoAtual) {
+                    if (v.atributos[attr] !== selecaoAtual[attr]) { match = false; break; }
+                }
+                if (match) { encontrada = v; break; }
+            }
+
+            var elUnit = document.getElementById('variacaoPrecoUnitario');
+            var elQtd = document.getElementById('variacaoQuantidade');
+            var elEstoque = document.getElementById('variacaoEstoque');
+            var elTotal = document.getElementById('variacaoTotal');
+
+            if (encontrada) {
+                variacaoSelecionadaAtual = encontrada;
+                var preco = parseFloat(encontrada.preco) || 0;
+                var estoque = obterEstoqueNumerico(encontrada.estoque);
+                var imgs = obterImagensVariacao(encontrada);
+                variacaoImagem.src = imgs[0] || obterImagemPrincipalProduto(produto) || 'https://via.placeholder.com/150';
+
+                var oferta = calcularOfertaItemLoja({
+                    id: produto.id,
+                    variacaoId: obterIdVariacaoLoja(encontrada),
+                    preco: preco,
+                    quantidade: 1,
+                    atributos: encontrada.atributos || null
+                });
+
+                if (elUnit) elUnit.textContent = formatarValorPromocaoLoja(preco);
+                if (elQtd) elQtd.textContent = '1';
+                if (elEstoque) elEstoque.textContent = textoEstoqueDisponivel(encontrada.estoque);
+                if (elTotal) {
+                    if (oferta.desconto > 0) {
+                        elTotal.innerHTML = '<s style="color:#94a3b8;font-size:.8rem;">' + formatarValorPromocaoLoja(oferta.subtotalOriginal) + '</s> ' + formatarValorPromocaoLoja(oferta.subtotalPromocional);
+                    } else {
+                        elTotal.textContent = formatarValorPromocaoLoja(preco);
+                    }
+                }
+                btnAdd.disabled = estoque !== null && estoque <= 0;
             } else {
-                qtdInput.max = String(estoque);
-                if (parseInt(qtdInput.value) > estoque && estoque > 0) qtdInput.value = estoque;
+                if (elUnit) elUnit.textContent = '—';
+                if (elEstoque) elEstoque.textContent = '—';
+                if (elTotal) elTotal.textContent = 'Indisponível';
+                variacaoImagem.src = obterImagemPrincipalProduto(produto) || 'https://via.placeholder.com/150';
+                btnAdd.disabled = true;
             }
-            atualizarTotalVariacaoModal();
-            btnAdd.disabled = estoque !== null && estoque <= 0;
-        } else {
-            variacaoInfo.innerHTML = 'Combinação não disponível.';
-            var variacaoTotal = document.getElementById('variacaoTotal');
-            if (variacaoTotal) variacaoTotal.textContent = 'Indisponível';
-            variacaoImagem.src = obterImagemPrincipalProduto(produto) || 'https://via.placeholder.com/150';
-            btnAdd.disabled = true;
         }
-    }
 
-    function atualizarTotalVariacaoModal() {
-        var totalEl = document.getElementById('variacaoTotal');
-        if (!totalEl || !variacaoSelecionadaAtual) return;
-        var quantidadeAtual = Math.max(1, parseInt(qtdInput.value) || 1);
-        var precoUnitario = parseFloat(variacaoSelecionadaAtual.preco) || 0;
-        var ofertaAtual = calcularOfertaItemLoja({ id: produto.id, variacaoId: obterIdVariacaoLoja(variacaoSelecionadaAtual), preco: precoUnitario, quantidade: quantidadeAtual, atributos: variacaoSelecionadaAtual.atributos || null });
-        var totalOriginal = precoUnitario * quantidadeAtual;
-        var estoqueAtual = obterEstoqueNumerico(variacaoSelecionadaAtual.estoque);
-        if (variacaoInfo) {
-            var infoHtml = '<div><strong>Preço unitário:</strong> ' + formatarValorPromocaoLoja(precoUnitario) + '</div>';
-            infoHtml += '<div><strong>Quantidade:</strong> ' + quantidadeAtual + '</div>';
-            if (ofertaAtual.desconto > 0) {
-                infoHtml += '<div class="promocao-aplicada-info"><strong>Promoção:</strong> ' + ofertaAtual.condicaoPromocao + '<br><strong>Desconto:</strong> -' + formatarValorPromocaoLoja(ofertaAtual.desconto) + '</div>';
-            } else if (ofertaAtual.promocaoDisponivel && ofertaAtual.faixaSeguinte) {
-                var faltam = Math.max(0, ofertaAtual.faixaSeguinte.quantidade - quantidadeAtual);
-                infoHtml += '<div class="promocao-pendente-info"><strong>Oferta:</strong> ' + ofertaAtual.faixaSeguinte.quantidade + ' por ' + formatarValorPromocaoLoja(ofertaAtual.faixaSeguinte.preco) + '<br>Adicione mais ' + faltam + ' unidade' + (faltam === 1 ? '' : 's') + ' para ativar.</div>';
-            }
-            infoHtml += '<div><strong>Estoque disponível:</strong> ' + textoEstoqueDisponivel(variacaoSelecionadaAtual.estoque) + '</div>';
-            variacaoInfo.innerHTML = infoHtml;
-        }
-        if (ofertaAtual.desconto > 0) {
-            totalEl.innerHTML = '<span class="total-label">Total com promoção</span> <s style="color:#94a3b8;font-size:.8rem;">' + formatarValorPromocaoLoja(totalOriginal) + '</s> <strong style="color:#059669;">' + formatarValorPromocaoLoja(ofertaAtual.subtotalPromocional) + '</strong>';
-        } else {
-            totalEl.innerHTML = '<span class="total-label">Total</span> <strong>' + formatarValorPromocaoLoja(totalOriginal) + '</strong>';
-        }
-    }
-
-    document.getElementById('variacaoMenosQtd').onclick = function() {
-        var val = parseInt(qtdInput.value) || 1;
-        if (val > 1) { qtdInput.value = val - 1; atualizarTotalVariacaoModal(); }
-    };
-    document.getElementById('variacaoMaisQtd').onclick = function() {
-        var val = parseInt(qtdInput.value) || 1;
-        var max = qtdInput.max ? parseInt(qtdInput.max, 10) : Infinity;
-        if (!Number.isFinite(max) || val < max) { qtdInput.value = val + 1; atualizarTotalVariacaoModal(); }
-    };
-    qtdInput.addEventListener('input', atualizarTotalVariacaoModal);
-    qtdInput.addEventListener('change', atualizarTotalVariacaoModal);
-
-    btnAdd.onclick = function() {
-        if (btnAdd.disabled) return;
-        var qtd = parseInt(qtdInput.value) || 1;
-        var encontrada = null;
-        for (var i = 0; i < variacoes.length; i++) {
-            var v = variacoes[i];
-            var match = true;
-            for (var attr in selecaoAtual) {
-                if (v.atributos[attr] !== selecaoAtual[attr]) {
-                    match = false;
-                    break;
+        btnAdd.onclick = function() {
+            if (btnAdd.disabled) return;
+            var encontrada = null;
+            for (var i = 0; i < variacoes.length; i++) {
+                var v = variacoes[i];
+                var match = true;
+                for (var attr in selecaoAtual) {
+                    if (v.atributos[attr] !== selecaoAtual[attr]) { match = false; break; }
                 }
+                if (match) { encontrada = v; break; }
             }
-            if (match) {
-                encontrada = v;
-                break;
+            if (!encontrada) { UI.mostrarToast('Selecione uma combinação válida.', 'erro'); return; }
+            var estoqueDisp = obterEstoqueNumerico(encontrada.estoque);
+            if (estoqueDisp !== null && estoqueDisp <= 0) { UI.mostrarToast('Estoque insuficiente.', 'erro'); return; }
+
+            var atributosStr = '';
+            for (var attr in selecaoAtual) {
+                atributosStr += (atributosStr ? ', ' : '') + attr + ': ' + selecaoAtual[attr];
             }
-        }
-        if (!encontrada) {
-            UI.mostrarToast('Selecione uma combinação válida.', 'erro');
-            return;
-        }
-        var estoqueDisp = obterEstoqueNumerico(encontrada.estoque);
-        if (estoqueDisp !== null && qtd > estoqueDisp) {
-            UI.mostrarToast('Estoque insuficiente. Disponível: ' + estoqueDisp, 'erro');
-            return;
-        }
+            var nomeCompleto = produto.nome + (atributosStr ? ' (' + atributosStr + ')' : '');
 
-        var atributosStr = '';
-        for (var attr in selecaoAtual) {
-            atributosStr += (atributosStr ? ', ' : '') + attr + ': ' + selecaoAtual[attr];
-        }
-        var nomeCompleto = produto.nome + (atributosStr ? ' (' + atributosStr + ')' : '');
-
-        var variacaoIdCarrinho = obterIdVariacaoLoja(encontrada);
-        var existing = carrinho.find(function(item) {
-            return item.id === produto.id && item.variacaoId === variacaoIdCarrinho;
-        });
-        if (existing) {
-            existing.quantidade += qtd;
-        } else {
-            carrinho.push({
-                id: produto.id,
-                nome: nomeCompleto,
-                preco: parseFloat(encontrada.preco) || 0,
-                quantidade: qtd,
-                imagem: encontrada.imagem || produto.imagem || null,
-                variacaoId: variacaoIdCarrinho,
-                atributos: JSON.parse(JSON.stringify(selecaoAtual)),
-                estoque: encontrada.estoque
+            var variacaoIdCarrinho = obterIdVariacaoLoja(encontrada);
+            var existing = carrinho.find(function(item) {
+                return item.id === produto.id && item.variacaoId === variacaoIdCarrinho;
             });
-        }
-        atualizarCarrinhoLoja();
-        mostrarFeedbackAdicionarLoja(produto.id);
-        UI.mostrarToast('Produto adicionado ao carrinho', 'sucesso');
-        fecharVariacaoLoja();
-    };
+            if (existing) {
+                existing.quantidade += 1;
+            } else {
+                carrinho.push({
+                    id: produto.id,
+                    nome: nomeCompleto,
+                    preco: parseFloat(encontrada.preco) || 0,
+                    quantidade: 1,
+                    imagem: encontrada.imagem || produto.imagem || null,
+                    variacaoId: variacaoIdCarrinho,
+                    atributos: JSON.parse(JSON.stringify(selecaoAtual)),
+                    estoque: encontrada.estoque
+                });
+            }
+            atualizarCarrinhoLoja();
+            mostrarFeedbackAdicionarLoja(produto.id);
+            UI.mostrarToast('Produto adicionado ao carrinho', 'sucesso');
+            ctrl.fechar();
+        };
 
-    renderizarAtributos();
-    atualizarVariacaoSelecionada();
-}
+        renderizarAtributos();
+        atualizarVariacaoSelecionada();
+    }
+
     // ===== RENDERIZAÇÃO DE PRODUTOS =====
     function renderizarProdutosLoja(produtos) {
         if (!produtos || produtos.length === 0) {
@@ -728,7 +674,7 @@ function abrirModalVariacoes(produto) {
         var html = '';
         for (var cat in categorias) {
             html += '<div class="categoria-group">' +
-                '<button type="button" class="categoria-titulo-modal" aria-expanded="true">' + Core.sanitize(cat) + '</button>' +
+                '<div class="categoria-titulo-modal" role="button" tabindex="0" aria-expanded="true">' + Core.sanitize(cat) + '</div>' +
                 '<div class="produtos-grid">';
             categorias[cat].forEach(function(prod) {
                 html += gerarHTMLProdutoLoja(prod);
@@ -800,16 +746,18 @@ function abrirModalVariacoes(produto) {
             }
         }
 
+        var btnIcone = '<i class="fas fa-cart-plus" aria-hidden="true"></i>';
+
         var botaoHtml = '';
         if (temVariacoes) {
-            botaoHtml = '<button class="btn-escolher" data-prod-id="' + prod.id + '" data-tipo="variavel" ' + (esgotado ? 'disabled' : '') + '>' + (esgotado ? 'Indisponível' : 'Escolher') + '</button>';
+            botaoHtml = '<button class="btn-escolher" data-prod-id="' + prod.id + '" data-tipo="variavel" ' + (esgotado ? 'disabled' : '') + '>' + btnIcone + ' ' + (esgotado ? 'Indisponível' : 'Escolher') + '</button>';
         } else {
             botaoHtml = '<div class="produto-quantidade-simples">' +
                 '<button class="qtd-btn-simples" data-prod-id="' + prod.id + '" data-delta="-1" aria-label="Diminuir quantidade">−</button>' +
                 '<input type="number" id="qtd_simples_' + prod.id + '" value="1" min="1" style="width:3rem; text-align:center;" aria-label="Quantidade">' +
                 '<button class="qtd-btn-simples" data-prod-id="' + prod.id + '" data-delta="1" aria-label="Aumentar quantidade">+</button>' +
                 '</div>' +
-                '<button class="btn-adicionar-simples" data-prod-id="' + prod.id + '" data-preco="' + (parseFloat(prod.preco) || 0) + '" ' + (esgotado ? 'disabled' : '') + '>' + (esgotado ? 'Indisponível' : 'Adicionar') + '</button>';
+                '<button class="btn-adicionar-simples" data-prod-id="' + prod.id + '" data-preco="' + (parseFloat(prod.preco) || 0) + '" ' + (esgotado ? 'disabled' : '') + '>' + btnIcone + ' ' + (esgotado ? 'Indisponível' : 'Adicionar') + '</button>';
         }
 
         return '<div class="produto-card" data-prod-id="' + prod.id + '">' +
@@ -1747,10 +1695,10 @@ function abrirModalVariacoes(produto) {
 
             // Construir HTML do modal
             var logoHtml = logoEstab ? '<img src="' + Core.sanitize(logoEstab) + '" alt="Logo de ' + Core.sanitize(nomeEstab) + '" loading="eager" referrerpolicy="no-referrer">' : '<span aria-hidden="true">🛍️</span>';
-            var modalHtml = '<div class="modal-overlay loja-padronizada" id="modalLoja" style="display:flex;" role="dialog" aria-modal="true" aria-labelledby="modalLojaTitulo">' +
+            var modalHtml = '<div class="modal-overlay loja-padronizada" id="modalLoja" role="dialog" aria-modal="true" aria-labelledby="modalLojaTitulo">' +
                 '<div class="modal-conteudo fullscreen">' +
                 '<div class="modal-header"><div class="modal-estabelecimento-brand"><div class="modal-estabelecimento-logo">' + logoHtml + '</div><div class="modal-estabelecimento-meta"><h3 id="modalLojaTitulo">' + Core.sanitize(nomeEstab) + '</h3><span id="statusLojaBadgeLoja" class="modal-estabelecimento-status status-aberta">Aceitando pedidos</span></div></div>' +
-                '<button class="btn-modal-fechar" onclick="fecharModalLoja()" aria-label="Fechar loja">✕</button></div>' +
+                '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar loja">×</button></div>' +
                 '<div class="modal-tabs">' +
                 '<button class="modal-tab active" data-tab="produtos">📦 Produtos</button>' +
                 '<button class="modal-tab" data-tab="carrinho">🛒 Carrinho <span class="cart-tab-badge" id="cartBadgeLoja" style="display:none;">0</span></button>' +
@@ -1759,12 +1707,12 @@ function abrirModalVariacoes(produto) {
                 '</div>' +
                 '<div class="modal-body">' +
                 '<div id="tabProdutos" class="modal-tab-content active">' +
-                '<div id="statusLojaMsgLoja" style="display:none; background:#fef3c7; border:1px solid #f59e0b; border-radius:0.75rem; padding:0.75rem; margin-bottom:0.75rem; text-align:center; font-weight:600; color:#92400e;" role="alert"></div>' +
+                '<div id="statusLojaMsgLoja" style="display:none;" role="alert"></div>' +
                 '<div id="produtosContainer" aria-live="polite"><div class="loja-estado loja-estado-carregando" role="status"><span class="loja-spinner" aria-hidden="true"></span><strong>Carregando produtos</strong><p>Estamos atualizando a vitrine desta loja.</p></div></div>' +
                 '</div>' +
                 '<div id="tabCarrinho" class="modal-tab-content">' +
                 '<div class="carrinho-layout">' +
-                '<div class="carrinho-col-esquerda" id="carrinhoLista"><p style="text-align:center;padding:1rem;">Carrinho vazio</p></div>' +
+                '<div class="carrinho-col-esquerda" id="carrinhoLista"></div>' +
                 '<div class="carrinho-col-direita">' +
                 '<strong>Resumo do pedido</strong>' +
                 '<div>Subtotal: R$ <span id="carrinhoSubtotal">0.00</span></div>' +
@@ -1780,7 +1728,7 @@ function abrirModalVariacoes(produto) {
                 '<strong>Pagamento</strong>' +
                 '<select id="formaPagamentoLoja" class="input-pedido" onchange="toggleTrocoLoja()" aria-label="Forma de pagamento">' +
                 '<option value="Dinheiro">Dinheiro</option><option value="Cartão na entrega">Cartão na entrega</option><option value="Pix">Pix</option></select>' +
-                '<div id="trocoParaWrapperLoja" style="display:block;"><input type="number" id="trocoParaLoja" class="input-pedido" placeholder="Troco para quanto?" aria-label="Troco para quanto"><label style="display:flex; align-items:center; gap:0.4rem; font-size:0.75rem; color:var(--gray-700); margin:-0.3rem 0 0.5rem 0.2rem;"><input type="checkbox" id="semTrocoCheckbox" style="width:auto;"> Não preciso de troco</label></div>' +
+                '<div id="trocoParaWrapperLoja" style="display:block;"><input type="number" id="trocoParaLoja" class="input-pedido" placeholder="Troco para quanto?" aria-label="Troco para quanto"><label class="sem-troco-label"><input type="checkbox" id="semTrocoCheckbox"> Não preciso de troco</label></div>' +
                 '<div class="cliente-info">' +
                 '<div class="form-row">' +
                 '<input type="text" id="clienteNomeLoja" class="input-pedido" placeholder="Seu nome*" value="' + (Core.getUserDisplayName() || '') + '" aria-label="Seu nome" required>' +
@@ -1802,6 +1750,11 @@ function abrirModalVariacoes(produto) {
                 '</div></div></div>';
 
             document.body.insertAdjacentHTML('beforeend', modalHtml);
+            var modalLojaEl = document.getElementById('modalLoja');
+            var ctrlModal = EU.criarModalAcessivel();
+            ctrlModal.abrir(modalLojaEl, function() { fecharModalLoja(); });
+            modalLojaEl.__ctrl = ctrlModal;
+
             atualizarLogoLojaUI(lojistaData);
             atualizarStatusLojaUI(lojistaData.statusLoja || 'aberta', lojistaData.statusMessage || '');
 
@@ -1878,7 +1831,6 @@ function abrirModalVariacoes(produto) {
             var produtosContainer = document.getElementById('produtosContainer');
             if (produtosContainer) {
                 produtosContainer.addEventListener('click', function(e) {
-                    // Botões de quantidade (qtd-btn-simples)
                     var qtdBtn = e.target.closest('.qtd-btn-simples');
                     if (qtdBtn) {
                         var prodId = qtdBtn.dataset.prodId;
@@ -1892,7 +1844,6 @@ function abrirModalVariacoes(produto) {
                         return;
                     }
 
-                    // Botão "Escolher" (variações)
                     var btnEscolher = e.target.closest('.btn-escolher');
                     if (btnEscolher) {
                         var prodId = btnEscolher.dataset.prodId;
@@ -1903,7 +1854,6 @@ function abrirModalVariacoes(produto) {
                         return;
                     }
 
-                    // Botão "Adicionar" (produtos simples)
                     var btnAdicionar = e.target.closest('.btn-adicionar-simples');
                     if (btnAdicionar) {
                         var prodId = btnAdicionar.dataset.prodId;
@@ -1912,18 +1862,15 @@ function abrirModalVariacoes(produto) {
                 });
             }
 
-            var modalLojaEl = document.getElementById('modalLoja');
-            UI.trapFocus(modalLojaEl);
-            if (modalLojaEl) {
-                modalLojaEl.addEventListener('click', function(e) {
-                    if (e.target === modalLojaEl) fecharModalLoja();
-                });
-            }
+            // Fechar clicando fora
+            modalLojaEl.addEventListener('click', function(e) {
+                if (e.target === modalLojaEl) fecharModalLoja();
+            });
 
-            // O listener delega o encerramento ao módulo para também cancelar os listeners Firebase.
+            // ESC
             escHandlerLoja = function(e) {
                 if (e.key !== 'Escape' || !document.getElementById('modalLoja')) return;
-                if (document.querySelector('.modal-overlay.active:not(#modalLoja), .loja-confirmacao-overlay, .popup-confirmacao, .modal-variacao-full, .modal-imagem-full')) return;
+                if (document.querySelector('.modal-overlay.active:not(#modalLoja), .loja-confirmacao-overlay, .popup-confirmacao, .modal-extras-pontual, .modal-imagem-full')) return;
                 fecharModalLoja();
             };
             document.addEventListener('keydown', escHandlerLoja, true);
@@ -1937,7 +1884,6 @@ function abrirModalVariacoes(produto) {
 };
 
     // O core só renderiza o botão de ação quando o módulo se registra.
-    // O antigo script público criava o modal, mas não registrava o CTA.
     var cardsLoja = window.Economizei && window.Economizei.Cards;
     if (cardsLoja && typeof cardsLoja.registrarModulo === 'function') {
         var definicaoLojaPublica = {
