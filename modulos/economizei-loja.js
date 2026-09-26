@@ -1103,51 +1103,15 @@ window.abrirModalLoja = function(idx) {
             return i.id === id && (variacaoId ? i.variacaoId === variacaoId : !i.variacaoId);
         });
         if (!item) return;
-        var overlay = document.createElement('div');
-        overlay.className = 'modal-overlay loja-confirmacao-overlay';
-        overlay.setAttribute('role', 'dialog');
-        overlay.setAttribute('aria-modal', 'true');
-        overlay.setAttribute('aria-label', 'Confirmar remoção do carrinho');
-        var conteudo = document.createElement('div');
-        conteudo.className = 'modal-conteudo modal-sm loja-confirmacao-card';
-        var header = document.createElement('div');
-        header.className = 'modal-header';
-        var titulo = document.createElement('h3');
-        titulo.textContent = 'Remover item?';
-        var corpo = document.createElement('div');
-        corpo.className = 'modal-body';
-        corpo.textContent = 'Deseja remover “' + item.nome + '” do carrinho?';
-        var acoes = document.createElement('div');
-        acoes.className = 'modal-footer';
-        var cancelar = document.createElement('button');
-        cancelar.type = 'button';
-        cancelar.className = 'btn-modal-secundario';
-        cancelar.textContent = 'Manter item';
-        var confirmar = document.createElement('button');
-        confirmar.type = 'button';
-        confirmar.className = 'btn-modal-primario loja-remover-confirmar';
-        confirmar.textContent = 'Remover';
-        header.appendChild(titulo);
-        acoes.appendChild(cancelar);
-        acoes.appendChild(confirmar);
-        conteudo.appendChild(header);
-        conteudo.appendChild(corpo);
-        conteudo.appendChild(acoes);
-        overlay.appendChild(conteudo);
-        document.body.appendChild(overlay);
-        var ctrl = EU.criarModalAcessivel();
-        ctrl.abrir(overlay, function() { overlay.remove(); });
-        cancelar.addEventListener('click', function() { ctrl.fechar(); });
-        confirmar.addEventListener('click', function() {
+        EU.confirmar('Deseja remover “' + item.nome + '” do carrinho?', { titulo: 'Remover item', confirmar: 'Remover', cancelar: 'Manter item' }).then(function(confirmado) {
+            if (!confirmado) return;
             carrinho = carrinho.filter(function(i) {
                 if (variacaoId) return !(i.id === id && i.variacaoId === variacaoId);
                 return i.id !== id;
             });
             atualizarCarrinhoLoja();
-            ctrl.fechar();
             UI.mostrarToast('Item removido do carrinho.', 'sucesso');
         });
-        overlay.addEventListener('click', function(e) { if (e.target === overlay) ctrl.fechar(); });
     }
 
     function alterarQuantidadeLoja(id, qtd, variacaoId) {
@@ -1728,7 +1692,7 @@ window.abrirModalLoja = function(idx) {
 
             escHandlerLoja = function(e) {
                 if (e.key !== 'Escape' || !document.getElementById('modalLoja')) return;
-                if (document.querySelector('.modal-overlay.active:not(#modalLoja), .loja-confirmacao-overlay, .popup-confirmacao, .modal-extras-pontual, .modal-imagem-full')) return;
+                if (document.querySelector('.modal-overlay.active:not(#modalLoja), .popup-confirmacao, .modal-extras-pontual, .modal-imagem-full')) return;
                 fecharModalLoja();
             };
             document.addEventListener('keydown', escHandlerLoja, true);
