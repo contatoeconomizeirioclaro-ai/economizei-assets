@@ -1,9 +1,11 @@
 /* ============================================================
    MÓDULO LOJA — CSS específico (vitrine pública)
-   Modal-config, modal-close-btn, modais → comum/modais.css
-   Produto-card, tabs, inputs, carrinho → comum/componentes.css
+   Modal-config, modal-close-btn, modais, imagem-full → comum/modais.css
+   Produto-card, grid, categoria, tabs, inputs, carrinho → comum/componentes.css
+   Aqui só o que é EXCLUSIVO da Loja.
    ============================================================ */
 
+/* ── Overlay e conteúdo fullscreen do modal Loja ── */
 #modalLoja.loja-padronizada {
   position: fixed;
   inset: 0;
@@ -41,7 +43,7 @@
   overflow-y: auto;
 }
 
-/* ── Banner de status (aviso do lojista) ── */
+/* ── Banner de status da loja (aviso do lojista) ── */
 #modalLoja.loja-padronizada #statusLojaMsgLoja {
   display: flex;
   align-items: center;
@@ -97,43 +99,6 @@
   font-weight: 650;
 }
 
-/* ── Categoria: botão expandir/recolher ── */
-#modalLoja.loja-padronizada .categoria-titulo-modal {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: .35rem 0;
-  border: 0;
-  border-left: 3px solid var(--primary, #0a66c2);
-  background: transparent;
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--primary, #0a66c2);
-  text-align: left;
-  cursor: pointer;
-  user-select: none;
-}
-#modalLoja.loja-padronizada .categoria-titulo-modal::after {
-  content: "";
-  width: .48rem;
-  height: .48rem;
-  margin-right: .15rem;
-  border-right: 2px solid #64748b;
-  border-bottom: 2px solid #64748b;
-  transform: rotate(45deg) translateY(-2px);
-  transition: transform .2s ease;
-}
-#modalLoja.loja-padronizada .categoria-titulo-modal.recolhida::after {
-  transform: rotate(-45deg) translateY(2px);
-}
-#modalLoja.loja-padronizada .categoria-titulo-modal:focus-visible {
-  border-radius: .35rem;
-  outline: 3px solid rgba(59, 130, 246, .28);
-  outline-offset: 2px;
-}
-
 /* ── Estado vazio / carregando / erro ── */
 #modalLoja.loja-padronizada .loja-estado {
   display: grid;
@@ -171,7 +136,7 @@
 }
 @keyframes lojaGira { to { transform: rotate(360deg); } }
 
-/* ── Modal de imagem em tela cheia ── */
+/* ── Lightbox de imagem da Loja ── */
 .modal-imagem-full.loja-padronizada {
   position: fixed; inset: 0; background: #000; z-index: 20000;
   display: flex; align-items: center; justify-content: center;
@@ -194,7 +159,7 @@
   transform: translateY(-50%) scale(.94);
 }
 
-/* ── Modo app ── */
+/* ── Modo app: reserva da barra inferior ── */
 html.modo-app-inicial #modalLoja.loja-padronizada > .modal-conteudo.fullscreen,
 body.modo-app #modalLoja.loja-padronizada > .modal-conteudo.fullscreen {
   height: calc(100dvh - var(--reserva-barra-app));
@@ -206,10 +171,14 @@ body.modo-app #modalLoja.loja-padronizada .modal-body {
   padding-bottom: max(.75rem, var(--reserva-barra-app)) !important;
 }
 
+/* ── Responsivo ── */
 @media (max-width: 700px) {
-  .modal-imagem-full.loja-padronizada .imagem-navegacao { width: 36px; height: 50px; font-size: 34px; }
+  .modal-imagem-full.loja-padronizada .imagem-navegacao {
+    width: 36px; height: 50px; font-size: 34px;
+  }
 }
 
+/* ── Acessibilidade ── */
 @media (prefers-reduced-motion: reduce) {
   #modalLoja.loja-padronizada .loja-spinner,
   .modal-imagem-full.loja-padronizada .imagem-navegacao {
