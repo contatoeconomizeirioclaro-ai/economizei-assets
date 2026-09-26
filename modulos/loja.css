@@ -33,11 +33,13 @@
   display: flex;
   flex-direction: column;
 }
+
+/* ── Header: botão X ── */
 #modalLoja.loja-padronizada .modal-header {
   padding: .75rem 1rem;
   flex-shrink: 0;
 }
-#modalLoja.loja-padronizada .modal-header > .btn-modal-fechar {
+#modalLoja.loja-padronizada .modal-header > .modal-close-btn {
   width: 2.25rem;
   height: 2.25rem;
   min-width: 2.25rem;
@@ -46,15 +48,22 @@
   font-size: 1.45rem;
   line-height: 1;
   margin-left: auto;
+  flex: 0 0 auto;
   background: transparent;
   border: none;
+  box-shadow: none;
   cursor: pointer;
   color: var(--gray-500, #64748b);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-#modalLoja.loja-padronizada .modal-header > .btn-modal-fechar:hover {
+#modalLoja.loja-padronizada .modal-header > .modal-close-btn:hover {
   background: var(--gray-100, #f1f5f9);
   color: var(--gray-700, #334155);
 }
+
+/* ── Tabs / body ── */
 #modalLoja.loja-padronizada .modal-tabs { flex-shrink: 0; }
 #modalLoja.loja-padronizada .modal-body {
   flex: 1;
@@ -68,10 +77,9 @@
   align-items: center;
   justify-content: center;
   gap: .35rem;
-  min-height: 2.8rem;
   box-sizing: border-box;
   border-radius: .75rem !important;
-  padding: .65rem .75rem !important;
+  padding: .75rem !important;
   margin-bottom: .75rem !important;
   text-align: center !important;
   font-weight: 600 !important;
