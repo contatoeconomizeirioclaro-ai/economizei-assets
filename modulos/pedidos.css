@@ -1,12 +1,10 @@
 /* ============================================================
    MÓDULO PEDIDOS — CSS específico (restaurante/lanchonete)
-   Toda a camada base vem de:
-     comum/tokens.css
-     comum/modais.css
-     comum/componentes.css
+   Modal-config, modal-close-btn, modais → comum/modais.css
+   Produto-card, tabs, inputs, carrinho → comum/componentes.css
    ============================================================ */
 
-/* ── Modal de personalização (extras + customização) ── */
+/* ── Modal de personalização: só o que é de comida ── */
 .modal-extras-pontual,
 .modal-customizacao-full {
   width: min(94vw, 900px) !important;
@@ -225,8 +223,6 @@
 #modalScanner { z-index: 9999 !important; }
 #modalScanner .modal-conteudo { max-width: 500px; }
 #modalScanner .modal-body { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: .5rem; }
-
-/* ── Sabor/extra redondo (só no Pedidos) ── */
 .sabor-imagem, .extra-imagem {
   width: 36px; height: 36px; min-width: 36px; border-radius: 50%;
   object-fit: cover; margin-right: 8px; flex-shrink: 0;
@@ -242,7 +238,7 @@
   box-sizing: border-box;
 }
 
-/* ── Modo app: reserva da barra inferior ── */
+/* ── Modo app ── */
 html.modo-app-inicial .modal-overlay#modalPedidoRest,
 body.modo-app .modal-overlay#modalPedidoRest { align-items: flex-start !important; }
 html.modo-app-inicial .modal-overlay#modalPedidoRest > .modal-conteudo.fullscreen,
@@ -263,7 +259,7 @@ body.modo-app .modal-overlay#modalPedidoRest > .modal-conteudo > .modal-body {
 }
 .popup-confirmacao-header .popup-confirmacao-close:hover { background: rgba(255, 255, 255, .3); color: #fff; }
 
-/* ── Header específico do modal de Pedidos (Loja no modal do restaurante) ── */
+/* ── Header da Loja dentro do modal Pedidos ── */
 #modalPedidoRest .modal-estabelecimento-brand { display: flex; align-items: center; gap: .55rem; min-width: 0; flex: 1; text-align: left; }
 #modalPedidoRest .modal-estabelecimento-logo { width: 42px; height: 42px; flex: 0 0 42px; border-radius: 50%; overflow: hidden; background: var(--primary-light, #eef4ff); border: 2px solid var(--primary, #0a66c2); display: flex; align-items: center; justify-content: center; color: var(--primary, #0a66c2); font-size: .9rem; font-weight: 800; }
 #modalPedidoRest .modal-estabelecimento-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -277,7 +273,6 @@ body.modo-app .modal-overlay#modalPedidoRest > .modal-conteudo > .modal-body {
 #modalPedidoRest .modal-estabelecimento-status.status-pausada::before { background: #f59e0b; }
 #modalPedidoRest .modal-estabelecimento-status.status-fechada { color: #b91c1c; }
 #modalPedidoRest .modal-estabelecimento-status.status-fechada::before { background: #ef4444; }
-#modalPedidoRest .modal-header > .modal-close-btn { margin-left: auto; }
 
 /* ── Checkbox "não preciso de troco" ── */
 #semTrocoCheckbox {
@@ -293,7 +288,7 @@ body.modo-app .modal-overlay#modalPedidoRest > .modal-conteudo > .modal-body {
 #semTrocoCheckbox:checked::after { content: "✓"; color: #fff; font-size: .72rem; font-weight: 800; line-height: 1; }
 #semTrocoCheckbox:focus-visible { outline: 3px solid rgba(10, 102, 194, .28); outline-offset: 2px; }
 
-/* ── Feedback tátil dos controles ── */
+/* ── Feedback tátil ── */
 .btn-tamanho-modal:active,
 .extra-qtd button:active,
 .qtd-btn-simples:active,
