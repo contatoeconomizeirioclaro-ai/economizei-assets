@@ -12,10 +12,6 @@
    TAMANHOS:  .modal-sm  .modal-lg  .modal-xl  (padrão = 460px)
    FAMÍLIAS:  .modal-confirmar  .modal-lista  .modal-midia  .modal-multis  .modal-config
    TONS:      .tom-aviso  .tom-erro  .tom-sucesso
-
-   LIMITE DE ITENS VISÍVEIS (configurável em :root abaixo):
-   - Multis: 5 itens. Passando disso, o body rola.
-   - Lista:  6 itens. Passando, o body rola.
    ============================================================ */
 
 :root {
@@ -42,8 +38,7 @@
   padding: 16px;
   box-sizing: border-box;
 }
-/* A visibilidade é controlada exclusivamente por .modal-overlay.active, 
-   definida em tokens.css. Não usar .ativo nem display inline. */
+.modal-overlay.active { display: flex; }
 
 .modal-conteudo {
   position: relative;
@@ -67,7 +62,6 @@
 @supports (height: 100dvh) {
   .modal-conteudo { max-height: 85dvh; }
 }
-
 @keyframes modalEntrada {
   from { opacity: 0; transform: translateY(12px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0)   scale(1);    }
@@ -83,7 +77,6 @@
   background: #fff;
   flex-shrink: 0;
 }
-
 .modal-header h3 {
   display: flex;
   align-items: center;
@@ -97,7 +90,6 @@
   line-height: 1.25;
   color: var(--gray-800, #1e293b);
 }
-
 .modal-header h3 > i:first-child,
 .modal-header h3 > span[aria-hidden="true"]:first-child {
   width: 36px;
@@ -129,10 +121,7 @@
   scrollbar-color: #cbd5e1 transparent;
 }
 .modal-body::-webkit-scrollbar { width: 8px; }
-.modal-body::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
+.modal-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 .modal-body::-webkit-scrollbar-track { background: transparent; }
 .modal-body > p:first-child { margin-top: 0; }
 .modal-body > p:last-child  { margin-bottom: 0; }
@@ -174,6 +163,7 @@
   color: var(--gray-800, #1e293b);
 }
 .modal-close-btn:active { transform: scale(0.92); }
+.modal-header > .modal-close-btn { margin-left: auto; }
 
 /* ===== BOTÕES DE AÇÃO ===== */
 .btn-modal-fechar,
@@ -196,7 +186,6 @@
   min-height: 42px;
   white-space: nowrap;
 }
-
 .btn-modal-primario {
   background: var(--primary, #0a66c2);
   color: #fff;
@@ -217,7 +206,6 @@
   box-shadow: 0 1px 2px rgba(185,28,28,.2), 0 4px 12px -4px rgba(185,28,28,.3);
 }
 .btn-modal-perigo:hover { background: #991b1b; }
-
 .btn-modal-secundario {
   background: #fff;
   color: var(--gray-700, #334155);
@@ -227,7 +215,6 @@
   background: var(--gray-100, #f1f5f9);
   border-color: #cbd5e1;
 }
-
 .btn-modal-fechar {
   background: transparent;
   color: var(--gray-600, #475569);
@@ -361,14 +348,12 @@
     + 1.7rem
   );
 }
-
 .modal-conteudo.modal-multis .modal-body > div,
 .modal-conteudo.modal-lista .modal-body > div {
   display: flex;
   flex-direction: column;
   gap: inherit;
 }
-
 .modal-conteudo.modal-multis .item-opcao {
   display: flex;
   align-items: center;
@@ -393,10 +378,7 @@
   box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.12);
   transform: translateY(-1px);
 }
-.modal-conteudo.modal-multis .item-opcao:active {
-  transform: translateY(0);
-}
-
+.modal-conteudo.modal-multis .item-opcao:active { transform: translateY(0); }
 .modal-conteudo.modal-multis .item-opcao .item-icone {
   width: 38px;
   height: 38px;
@@ -442,8 +424,6 @@
   transform: translateX(3px);
   color: var(--primary, #0a66c2);
 }
-
-/* Tipos — cor no ícone */
 .modal-conteudo.modal-multis .item-opcao.item-whatsapp .item-icone { background: #dcfce7; color: #166534; }
 .modal-conteudo.modal-multis .item-opcao.item-telefone .item-icone { background: #dbeafe; color: #1e40af; }
 .modal-conteudo.modal-multis .item-opcao.item-email    .item-icone { background: #e2e8f0; color: #334155; }
@@ -609,12 +589,10 @@
   gap: .5rem;
 }
 .modal-button-arrow { font-size: 1.1rem; }
-
 html.modo-app-inicial .modal-config-footer,
 body.modo-app .modal-config-footer {
   padding-bottom: max(1rem, var(--reserva-barra-app)) !important;
 }
-
 @media (max-width: 700px) {
   .modal-config-body { display: block !important; padding: .75rem !important; }
   .modal-step { padding: .75rem; gap: .55rem; }
@@ -638,7 +616,6 @@ body.modo-app .modal-config-footer {
   background: #fef3c7;
   color: #92400e;
 }
-
 .modal-header.tom-erro {
   background: #fef2f2;
   border-bottom-color: #fecaca;
@@ -649,7 +626,6 @@ body.modo-app .modal-config-footer {
   background: #fee2e2;
   color: #991b1b;
 }
-
 .modal-header.tom-sucesso {
   background: #f0fdf4;
   border-bottom-color: #bbf7d0;
@@ -674,20 +650,16 @@ body.modo-app .modal-config-footer {
 }
 .modal-conteudo:focus-visible,
 .modal-conteudo:focus { outline: none; }
-
 .modal-conteudo .sr-only,
 .modal-overlay .sr-only {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
 }
-
 @media (prefers-reduced-motion: reduce) {
   .modal-conteudo { animation: none; }
   .modal-conteudo *,
@@ -698,7 +670,6 @@ body.modo-app .modal-config-footer {
     animation-iteration-count: 1 !important;
   }
 }
-
 @media (pointer: coarse) {
   .modal-close-btn,
   .btn-modal-fechar,
@@ -714,21 +685,14 @@ body.modo-app .modal-config-footer {
     min-width: 44px;
   }
 }
-
-/* ===== AJUSTES POR TELA ===== */
 @media (max-height: 520px) {
-  .modal-conteudo {
-    max-height: calc(100vh - 24px);
-  }
+  .modal-conteudo { max-height: calc(100vh - 24px); }
   @supports (height: 100dvh) {
     .modal-conteudo { max-height: calc(100dvh - 24px); }
   }
   .modal-conteudo.modal-lista .modal-body,
-  .modal-conteudo.modal-multis .modal-body {
-    max-height: none;
-  }
+  .modal-conteudo.modal-multis .modal-body { max-height: none; }
 }
-
 @media (max-width: 520px) {
   .modal-overlay { padding: 12px; }
   .modal-conteudo { max-height: 82vh; }
@@ -738,43 +702,27 @@ body.modo-app .modal-config-footer {
   .modal-footer { justify-content: stretch; }
   .modal-footer .btn-modal-fechar,
   .modal-footer .btn-modal-secundario,
-  .modal-footer .btn-modal-primario {
-    flex: 1 1 auto;
-  }
+  .modal-footer .btn-modal-primario { flex: 1 1 auto; }
 }
 
-/* Modo app: desconta a barra inferior nativa. */
-:root {
-  --reserva-barra-app: env(safe-area-inset-bottom, 0px);
-}
+/* Modo app */
+:root { --reserva-barra-app: env(safe-area-inset-bottom, 0px); }
 html.modo-app-inicial,
 body.modo-app {
   --reserva-barra-app: max(130px, env(safe-area-inset-bottom, 0px)) !important;
 }
-
-.modal-overlay > .modal-conteudo {
-  margin-bottom: var(--reserva-barra-app);
-}
+.modal-overlay > .modal-conteudo { margin-bottom: var(--reserva-barra-app); }
 html.modo-app-inicial .modal-conteudo,
-body.modo-app .modal-conteudo {
-  max-height: calc(100vh - var(--reserva-barra-app));
-}
+body.modo-app .modal-conteudo { max-height: calc(100vh - var(--reserva-barra-app)); }
 @supports (height: 100dvh) {
   html.modo-app-inicial .modal-conteudo,
-  body.modo-app .modal-conteudo {
-    max-height: calc(100dvh - var(--reserva-barra-app));
-  }
+  body.modo-app .modal-conteudo { max-height: calc(100dvh - var(--reserva-barra-app)); }
 }
-
-.modal-footer {
-  padding-bottom: max(1rem, var(--reserva-barra-app, 0px));
-}
+.modal-footer { padding-bottom: max(1rem, var(--reserva-barra-app, 0px)); }
 
 /* ============================================================
    [NOVO] EXTENSÕES DO PAINEL
    ============================================================ */
-
-/* ===== EYEBROW (subtítulo acima do título do modal) ===== */
 .modal-eyebrow {
   display: block;
   margin-bottom: .2rem;
@@ -784,13 +732,133 @@ body.modo-app .modal-conteudo {
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-
-/* ===== VARIANTE: HEADER STICKY ===== */
-/* Modais altos (cadastro de produto, campanha, entrega) mantêm
-   o header visível enquanto o body rola. */
 .modal-conteudo.modal-sticky-header .modal-header {
   position: sticky;
   top: 0;
   z-index: 2;
   background: #fff;
+}
+
+/* ============================================================
+   IMAGEM EM TELA CHEIA (lightbox compartilhado)
+   ============================================================ */
+.modal-imagem-full {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+.modal-imagem-full .container-imagem {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  position: relative;
+}
+.modal-imagem-full .lado-esquerdo {
+  flex: 2;
+  min-width: 150px;
+  text-align: center;
+  padding: .5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+.modal-imagem-full .lado-esquerdo .imagem-principal {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  margin: auto;
+}
+.modal-imagem-full .miniaturas {
+  display: flex;
+  gap: .3rem;
+  justify-content: center;
+  margin-top: .5rem;
+  flex-wrap: wrap;
+}
+.modal-imagem-full .miniatura {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: .5rem;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+.modal-imagem-full .miniatura.ativa { border-color: var(--primary, #0a66c2); }
+.modal-imagem-full .lado-direito {
+  flex: 1;
+  padding: .75rem;
+  background: #111;
+  color: #fff;
+  border-radius: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: .5rem;
+}
+.modal-imagem-full .lado-direito .produto-nome { font-size: 1rem; font-weight: 700; color: #fff; }
+.modal-imagem-full .lado-direito .descricao { font-size: .8rem; color: #ccc; }
+.modal-imagem-full .lado-direito .preco { font-size: 1rem; font-weight: 700; color: var(--primary, #0a66c2); }
+.modal-imagem-full .fechar {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  background: rgba(0, 0, 0, .5);
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.imagem-navegacao {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 42px;
+  height: 58px;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, .72);
+  color: #fff;
+  font-size: 42px;
+  line-height: 42px;
+  font-family: Arial, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+}
+.imagem-navegacao:hover,
+.imagem-navegacao:focus-visible {
+  background: var(--primary, #0a66c2);
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.imagem-navegacao:active { transform: translateY(-50%) scale(.94); }
+.imagem-navegacao-anterior { left: .75rem; }
+.imagem-navegacao-seguinte { right: .75rem; }
+@media (max-width: 640px) {
+  .imagem-navegacao { width: 36px; height: 50px; font-size: 34px; }
+  .imagem-navegacao-anterior { left: .4rem; }
+  .imagem-navegacao-seguinte { right: .4rem; }
 }
