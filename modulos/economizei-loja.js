@@ -8,11 +8,6 @@
     'use strict';
     if (!window.Economizei) window.Economizei = {};
 
-    // ============================================================
-    // IDENTIDADE VISUAL COMPARTILHADA COM ONDE COMER/PEDIDOS
-    // O módulo continua externo e injeta somente a camada visual do
-    // próprio modal. O shell Blogger permanece na página hospedeira.
-    // ============================================================
     function instalarEstiloLojaPublica() {
         if (document.getElementById('economizei-loja-publica-css')) return;
         var link = document.createElement('link');
@@ -23,16 +18,14 @@
     }
     instalarEstiloLojaPublica();
 
-
-
     function mostrarFeedbackAdicionarLoja(prodId) {
         var botoes = document.querySelectorAll('#modalLoja .btn-adicionar-simples[data-prod-id], #modalLoja .btn-escolher[data-prod-id]');
         Array.prototype.forEach.call(botoes, function(botao) {
             if (botao.dataset.prodId !== String(prodId)) return;
-            var textoOriginal = botao.dataset.textoOriginal || botao.textContent;
+            var textoOriginal = botao.dataset.textoOriginal || botao.innerHTML;
             botao.dataset.textoOriginal = textoOriginal;
             botao.classList.add('is-added');
-            botao.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> Adicionado ✓';
+            botao.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> Adicionado';
             window.setTimeout(function() {
                 if (!botao.isConnected) return;
                 botao.classList.remove('is-added');
@@ -40,9 +33,6 @@
             }, 1300);
         });
     }
-
-// MÓDULO LOJA – COMPLETO (CORRIGIDO)
-// ============================================================
 
 window.abrirModalLoja = function(idx) {
     var Core = Economizei.Core;
@@ -72,7 +62,6 @@ window.abrirModalLoja = function(idx) {
     var unsubscribeStatusLoja = null;
     var escHandlerLoja = null;
 
-    // ===== FUNÇÃO AUXILIAR: normalizar imagens =====
     function normalizarImagens(imagens) {
         var lista = [];
         if (Array.isArray(imagens)) lista = imagens;
@@ -90,11 +79,6 @@ window.abrirModalLoja = function(idx) {
         if (estoqueSemLimite(valor)) return null;
         var numero = parseInt(valor, 10);
         return Number.isFinite(numero) ? numero : null;
-    }
-
-    function estoqueDisponivelParaQuantidade(valor, quantidade) {
-        var estoque = obterEstoqueNumerico(valor);
-        return estoque === null || quantidade <= estoque;
     }
 
     function textoEstoqueDisponivel(valor) {
@@ -161,8 +145,6 @@ window.abrirModalLoja = function(idx) {
         return imagensTodas.length > 0 ? imagensTodas[0] : null;
     }
 
-    // ===== FUNÇÕES AUXILIARES =====
-
     function gerarComprovanteLoja(pedido, codigoCurto) {
         function numero(valor) {
             var convertido = parseFloat(valor);
@@ -216,7 +198,7 @@ window.abrirModalLoja = function(idx) {
             '<div class="popup-confirmacao-header"><h3>' + Core.sanitize(opcoes.titulo || 'Pedido enviado') + '</h3><button type="button" class="modal-close-btn popup-confirmacao-close" data-fechar-confirmacao aria-label="Fechar">×</button></div>' +
             '<div class="popup-confirmacao-body"><p>Seu pedido foi enviado com sucesso!</p>' +
             '<div class="popup-confirmacao-codigo"><p class="label">Código</p><p class="valor">#' + Core.sanitize(codigo) + '</p>' +
-            '<button type="button" class="btn-adicionar-filtro btn-copiar-codigo" data-codigo-copiar="' + Core.sanitize(codigo) + '">📋 Copiar código</button></div>' +
+            '<button type="button" class="btn-copiar-codigo" data-codigo-copiar="' + Core.sanitize(codigo) + '">📋 Copiar código</button></div>' +
             '<div class="popup-confirmacao-botoes">' + (opcoes.botoes || '') + '</div></div>' +
             '<div class="popup-confirmacao-footer"><button type="button" class="btn-modal-fechar" data-fechar-confirmacao>Fechar</button></div></div>';
         document.body.appendChild(overlay);
@@ -240,14 +222,6 @@ window.abrirModalLoja = function(idx) {
                 UI.mostrarToast('Não foi possível copiar o código.', 'erro');
             });
         });
-    }
-
-    // ===== IMAGEM EM TELA CHEIA =====
-    if (!document.getElementById('economizei-loja-image-navigation-style')) {
-        var imageNavigationStyle = document.createElement('style');
-        imageNavigationStyle.id = 'economizei-loja-image-navigation-style';
-        imageNavigationStyle.textContent = '.imagem-navegacao{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:42px;height:58px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(15,23,42,.72);color:#fff;font-size:42px;line-height:42px;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s ease,transform .15s ease}.imagem-navegacao:hover,.imagem-navegacao:focus-visible{background:#0a66c2;outline:2px solid #fff;outline-offset:2px}.imagem-navegacao:active{transform:translateY(-50%) scale(.94)}.imagem-navegacao-anterior{left:.75rem}.imagem-navegacao-seguinte{right:.75rem}@media(max-width:640px){.imagem-navegacao{width:36px;height:50px;font-size:34px}.imagem-navegacao-anterior{left:.4rem}.imagem-navegacao-seguinte{right:.4rem}}';
-        document.head.appendChild(imageNavigationStyle);
     }
 
     function abrirModalImagemFullLoja(produto) {
@@ -293,30 +267,28 @@ window.abrirModalLoja = function(idx) {
             var estoqueNumerico = obterEstoqueNumerico(estoqueDaImagem);
             var estoqueImagemHtml = estoqueNumerico === null ? '<div class="estoque-imagem" style="font-size:.8rem;color:#cbd5e1;">Estoque disponível: Ilimitado</div>' : '<div class="estoque-imagem" style="font-size:.8rem;color:#cbd5e1;">Estoque disponível: ' + estoqueNumerico + '</div>';
             var html = '<div class="container-imagem" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; width:100%; height:100%; background:#000; position:relative;">' +
-                '<button type="button" class="modal-close-btn fechar" data-fechar-imagem aria-label="Fechar imagem" style="position:absolute; top:1rem; right:1rem; color:white; font-size:1.45rem; cursor:pointer; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,.35); width:2.25rem; height:2.25rem; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10;">×</button>' +
+                '<button type="button" class="modal-close-btn fechar" data-fechar-imagem aria-label="Fechar imagem" style="position:absolute; top:1rem; right:1rem; color:white; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,.35); width:2.25rem; height:2.25rem; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10;">×</button>' +
                 '<div class="lado-esquerdo" style="flex:2; min-width:200px; text-align:center; padding:1rem; display:flex; flex-direction:column; justify-content:center; height:100%; position:relative;">' +
-                (imagens.length > 1 ? '<button type="button" id="imagemAnterior" class="imagem-navegacao imagem-navegacao-anterior" aria-label="Imagem anterior" title="Imagem anterior (seta para a esquerda)">‹</button><button type="button" id="imagemSeguinte" class="imagem-navegacao imagem-navegacao-seguinte" aria-label="Próxima imagem" title="Próxima imagem (seta para a direita)">›</button>' : '') +
+                (imagens.length > 1 ? '<button type="button" id="imagemAnterior" class="imagem-navegacao imagem-navegacao-anterior" aria-label="Imagem anterior" title="Imagem anterior">‹</button><button type="button" id="imagemSeguinte" class="imagem-navegacao imagem-navegacao-seguinte" aria-label="Próxima imagem" title="Próxima imagem">›</button>' : '') +
                 '<img src="' + imagens[currentIndex] + '" class="imagem-principal" alt="' + produto.nome + '" style="max-width:100%; max-height:70vh; object-fit:contain; margin:auto;">' +
                 (imagens.length > 1 ? '<div class="miniaturas" style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;">' +
                     imagens.map(function(img, idx) {
-                        return '<img src="' + img + '" class="miniatura ' + (idx === currentIndex ? 'ativa' : '') + '" data-idx="' + idx + '" alt="Miniatura ' + (idx+1) + '" style="width:50px; height:50px; object-fit:cover; border-radius:0.5rem; cursor:pointer; border:' + (idx === currentIndex ? '2px solid #0a66c2' : '2px solid transparent') + ';">';
+                        return '<img src="' + img + '" class="miniatura ' + (idx === currentIndex ? 'ativa' : '') + '" data-idx="' + idx + '" alt="Miniatura ' + (idx+1) + '">';
                     }).join('') + '</div>' : '') +
                 '</div>' +
-                '<div class="lado-direito" style="flex:1; padding:1rem; background:#111; color:white; border-radius:0; height:100%; display:flex; flex-direction:column; justify-content:center; gap:1rem;">' +
-                '<div class="produto-nome" style="font-size:1.2rem; font-weight:700; color:white;">' + Core.sanitize(produto.nome) + '</div>' +
-                '<div class="preco-unitario-imagem" id="precoUnitarioImagem" style="font-size:.82rem; color:#cbd5e1;">Preço unitário: ' + formatarValorPromocaoLoja(precoBase) + '</div>' +
-                '<div class="promocao-imagem-info" style="font-size:.78rem; color:#86efac;"></div>' +
-                '<div class="preco" style="font-size:1.2rem; font-weight:700; color:#0a66c2;">Total: ' + formatarValorPromocaoLoja(precoBase) + '</div>' +
+                '<div class="lado-direito">' +
+                '<div class="produto-nome">' + Core.sanitize(produto.nome) + '</div>' +
+                '<div class="preco-unitario-imagem" id="precoUnitarioImagem">Preço unitário: ' + formatarValorPromocaoLoja(precoBase) + '</div>' +
+                '<div class="promocao-imagem-info"></div>' +
+                '<div class="preco">Total: ' + formatarValorPromocaoLoja(precoBase) + '</div>' +
                 estoqueImagemHtml +
-                '<div class="descricao" style="font-size:0.9rem; color:#ccc;">' + (produto.descricao || 'Sem descrição') + '</div>' +
-                '<div class="produto-quantidade-simples" style="display:flex; align-items:center; gap:8px; margin:8px 0;">' +
-                '<button id="menosQtdImg" style="background:#333; color:white; border:none; border-radius:50%; width:26px; height:26px; font-size:14px; cursor:pointer;" aria-label="Diminuir quantidade">−</button>' +
-                '<input type="number" id="qtdImg" value="1" min="1" style="width:60px; text-align:center; border:1px solid #444; border-radius:2rem; font-size:12px; padding:4px; background:#222; color:white;" aria-label="Quantidade">' +
-                '<button id="maisQtdImg" style="background:#333; color:white; border:none; border-radius:50%; width:26px; height:26px; font-size:14px; cursor:pointer;" aria-label="Aumentar quantidade">+</button>' +
+                '<div class="descricao">' + (produto.descricao || 'Sem descrição') + '</div>' +
+                '<div class="produto-quantidade-simples">' +
+                '<button id="menosQtdImg" aria-label="Diminuir quantidade">−</button>' +
+                '<input type="number" id="qtdImg" value="1" min="1" aria-label="Quantidade">' +
+                '<button id="maisQtdImg" aria-label="Aumentar quantidade">+</button>' +
                 '</div>' +
-                '<button class="btn-pedido-cta" id="addImagem">' +
-                  '<i class="fas fa-cart-plus" aria-hidden="true"></i> Adicionar ao carrinho' +
-                '</button>' +
+                '<button class="btn-pedido-cta" id="addImagem"><i class="fas fa-cart-plus" aria-hidden="true"></i> Adicionar ao carrinho</button>' +
                 '</div></div>';
             modal.innerHTML = html;
 
@@ -348,7 +320,7 @@ window.abrirModalLoja = function(idx) {
                     variacaoId: obterIdVariacaoLoja(variacaoParaCalculo),
                     preco: precoBase,
                     quantidade: qtd,
-                    atributos: variacaoParaCalculo && variacaoParaCalculo.atributos ? variacaoParaCalculo.atributos : (produto.__variacaoSelecionada && produto.__variacaoSelecionada.atributos ? produto.__variacaoSelecionada.atributos : null)
+                    atributos: variacaoParaCalculo && variacaoParaCalculo.atributos ? variacaoParaCalculo.atributos : null
                 });
                 var total = ofertaImagem.subtotalPromocional;
                 var unitarioEl = modal.querySelector('#precoUnitarioImagem');
@@ -419,7 +391,6 @@ window.abrirModalLoja = function(idx) {
         UI.trapFocus(modal);
     }
 
-    // ===== MODAL DE VARIAÇÕES (padrão modal-extras-pontual) =====
     function abrirModalVariacoes(produto) {
         var atributos = produto.atributos || [];
         var variacoes = produto.variacoes || [];
@@ -660,7 +631,6 @@ window.abrirModalLoja = function(idx) {
         atualizarVariacaoSelecionada();
     }
 
-    // ===== RENDERIZAÇÃO DE PRODUTOS =====
     function renderizarProdutosLoja(produtos) {
         if (!produtos || produtos.length === 0) {
             return '<div class="loja-estado loja-estado-vazio" role="status"><span class="loja-estado-icone" aria-hidden="true">⌕</span><strong>Vitrine vazia por enquanto</strong><p>Esta loja ainda não publicou produtos. Volte mais tarde para conferir as novidades.</p></div>';
@@ -674,7 +644,7 @@ window.abrirModalLoja = function(idx) {
         var html = '';
         for (var cat in categorias) {
             html += '<div class="categoria-group">' +
-                '<div class="categoria-titulo-modal" role="button" tabindex="0" aria-expanded="true">' + Core.sanitize(cat) + '</div>' +
+                '<button type="button" class="categoria-titulo-modal" aria-expanded="true">' + Core.sanitize(cat) + '</button>' +
                 '<div class="produtos-grid">';
             categorias[cat].forEach(function(prod) {
                 html += gerarHTMLProdutoLoja(prod);
@@ -754,7 +724,7 @@ window.abrirModalLoja = function(idx) {
         } else {
             botaoHtml = '<div class="produto-quantidade-simples">' +
                 '<button class="qtd-btn-simples" data-prod-id="' + prod.id + '" data-delta="-1" aria-label="Diminuir quantidade">−</button>' +
-                '<input type="number" id="qtd_simples_' + prod.id + '" value="1" min="1" style="width:3rem; text-align:center;" aria-label="Quantidade">' +
+                '<input type="number" id="qtd_simples_' + prod.id + '" value="1" min="1" aria-label="Quantidade">' +
                 '<button class="qtd-btn-simples" data-prod-id="' + prod.id + '" data-delta="1" aria-label="Aumentar quantidade">+</button>' +
                 '</div>' +
                 '<button class="btn-adicionar-simples" data-prod-id="' + prod.id + '" data-preco="' + (parseFloat(prod.preco) || 0) + '" ' + (esgotado ? 'disabled' : '') + '>' + btnIcone + ' ' + (esgotado ? 'Indisponível' : 'Adicionar') + '</button>';
@@ -772,7 +742,6 @@ window.abrirModalLoja = function(idx) {
             '</div>';
     }
 
-    // ===== PROMOÇÕES AUTOMÁTICAS =====
     function assinaturaAtributosVariacaoLoja(atributos) {
         if (!atributos || typeof atributos !== 'object') return '';
         return Object.keys(atributos).sort().map(function(chave) {
@@ -879,9 +848,7 @@ window.abrirModalLoja = function(idx) {
     function calcularSubtotalPromocaoLoja(promocao, precoOriginal, quantidade) {
         var subtotalOriginal = precoOriginal * quantidade;
         if (!promocao) return subtotalOriginal;
-        if (promocao.tipo === 'preco') {
-            return Math.min(subtotalOriginal, Math.max(0, parseFloat(promocao.valor) || 0) * quantidade);
-        }
+        if (promocao.tipo === 'preco') return Math.min(subtotalOriginal, Math.max(0, parseFloat(promocao.valor) || 0) * quantidade);
         if (promocao.tipo === 'percentual') {
             var percentual = Math.min(100, Math.max(0, parseFloat(promocao.valor) || 0));
             return subtotalOriginal * (1 - percentual / 100);
@@ -902,12 +869,8 @@ window.abrirModalLoja = function(idx) {
         if (promocao.tipo === 'quantidade' && faixaAplicada) {
             if (promocao.quantidadeModo === 'a_partir') return 'A partir de ' + faixaAplicada.quantidade + ' unidades: ' + formatarValorPromocaoLoja(faixaAplicada.preco) + ' por peça';
             var partes = [];
-            if (faixaAplicada.pacotes > 0) {
-                partes.push(faixaAplicada.pacotes + ' pacote' + (faixaAplicada.pacotes === 1 ? '' : 's') + ' de ' + faixaAplicada.quantidade + ' por ' + formatarValorPromocaoLoja(faixaAplicada.preco));
-            }
-            if (faixaAplicada.restante > 0) {
-                partes.push(faixaAplicada.restante + ' unidade' + (faixaAplicada.restante === 1 ? '' : 's') + ' por ' + formatarValorPromocaoLoja(precoOriginal));
-            }
+            if (faixaAplicada.pacotes > 0) partes.push(faixaAplicada.pacotes + ' pacote' + (faixaAplicada.pacotes === 1 ? '' : 's') + ' de ' + faixaAplicada.quantidade + ' por ' + formatarValorPromocaoLoja(faixaAplicada.preco));
+            if (faixaAplicada.restante > 0) partes.push(faixaAplicada.restante + ' unidade' + (faixaAplicada.restante === 1 ? '' : 's') + ' por ' + formatarValorPromocaoLoja(precoOriginal));
             return partes.join(' + ');
         }
         if (promocao.tipo === 'quantidade') {
@@ -1014,7 +977,10 @@ window.abrirModalLoja = function(idx) {
             promocoesCache = [];
             snap.forEach(function(doc) { promocoesCache.push(Object.assign({ id: doc.id }, doc.data())); });
             var container = document.getElementById('produtosContainer');
-            if (container && produtosCache.length) container.innerHTML = renderizarProdutosLoja(produtosCache);
+            if (container && produtosCache.length) {
+                container.innerHTML = renderizarProdutosLoja(produtosCache);
+                anexarListenersCategorias(container);
+            }
             atualizarCarrinhoLoja();
         }).catch(function(err) {
             promocoesCache = [];
@@ -1033,7 +999,18 @@ window.abrirModalLoja = function(idx) {
         return Math.min(totalPedido, Math.max(0, desconto));
     }
 
-    // ===== CARRINHO =====
+    function anexarListenersCategorias(container) {
+        container.querySelectorAll('.categoria-titulo-modal').forEach(function(botao) {
+            botao.onclick = function() {
+                var grupo = botao.nextElementSibling;
+                var expandir = botao.getAttribute('aria-expanded') !== 'true';
+                if (grupo) grupo.style.display = expandir ? 'grid' : 'none';
+                botao.setAttribute('aria-expanded', String(expandir));
+                botao.classList.toggle('recolhida', !expandir);
+            };
+        });
+    }
+
     function atualizarCarrinhoLoja() {
         var container = document.getElementById('carrinhoLista');
         if (!container) return;
@@ -1177,9 +1154,7 @@ window.abrirModalLoja = function(idx) {
         qtd = parseInt(qtd);
         if (isNaN(qtd) || qtd < 1) qtd = 1;
         var item = carrinho.find(function(i) {
-            if (variacaoId) {
-                return i.id === id && i.variacaoId === variacaoId;
-            }
+            if (variacaoId) return i.id === id && i.variacaoId === variacaoId;
             return i.id === id && !i.variacaoId;
         });
         if (item) {
@@ -1213,7 +1188,6 @@ window.abrirModalLoja = function(idx) {
         }
     }
 
-    // ===== CUPOM COM FIRESTORE =====
     function aplicarCupomLoja() {
         var cod = document.getElementById('cupomLoja').value.trim().toUpperCase();
         var statusDiv = document.getElementById('cupomLojaStatus');
@@ -1246,7 +1220,6 @@ window.abrirModalLoja = function(idx) {
             });
     }
 
-    // ===== TROCO =====
     function toggleTrocoLoja() {
         var val = document.getElementById('formaPagamentoLoja')?.value;
         var wrapper = document.getElementById('trocoParaWrapperLoja');
@@ -1282,7 +1255,6 @@ window.abrirModalLoja = function(idx) {
         });
     }
 
-    // ===== FINALIZAR PEDIDO =====
     function finalizarPedidoLoja() {
         if (statusLojaAtual !== 'aberta') {
             UI.mostrarToast('A loja está fechada ou pausada no momento. Tente novamente mais tarde.', 'erro');
@@ -1295,44 +1267,23 @@ window.abrirModalLoja = function(idx) {
         var nome = document.getElementById('clienteNomeLoja').value.trim();
         var tel = document.getElementById('clienteTelLoja').value.trim();
         var end = document.getElementById('enderecoLoja').value.trim();
-        if (!nome || nome.length < 2) {
-            UI.mostrarToast('Por favor, informe seu nome completo.', 'erro');
-            return;
-        }
+        if (!nome || nome.length < 2) { UI.mostrarToast('Por favor, informe seu nome completo.', 'erro'); return; }
         var telNumerico = tel.replace(/\D/g, '');
-        if (!telNumerico || telNumerico.length < 10) {
-            UI.mostrarToast('Telefone inválido. Informe DDD + número.', 'erro');
-            return;
-        }
-        if (!end) {
-            UI.mostrarToast('Informe o endereço para entrega.', 'erro');
-            return;
-        }
+        if (!telNumerico || telNumerico.length < 10) { UI.mostrarToast('Telefone inválido. Informe DDD + número.', 'erro'); return; }
+        if (!end) { UI.mostrarToast('Informe o endereço para entrega.', 'erro'); return; }
         var selectFrete = document.getElementById('selectFreteLoja');
         var freteSelecionado = selectFrete ? String(selectFrete.value || '').trim() : '';
         var freteCarregado = !!selectFrete && selectFrete.dataset.freteCarregado === 'true';
-        if (selectFrete && !freteCarregado) {
-            UI.mostrarToast('Aguarde o carregamento das opções de frete.', 'erro');
-            selectFrete.focus();
-            return;
-        }
+        if (selectFrete && !freteCarregado) { UI.mostrarToast('Aguarde o carregamento das opções de frete.', 'erro'); selectFrete.focus(); return; }
         var freteObrigatorio = !!selectFrete && fretesCache.length > 0;
-        if (freteObrigatorio && !freteSelecionado) {
-            UI.mostrarToast('Selecione o frete antes de confirmar o pedido.', 'erro');
-            selectFrete.focus();
-            selectFrete.setAttribute('aria-invalid', 'true');
-            return;
-        }
+        if (freteObrigatorio && !freteSelecionado) { UI.mostrarToast('Selecione o frete antes de confirmar o pedido.', 'erro'); selectFrete.focus(); selectFrete.setAttribute('aria-invalid', 'true'); return; }
         if (selectFrete) selectFrete.removeAttribute('aria-invalid');
         var formaPagamento = document.getElementById('formaPagamentoLoja').value;
         var semTrocoCheckbox = document.getElementById('semTrocoCheckbox');
         var trocoInput = document.getElementById('trocoParaLoja');
         var semTroco = !!(semTrocoCheckbox && semTrocoCheckbox.checked);
         var trocoValor = trocoInput ? trocoInput.value.trim() : '';
-        if (formaPagamento === 'Dinheiro' && !semTroco && !trocoValor) {
-            UI.mostrarToast('Informe o valor para troco, ou marque "Não preciso de troco".', 'erro');
-            return;
-        }
+        if (formaPagamento === 'Dinheiro' && !semTroco && !trocoValor) { UI.mostrarToast('Informe o valor para troco, ou marque "Não preciso de troco".', 'erro'); return; }
         EU.salvarDadosClienteLocal(nome, telNumerico, end);
 
         var resumoPedido = calcularResumoPromocoesLoja();
@@ -1344,44 +1295,29 @@ window.abrirModalLoja = function(idx) {
         var pedidoItens = carrinho.map(function(i) {
             var oferta = calcularOfertaItemLoja(i);
             return {
-                nome: i.nome,
-                quantidade: i.quantidade,
-                precoUnitario: oferta.precoUnitarioPromocional,
-                precoUnitarioOriginal: i.preco,
-                variacaoId: i.variacaoId || null,
-                atributos: i.atributos || null,
+                nome: i.nome, quantidade: i.quantidade,
+                precoUnitario: oferta.precoUnitarioPromocional, precoUnitarioOriginal: i.preco,
+                variacaoId: i.variacaoId || null, atributos: i.atributos || null,
                 promocao: oferta.promocao ? oferta.promocao.nome : null
             };
         });
         var codigoCurto = Math.random().toString(36).substring(2, 8).toUpperCase();
         var pedido = {
-            estabelecimentoId: estId,
-            estabelecimentoNome: nomeEstab,
+            estabelecimentoId: estId, estabelecimentoNome: nomeEstab,
             clienteId: Core.getCurrentUser()?.uid || null,
-            clienteNome: nome,
-            clienteTelefone: telNumerico,
-            endereco: end,
-            itens: pedidoItens,
-            subtotal: subtotal,
-            subtotalOriginal: subtotalOriginal,
-            descontoPromocoes: resumoPedido.descontoPromocoes,
-            promocoesAplicadas: resumoPedido.promocoesAplicadas,
-            cupomCodigo: cupomAtual ? cupomAtual.codigo : null,
-            descontoAplicado: cupomDesconto,
-            taxaEntrega: frete,
-            total: total,
+            clienteNome: nome, clienteTelefone: telNumerico, endereco: end,
+            itens: pedidoItens, subtotal: subtotal, subtotalOriginal: subtotalOriginal,
+            descontoPromocoes: resumoPedido.descontoPromocoes, promocoesAplicadas: resumoPedido.promocoesAplicadas,
+            cupomCodigo: cupomAtual ? cupomAtual.codigo : null, descontoAplicado: cupomDesconto,
+            taxaEntrega: frete, total: total,
             formaPagamento: formaPagamento,
             trocoPara: formaPagamento === 'Dinheiro' && !semTroco ? trocoValor : '',
             semTroco: formaPagamento === 'Dinheiro' ? semTroco : false,
             observacao: document.getElementById('obsLoja').value,
-            status: 'pendente',
-            codigoCurto: codigoCurto,
+            status: 'pendente', codigoCurto: codigoCurto,
             criadoEm: firebase.firestore.FieldValue.serverTimestamp()
         };
-        if (!currentLojistaId) {
-            UI.mostrarToast('Erro: lojista não identificado.', 'erro');
-            return;
-        }
+        if (!currentLojistaId) { UI.mostrarToast('Erro: lojista não identificado.', 'erro'); return; }
         salvarPedidoComCupomLoja(pedido)
             .then(function() {
                 var updates = carrinho.map(function(item) {
@@ -1394,20 +1330,16 @@ window.abrirModalLoja = function(idx) {
                                         var data = doc.data();
                                         if (data.tipo === 'variavel' && data.variacoes) {
                                             var variacoes = data.variacoes.map(function(v) {
-                                                if (v.sku === item.variacaoId) {
-                                                    v.estoque = novoEstoque.toString();
-                                                }
+                                                if (v.sku === item.variacaoId) v.estoque = novoEstoque.toString();
                                                 return v;
                                             });
-                                            return Core.db.collection('lojistas').doc(currentLojistaId).collection('cardapio').doc(item.id)
-                                                .update({ variacoes: variacoes });
+                                            return Core.db.collection('lojistas').doc(currentLojistaId).collection('cardapio').doc(item.id).update({ variacoes: variacoes });
                                         }
                                     }
                                     return Promise.resolve();
                                 });
                         } else {
-                            return Core.db.collection('lojistas').doc(currentLojistaId).collection('cardapio').doc(item.id)
-                                .update({ estoque: novoEstoque.toString() });
+                            return Core.db.collection('lojistas').doc(currentLojistaId).collection('cardapio').doc(item.id).update({ estoque: novoEstoque.toString() });
                         }
                     }
                     return Promise.resolve();
@@ -1419,20 +1351,16 @@ window.abrirModalLoja = function(idx) {
                 mostrarPopupConfirmacaoLoja({
                     titulo: '✅ Pedido Confirmado!',
                     codigo: codigoCurto,
-                    botoes: '<button class="btn-adicionar-filtro" onclick="document.getElementById(\'consultaRastreio\').value=\'' + codigoCurto + '\'; var abaAcompanhar=document.querySelector(\'#modalLoja .modal-tab[data-tab=acompanhar]\'); if(abaAcompanhar) abaAcompanhar.click(); this.closest(\'.popup-confirmacao\').remove();">🔍 Acompanhar</button>' +
+                    botoes: '<button class="btn-adicionar-filtro" onclick="document.getElementById(\'consultaRastreio\').value=\'' + codigoCurto + '\'; var a=document.querySelector(\'#modalLoja .modal-tab[data-tab=acompanhar]\'); if(a) a.click(); this.closest(\'.popup-confirmacao\').remove();">🔍 Acompanhar</button>' +
                         '<button class="btn-adicionar-filtro" style="background:#2c3e50;" onclick="gerarComprovanteLoja(' + JSON.stringify(pedido).replace(/"/g, '&quot;') + ', \'' + codigoCurto + '\'); this.closest(\'.popup-confirmacao\').remove();">🖨️ Comprovante</button>',
-                    onClose: 'var abaProdutos=document.querySelector(\'#modalLoja .modal-tab[data-tab=produtos]\'); if(abaProdutos) abaProdutos.click();'
+                    onClose: 'var a=document.querySelector(\'#modalLoja .modal-tab[data-tab=produtos]\'); if(a) a.click();'
                 });
-                carrinho = [];
-                cupomAtual = null;
-                cupomDesconto = 0;
+                carrinho = []; cupomAtual = null; cupomDesconto = 0;
                 atualizarCarrinhoLoja();
             })
             .catch(function(err) {
                 if (err.message === 'cupom_limite') {
-                    cupomAtual = null;
-                    cupomDesconto = 0;
-                    recalcularTotalLoja();
+                    cupomAtual = null; cupomDesconto = 0; recalcularTotalLoja();
                     UI.mostrarToast('O limite de usos deste cupom já foi atingido.', 'erro');
                     return;
                 }
@@ -1440,7 +1368,6 @@ window.abrirModalLoja = function(idx) {
             });
     }
 
-    // ===== CONSULTAR PEDIDO =====
     function consultarPedidoRastreio() {
         var cod = document.getElementById('consultaRastreio').value.trim().toUpperCase();
         var resDiv = document.getElementById('resultadoRastreio');
@@ -1467,7 +1394,6 @@ window.abrirModalLoja = function(idx) {
             });
     }
 
-    // ===== HISTÓRICO =====
     function carregarHistoricoLoja(estIdLocal) {
         if (!Core.getCurrentUser()) return;
         var container = document.getElementById('listaHistoricoLoja');
@@ -1486,14 +1412,13 @@ window.abrirModalLoja = function(idx) {
                         '<div><strong>#' + codigo + '</strong> <span style="background:' + (p.status === 'pendente' ? '#fff7ed' : p.status === 'concluido' ? '#ecfdf5' : '#f1f5f9') + '; padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem;">' + (p.status || 'pendente') + '</span></div>' +
                         '<div>' + (p.criadoEm ? new Date(p.criadoEm.toDate()).toLocaleString() : '---') + '</div></div>' +
                         '<div><strong>Total:</strong> R$ ' + p.total.toFixed(2) + '</div>' +
-                        '<button class="btn-acao btn-qrcode" style="margin-top:0.5rem;" onclick="gerarComprovanteLoja(' + JSON.stringify(p).replace(/"/g, '&quot;') + ', \'' + codigo + '\')">🖨️ Ver comprovante</button>' +
+                        '<button class="btn-consultar-pedido" style="margin-top:0.5rem;" onclick="gerarComprovanteLoja(' + JSON.stringify(p).replace(/"/g, '&quot;') + ', \'' + codigo + '\')">🖨️ Ver comprovante</button>' +
                         '</div>';
                 });
                 container.innerHTML = html;
             });
     }
 
-    // ===== FECHAR MODAL =====
     window.fecharModalLoja = function() {
         if (unsubscribeCardapio) { unsubscribeCardapio(); unsubscribeCardapio = null; }
         if (unsubscribeFretes) { unsubscribeFretes(); unsubscribeFretes = null; }
@@ -1509,18 +1434,13 @@ window.abrirModalLoja = function(idx) {
             window.setTimeout(function() { if (modal.parentNode) modal.remove(); }, 180);
         }
         UI.restoreFocus();
-        if (modal && modal.dataset.fechando) modal.style.display = 'flex';
     };
 
-    // ===== ATUALIZAR IDENTIDADE VISUAL DA LOJA =====
     function atualizarLogoLojaUI(data) {
         var logoBox = document.querySelector('#modalLoja .modal-estabelecimento-logo');
         if (!logoBox) return;
         var logoUrl = obterLogoDoCadastroLoja(data) || logoEstab;
-        if (!logoUrl) {
-            logoBox.textContent = gerarIniciaisLoja(nomeEstab);
-            return;
-        }
+        if (!logoUrl) { logoBox.textContent = gerarIniciaisLoja(nomeEstab); return; }
         if (logoBox.getAttribute('data-logo-url') === logoUrl) return;
         logoBox.setAttribute('data-logo-url', logoUrl);
         logoBox.innerHTML = '';
@@ -1529,14 +1449,10 @@ window.abrirModalLoja = function(idx) {
         img.alt = 'Logo de ' + nomeEstab;
         img.loading = 'eager';
         img.referrerPolicy = 'no-referrer';
-        img.onerror = function() {
-            logoBox.removeAttribute('data-logo-url');
-            logoBox.textContent = gerarIniciaisLoja(nomeEstab);
-        };
+        img.onerror = function() { logoBox.removeAttribute('data-logo-url'); logoBox.textContent = gerarIniciaisLoja(nomeEstab); };
         logoBox.appendChild(img);
     }
 
-    // ===== ATUALIZAR STATUS UI =====
     function atualizarStatusLojaUI(statusLoja, statusMessage) {
         var msgDiv = document.getElementById('statusLojaMsgLoja');
         var statusBadge = document.getElementById('statusLojaBadgeLoja');
@@ -1563,23 +1479,17 @@ window.abrirModalLoja = function(idx) {
         }
     }
 
-    // ===== EXPOR FUNÇÃO GLOBAL =====
     window.abrirModalImagemFullLoja = abrirModalImagemFullLoja;
 
-    // ===== INICIALIZAR MODAL =====
     Core.db.collection('lojistas').where('estabelecimentoId', '==', estId).limit(1).get()
         .then(function(snap) {
-            if (snap.empty) {
-                UI.mostrarToast('Estabelecimento não configurado para loja.', 'erro');
-                return;
-            }
+            if (snap.empty) { UI.mostrarToast('Estabelecimento não configurado para loja.', 'erro'); return; }
             var lojistaDoc = snap.docs[0];
             currentLojistaId = lojistaDoc.id;
             var lojistaData = lojistaDoc.data();
             logoEstab = obterLogoDoCadastroLoja(lojistaData) || logoEstab;
             atualizarStatusLojaUI(lojistaData.statusLoja || 'aberta', lojistaData.statusMessage || '');
 
-            // Listeners em tempo real
             unsubscribeStatusLoja = Core.db.collection('lojistas').doc(currentLojistaId).onSnapshot(function(doc) {
                 if (doc.exists) {
                     var data = doc.data();
@@ -1608,39 +1518,25 @@ window.abrirModalLoja = function(idx) {
                             var imagemPrincipal = imagemPrincipalBase;
                             var imagemFallbackVariacao = false;
                             if (!imagemPrincipal) {
-                                for (var indiceImagem = 0; indiceImagem < variacoesNormalizadas.length; indiceImagem++) {
-                                    var imagensDaVariacao = obterImagensVariacao(variacoesNormalizadas[indiceImagem]);
-                                    if (imagensDaVariacao.length > 0) {
-                                        imagemPrincipal = imagensDaVariacao[0];
-                                        imagemFallbackVariacao = true;
-                                        break;
-                                    }
+                                for (var k = 0; k < variacoesNormalizadas.length; k++) {
+                                    var iv = obterImagensVariacao(variacoesNormalizadas[k]);
+                                    if (iv.length > 0) { imagemPrincipal = iv[0]; imagemFallbackVariacao = true; break; }
                                 }
                             }
-
                             var prod = {
-                                id: doc.id,
-                                nome: data.nome,
-                                preco: parseFloat(data.preco) || 0,
-                                imagem: imagemPrincipal,
-                                __imagemFallbackVariacao: imagemFallbackVariacao,
+                                id: doc.id, nome: data.nome, preco: parseFloat(data.preco) || 0,
+                                imagem: imagemPrincipal, __imagemFallbackVariacao: imagemFallbackVariacao,
                                 descricao: data.descricao || '',
                                 estoque: data.estoque !== undefined && data.estoque !== '' ? parseInt(data.estoque) : null,
-                                categoria: data.categoria || 'Geral',
-                                tipo: data.tipo || 'simples',
-                                atributos: data.atributos || [],
-                                variacoes: variacoesNormalizadas,
-                                imagens: imagens
+                                categoria: data.categoria || 'Geral', tipo: data.tipo || 'simples',
+                                atributos: data.atributos || [], variacoes: variacoesNormalizadas, imagens: imagens
                             };
-
                             if (prod.tipo === 'variavel' && prod.variacoes.length > 0) {
                                 prod.variacoes = prod.variacoes.map(function(v) {
                                     if (!v.sku) {
-                                        var skuParts = [];
-                                        for (var attr in v.atributos) {
-                                            skuParts.push(v.atributos[attr].substring(0, 3).toUpperCase());
-                                        }
-                                        v.sku = prod.id.substring(0, 4) + '-' + skuParts.join('-');
+                                        var sp = [];
+                                        for (var a in v.atributos) sp.push(v.atributos[a].substring(0, 3).toUpperCase());
+                                        v.sku = prod.id.substring(0, 4) + '-' + sp.join('-');
                                     }
                                     return v;
                                 });
@@ -1652,15 +1548,7 @@ window.abrirModalLoja = function(idx) {
                     var container = document.getElementById('produtosContainer');
                     if (container) {
                         container.innerHTML = renderizarProdutosLoja(produtos);
-                        container.querySelectorAll('.categoria-titulo-modal').forEach(function(botaoCategoria) {
-                            botaoCategoria.addEventListener('click', function() {
-                                var grupo = botaoCategoria.nextElementSibling;
-                                var expandir = botaoCategoria.getAttribute('aria-expanded') !== 'true';
-                                if (grupo) grupo.style.display = expandir ? 'grid' : 'none';
-                                botaoCategoria.setAttribute('aria-expanded', String(expandir));
-                                botaoCategoria.classList.toggle('recolhida', !expandir);
-                            });
-                        });
+                        anexarListenersCategorias(container);
                     }
                 }, function(err) {
                     var container = document.getElementById('produtosContainer');
@@ -1676,28 +1564,24 @@ window.abrirModalLoja = function(idx) {
                     snapFretes.forEach(function(doc) {
                         var dadosFrete = doc.data();
                         if (dadosFrete.ativo === 'nao') return;
-                        fretes.push({
-                            localidade: dadosFrete.localidade,
-                            taxa: parseFloat(dadosFrete.taxa) || 0
-                        });
+                        fretes.push({ localidade: dadosFrete.localidade, taxa: parseFloat(dadosFrete.taxa) || 0 });
                     });
                     fretesCache = fretes;
                     var select = document.getElementById('selectFreteLoja');
                     if (select) {
                         select.innerHTML = '<option value="">' + (fretes.length ? 'Selecione o frete' : 'Nenhuma opção de frete cadastrada') + '</option>' +
-                            fretes.map(function(f) {
-                                return '<option value="' + f.taxa + '">' + f.localidade + ' - R$ ' + f.taxa.toFixed(2) + '</option>';
-                            }).join('');
+                            fretes.map(function(f) { return '<option value="' + f.taxa + '">' + f.localidade + ' - R$ ' + f.taxa.toFixed(2) + '</option>'; }).join('');
                         select.options[0].disabled = fretes.length > 0;
                         select.dataset.freteCarregado = 'true';
                     }
                 });
 
-            // Construir HTML do modal
             var logoHtml = logoEstab ? '<img src="' + Core.sanitize(logoEstab) + '" alt="Logo de ' + Core.sanitize(nomeEstab) + '" loading="eager" referrerpolicy="no-referrer">' : '<span aria-hidden="true">🛍️</span>';
             var modalHtml = '<div class="modal-overlay loja-padronizada" id="modalLoja" role="dialog" aria-modal="true" aria-labelledby="modalLojaTitulo">' +
                 '<div class="modal-conteudo fullscreen">' +
-                '<div class="modal-header"><div class="modal-estabelecimento-brand"><div class="modal-estabelecimento-logo">' + logoHtml + '</div><div class="modal-estabelecimento-meta"><h3 id="modalLojaTitulo">' + Core.sanitize(nomeEstab) + '</h3><span id="statusLojaBadgeLoja" class="modal-estabelecimento-status status-aberta">Aceitando pedidos</span></div></div>' +
+                '<div class="modal-header">' +
+                '<div class="modal-estabelecimento-brand"><div class="modal-estabelecimento-logo">' + logoHtml + '</div>' +
+                '<div class="modal-estabelecimento-meta"><h3 id="modalLojaTitulo">' + Core.sanitize(nomeEstab) + '</h3><span id="statusLojaBadgeLoja" class="modal-estabelecimento-status status-aberta">Aceitando pedidos</span></div></div>' +
                 '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar loja">×</button></div>' +
                 '<div class="modal-tabs">' +
                 '<button class="modal-tab active" data-tab="produtos">📦 Produtos</button>' +
@@ -1728,7 +1612,9 @@ window.abrirModalLoja = function(idx) {
                 '<strong>Pagamento</strong>' +
                 '<select id="formaPagamentoLoja" class="input-pedido" onchange="toggleTrocoLoja()" aria-label="Forma de pagamento">' +
                 '<option value="Dinheiro">Dinheiro</option><option value="Cartão na entrega">Cartão na entrega</option><option value="Pix">Pix</option></select>' +
-                '<div id="trocoParaWrapperLoja" style="display:block;"><input type="number" id="trocoParaLoja" class="input-pedido" placeholder="Troco para quanto?" aria-label="Troco para quanto"><label class="sem-troco-label"><input type="checkbox" id="semTrocoCheckbox"> Não preciso de troco</label></div>' +
+                '<div id="trocoParaWrapperLoja" style="display:block;">' +
+                '<input type="number" id="trocoParaLoja" class="input-pedido" placeholder="Troco para quanto?" aria-label="Troco para quanto">' +
+                '<label class="sem-troco-label"><input type="checkbox" id="semTrocoCheckbox"> Não preciso de troco</label></div>' +
                 '<div class="cliente-info">' +
                 '<div class="form-row">' +
                 '<input type="text" id="clienteNomeLoja" class="input-pedido" placeholder="Seu nome*" value="' + (Core.getUserDisplayName() || '') + '" aria-label="Seu nome" required>' +
@@ -1758,21 +1644,13 @@ window.abrirModalLoja = function(idx) {
             atualizarLogoLojaUI(lojistaData);
             atualizarStatusLojaUI(lojistaData.statusLoja || 'aberta', lojistaData.statusMessage || '');
 
-            // Pré-preencher dados do cliente
             var saved = EU.carregarDadosClienteLocal();
             if (saved) {
-                if (saved.nome && document.getElementById('clienteNomeLoja')) {
-                    document.getElementById('clienteNomeLoja').value = saved.nome;
-                }
-                if (saved.telefone && document.getElementById('clienteTelLoja')) {
-                    document.getElementById('clienteTelLoja').value = saved.telefone;
-                }
-                if (saved.endereco && document.getElementById('enderecoLoja')) {
-                    document.getElementById('enderecoLoja').value = saved.endereco;
-                }
+                if (saved.nome && document.getElementById('clienteNomeLoja')) document.getElementById('clienteNomeLoja').value = saved.nome;
+                if (saved.telefone && document.getElementById('clienteTelLoja')) document.getElementById('clienteTelLoja').value = saved.telefone;
+                if (saved.endereco && document.getElementById('enderecoLoja')) document.getElementById('enderecoLoja').value = saved.endereco;
             }
 
-            // Máscara de telefone
             var telInput = document.getElementById('clienteTelLoja');
             if (telInput) {
                 telInput.addEventListener('input', function() {
@@ -1788,34 +1666,21 @@ window.abrirModalLoja = function(idx) {
                 });
             }
 
-            // Configurar abas
             document.querySelectorAll('#modalLoja .modal-tab').forEach(function(tab) {
                 tab.onclick = function() {
-                    document.querySelectorAll('#modalLoja .modal-tab').forEach(function(t) {
-                        t.classList.remove('active');
-                    });
+                    document.querySelectorAll('#modalLoja .modal-tab').forEach(function(t) { t.classList.remove('active'); });
                     tab.classList.add('active');
-                    document.querySelectorAll('#modalLoja .modal-tab-content').forEach(function(c) {
-                        c.classList.remove('active');
-                    });
+                    document.querySelectorAll('#modalLoja .modal-tab-content').forEach(function(c) { c.classList.remove('active'); });
                     var tabId = tab.dataset.tab;
                     var contentId = 'tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1);
                     document.getElementById(contentId).classList.add('active');
-                    if (tabId === 'historico' && Core.getCurrentUser()) {
-                        carregarHistoricoLoja(estId);
-                    }
-                    if (tabId === 'acompanhar') {
-                        var resDiv = document.getElementById('resultadoRastreio');
-                        if (resDiv && resDiv.innerHTML.trim() === '') resDiv.innerHTML = '';
-                    }
+                    if (tabId === 'historico' && Core.getCurrentUser()) carregarHistoricoLoja(estId);
                 };
             });
 
-            // Inicializar carrinho e toggles
             toggleTrocoLoja();
             atualizarCarrinhoLoja();
 
-            // Expor funções para uso inline
             window.adicionarAoCarrinhoLoja = adicionarAoCarrinhoLoja;
             window.removerDoCarrinhoLoja = removerDoCarrinhoLoja;
             window.alterarQuantidadeLoja = alterarQuantidadeLoja;
@@ -1824,18 +1689,16 @@ window.abrirModalLoja = function(idx) {
             window.toggleTrocoLoja = toggleTrocoLoja;
             window.finalizarPedidoLoja = finalizarPedidoLoja;
             window.consultarPedidoRastreio = consultarPedidoRastreio;
-            window.fecharModalLoja = window.fecharModalLoja;
             window.gerarComprovanteLoja = gerarComprovanteLoja;
 
-            // ===== EVENT DELEGATION PARA TODOS OS BOTÕES =====
             var produtosContainer = document.getElementById('produtosContainer');
             if (produtosContainer) {
                 produtosContainer.addEventListener('click', function(e) {
                     var qtdBtn = e.target.closest('.qtd-btn-simples');
                     if (qtdBtn) {
-                        var prodId = qtdBtn.dataset.prodId;
+                        var pid = qtdBtn.dataset.prodId;
                         var delta = parseInt(qtdBtn.dataset.delta);
-                        var input = document.getElementById('qtd_simples_' + prodId);
+                        var input = document.getElementById('qtd_simples_' + pid);
                         if (input) {
                             var val = parseInt(input.value) || 1;
                             val = Math.max(1, val + delta);
@@ -1846,28 +1709,23 @@ window.abrirModalLoja = function(idx) {
 
                     var btnEscolher = e.target.closest('.btn-escolher');
                     if (btnEscolher) {
-                        var prodId = btnEscolher.dataset.prodId;
-                        var produto = produtosCache.find(function(p) { return p.id === prodId; });
-                        if (produto && produto.tipo === 'variavel') {
-                            abrirModalVariacoes(produto);
-                        }
+                        var pidE = btnEscolher.dataset.prodId;
+                        var produto = produtosCache.find(function(p) { return p.id === pidE; });
+                        if (produto && produto.tipo === 'variavel') abrirModalVariacoes(produto);
                         return;
                     }
 
                     var btnAdicionar = e.target.closest('.btn-adicionar-simples');
                     if (btnAdicionar) {
-                        var prodId = btnAdicionar.dataset.prodId;
-                        adicionarAoCarrinhoLoja(prodId);
+                        adicionarAoCarrinhoLoja(btnAdicionar.dataset.prodId);
                     }
                 });
             }
 
-            // Fechar clicando fora
             modalLojaEl.addEventListener('click', function(e) {
                 if (e.target === modalLojaEl) fecharModalLoja();
             });
 
-            // ESC
             escHandlerLoja = function(e) {
                 if (e.key !== 'Escape' || !document.getElementById('modalLoja')) return;
                 if (document.querySelector('.modal-overlay.active:not(#modalLoja), .loja-confirmacao-overlay, .popup-confirmacao, .modal-extras-pontual, .modal-imagem-full')) return;
@@ -1883,7 +1741,6 @@ window.abrirModalLoja = function(idx) {
         });
 };
 
-    // O core só renderiza o botão de ação quando o módulo se registra.
     var cardsLoja = window.Economizei && window.Economizei.Cards;
     if (cardsLoja && typeof cardsLoja.registrarModulo === 'function') {
         var definicaoLojaPublica = {
@@ -1907,5 +1764,4 @@ window.abrirModalLoja = function(idx) {
     } else {
         console.error('[economizei-loja] Core de grupos não encontrado. Carregue este script após grupos.js.');
     }
-    // ============================================================
 })();
