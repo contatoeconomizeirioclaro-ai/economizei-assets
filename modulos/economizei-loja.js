@@ -465,12 +465,7 @@ window.abrirModalLoja = function(idx) {
           '</div>';
 
         document.body.appendChild(modal);
-        var ctrl = EU.criarModalAcessivel();
-        ctrl.abrir(modal, function() { modal.remove(); });
-        modal.__ctrl = ctrl;
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal || e.target.closest('[data-fechar-modal]')) ctrl.fechar();
-        }, true);
+        var ctrl = EU.criarModalLocal(modal);
 
         var atributosContainer = document.getElementById('atributosContainer');
         var variacaoImagem = document.getElementById('variacaoImagem');
