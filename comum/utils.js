@@ -228,6 +228,20 @@
     else if (el) el.remove();
   }
 
+  // ---------- FEEDBACK VISUAL DE "ADICIONADO" NO BOTÃO ----------
+  function mostrarFeedbackAdicionar(botao) {
+    if (!botao) return;
+    var textoOriginal = botao.dataset.textoOriginal || botao.innerHTML;
+    botao.dataset.textoOriginal = textoOriginal;
+    botao.classList.add('is-added');
+    botao.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> Adicionado';
+    window.setTimeout(function () {
+      if (!botao.isConnected) return;
+      botao.classList.remove('is-added');
+      botao.innerHTML = textoOriginal;
+    }, 1300);
+  }
+
   // ---------- DADOS DO CLIENTE (localStorage) ----------
   function salvarDadosClienteLocal(nome, telefone, endereco, mesa) {
     if (!nome && !telefone && !endereco && !mesa) return;
@@ -448,6 +462,7 @@
     criarModalAcessivel,
     criarModalLocal,
     fecharModalLocal,
+    mostrarFeedbackAdicionar,
     confirmar,
     // Compartilhados entre módulos
     salvarDadosClienteLocal,
