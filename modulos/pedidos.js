@@ -303,32 +303,10 @@ Economizei.Pedido = (function () {
   }
 
   function gerarComprovantePedido(pedido, codigoCurto) {
-    var itensHTML = pedido.itens ? '<ul>' + pedido.itens.map(function (i) {
-      return '<li>' + i.quantidade + 'x ' + Core.sanitize(i.nome) + ' - R$ ' + (i.precoUnitario * i.quantidade).toFixed(2) + '</li>';
-    }).join('') + '</ul>' : '';
-    var dados =
-      '<h2>Comprovante de Pedido</h2>' +
-      '<p style="text-align:center;"><strong>Pedido #' + Core.sanitize(codigoCurto) + '</strong><br>Data: ' + new Date().toLocaleString() + '</p>' +
-      '<div class="info">' +
-        '<p><strong>Estabelecimento:</strong> ' + Core.sanitize(pedido.estabelecimentoNome || '') + '</p>' +
-        '<p><strong>Cliente:</strong> ' + Core.sanitize(pedido.clienteNome || '') + '</p>' +
-        '<p><strong>Endereço:</strong> ' + Core.sanitize(pedido.endereco || '') + '</p>' +
-        (pedido.numeroMesa ? '<p><strong>Mesa:</strong> ' + Core.sanitize(pedido.numeroMesa) + '</p>' : '') +
-        '<p><strong>Telefone:</strong> ' + Core.sanitize(pedido.clienteTelefone || '') + '</p>' +
-      '</div>' +
-      '<div class="itens"><h3>Itens</h3>' + itensHTML + '</div>' +
-      '<div class="total">Subtotal: R$ ' + (pedido.subtotal || 0).toFixed(2) + '<br>Frete: R$ ' + (pedido.taxaEntrega || 0).toFixed(2) + '<br>Total: R$ ' + (pedido.total || 0).toFixed(2) + '</div>' +
-      '<p><strong>Pagamento:</strong> ' + Core.sanitize(pedido.formaPagamento || '') + (pedido.trocoPara ? ' (Troco para R$ ' + parseFloat(pedido.trocoPara).toFixed(2) + ')' : '') + '</p>' +
-      '<p><strong>Observação:</strong> ' + Core.sanitize(pedido.observacao || 'Nenhuma') + '</p>';
-    var html =
-      '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Comprovante de Pedido</title><style>' +
-      'body{font-family:Arial,sans-serif;margin:0;padding:1rem;background:#f2f4f7;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;box-sizing:border-box;}' +
-      '.comprovante{width:100%;max-width:600px;background:white;border-radius:1rem;padding:1.5rem;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin:0 auto;}' +
-      'h2{color:#0a66c2;text-align:center;font-size:1.3rem;}.info{background:#f8fafc;padding:1rem;border-radius:0.5rem;margin:1rem 0;font-size:0.9rem;}.info p{margin:0.3rem 0;}' +
-      '.itens{border-top:1px solid #ddd;margin:1rem 0;padding:0.5rem 0;}.itens ul{list-style:none;padding:0;}.itens li{padding:0.3rem 0;border-bottom:1px solid #eee;font-size:0.9rem;}' +
-      '.total{font-weight:bold;font-size:1.2rem;text-align:right;margin-top:1rem;}.obrigado{text-align:center;margin-top:1.5rem;color:#64748b;font-size:0.85rem;}' +
-      '@media (max-width:480px){.comprovante{padding:1rem;}h2{font-size:1.1rem;}.info{font-size:0.8rem;}}</style></head><body><div class="comprovante">' + dados + '<p class="obrigado">Obrigado pela preferência!</p></div></body></html>';
-    EU.abrirJanelaHTML(html);
+    var extras = pedido.numeroMesa ? [{ label: 'Mesa', valor: pedido.numeroMesa }] : [];
+    if (!EU.gerarComprovanteHTML(pedido, codigoCurto, { camposExtras: extras })) {
+      UI.mostrarToast('Permita a abertura do comprovante no navegador.', 'erro');
+    }
   }
 
   function mostrarPopupConfirmacao(opcoes) {
@@ -371,26 +349,25 @@ Economizei.Pedido = (function () {
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-label', 'Imagem de ' + produto.nome);
-    modal.style.cssText = 'position:fixed; inset:0; background:#000; z-index:20000; display:flex; align-items:center; justify-content:center; width:100vw; height:100vh; margin:0; padding:0;';
 
     function atualizarModal() {
-      var html = '<div class="container-imagem" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; width:100%; height:100%; background:#000; position:relative;">' +
-        '<button type="button" class="modal-close-btn fechar" data-fechar-modal aria-label="Fechar imagem" style="position:absolute; top:1rem; right:1rem; color:white; font-size:2rem; cursor:pointer; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,.35); width:2rem; height:2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10;">×</button>' +
-        '<div class="lado-esquerdo" style="flex:2; min-width:200px; text-align:center; padding:1rem; display:flex; flex-direction:column; justify-content:center; height:100%;">' +
-          '<img src="' + imagens[currentIndex] + '" class="imagem-principal" alt="' + Core.sanitize(produto.nome) + '" style="max-width:100%; max-height:70vh; object-fit:contain; margin:auto;">' +
-          (imagens.length > 1 ? '<div class="miniaturas" style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;">' + imagens.map(function (img, idx) { return '<img src="' + img + '" class="miniatura ' + (idx === currentIndex ? 'ativa' : '') + '" data-idx="' + idx + '" alt="Miniatura ' + (idx + 1) + '" style="width:50px; height:50px; object-fit:cover; border-radius:0.5rem; cursor:pointer; border:' + (idx === currentIndex ? '2px solid #0a66c2' : '2px solid transparent') + ';">'; }).join('') + '</div>' : '') +
+      var html = '<div class="container-imagem">' +
+        '<button type="button" class="modal-close-btn fechar" data-fechar-modal aria-label="Fechar imagem">×</button>' +
+        '<div class="lado-esquerdo">' +
+          '<img src="' + imagens[currentIndex] + '" class="imagem-principal" alt="' + Core.sanitize(produto.nome) + '">' +
+          (imagens.length > 1 ? '<div class="miniaturas">' + imagens.map(function (img, idx) { return '<img src="' + img + '" class="miniatura ' + (idx === currentIndex ? 'ativa' : '') + '" data-idx="' + idx + '" alt="Miniatura ' + (idx + 1) + '">'; }).join('') + '</div>' : '') +
         '</div>' +
-        '<div class="lado-direito" style="flex:1; padding:1rem; background:#111; color:white; border-radius:0; height:100%; display:flex; flex-direction:column; justify-content:center; gap:1rem;">' +
-          '<div class="produto-nome" style="font-size:1.2rem; font-weight:700; color:white;">' + Core.sanitize(produto.nome) + '</div>' +
+        '<div class="lado-direito">' +
+          '<div class="produto-nome">' + Core.sanitize(produto.nome) + '</div>' +
           (temTamanhos ? '<div class="tamanho-botoes-modal" style="display:flex; flex-wrap:wrap; gap:0.75rem; margin:0.5rem 0;">' + produto.tamanhos.map(function (t) { return '<button class="btn-tamanho-modal" data-tamanho="' + Core.sanitize(t.nome) + '" data-preco="' + t.preco + '" style="background:' + (tamanhoSelecionado === t.nome ? '#0a66c2' : '#eee') + '; color:' + (tamanhoSelecionado === t.nome ? 'white' : '#333') + '; border:none; border-radius:2rem; padding:0.6rem 1.2rem; font-size:0.9rem; font-weight:600; cursor:pointer;">' + Core.sanitize(t.nome) + '</button>'; }).join('') + '</div>' : '') +
-          '<div class="preco" style="font-size:1.2rem; font-weight:700; color:#0a66c2;">R$ ' + precoSelecionado.toFixed(2) + '</div>' +
-          '<div class="descricao" style="font-size:0.9rem; color:#ccc;">' + Core.sanitize(produto.descricao || 'Sem descrição') + '</div>' +
+          '<div class="preco">R$ ' + precoSelecionado.toFixed(2) + '</div>' +
+          '<div class="descricao">' + Core.sanitize(produto.descricao || 'Sem descrição') + '</div>' +
           '<div class="produto-quantidade-simples" style="display:flex; align-items:center; gap:8px; margin:8px 0;">' +
             '<button id="menosQtdImg" style="background:#333; color:white; border:none; border-radius:50%; width:26px; height:26px; font-size:14px; cursor:pointer;" aria-label="Diminuir quantidade">−</button>' +
             '<input type="number" id="qtdImg" value="1" min="1" style="width:60px; text-align:center; border:1px solid #444; border-radius:2rem; font-size:12px; padding:4px; background:#222; color:white;" aria-label="Quantidade">' +
             '<button id="maisQtdImg" style="background:#333; color:white; border:none; border-radius:50%; width:26px; height:26px; font-size:14px; cursor:pointer;" aria-label="Aumentar quantidade">+</button>' +
           '</div>' +
-          '<button class="btn-adicionar-simples" id="addImagem" style="background:#0a66c2; color:white; border:none; border-radius:2rem; padding:10px; font-size:14px; font-weight:600; cursor:pointer;"><i class="fas fa-cart-plus" aria-hidden="true"></i> ' + ((produto.personalizavel === true || produto.tipo === 'personalizavel') ? 'Voltar para personalização' : 'Adicionar ao carrinho') + '</button>' +
+          '<button class="btn-adicionar-simples" id="addImagem"><i class="fas fa-cart-plus" aria-hidden="true"></i> ' + ((produto.personalizavel === true || produto.tipo === 'personalizavel') ? 'Voltar para personalização' : 'Adicionar ao carrinho') + '</button>' +
         '</div>' +
       '</div>';
       modal.innerHTML = html;
