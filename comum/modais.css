@@ -39,6 +39,7 @@
   box-sizing: border-box;
 }
 .modal-overlay.active { display: flex; }
+.modal-overlay:has(> .modal-conteudo.fullscreen) { padding: 0; }
 
 .modal-conteudo {
   position: relative;
