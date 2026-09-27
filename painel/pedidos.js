@@ -253,7 +253,7 @@ async function compartilharMotoboy(id) {
 }
 function notificarNovoPedido(p) {
   Shell.mostrarPopupNovo({
-    titulo: '🛎️ NOVO PEDIDO!',
+    titulo: 'Novo pedido!',
     codigo: 'Pedido #' + (p.codigoCurto || p.id.slice(0, 6)),
     valor: 'Total: R$ ' + (p.total || 0).toFixed(2),
     cliente: 'Cliente: ' + p.clienteNome,
@@ -451,14 +451,14 @@ function inicializarAutoAddLinha(tbodyId, addFn) {
 function adicionarLinhaTamanho(tbodyId) {
   var tbody = document.getElementById(tbodyId); if (!tbody) return;
   var tr = document.createElement('tr');
-  if (tbodyId === 'listaTamanhosPerso') tr.innerHTML = '<td><input type="text" placeholder="Ex: Pequeno" class="tam-perso-nome"></td><td><input type="number" placeholder="1" class="tam-perso-max" value="1"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td>';
-  else tr.innerHTML = '<td><input type="text" placeholder="Ex: P" class="tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td>';
+  if (tbodyId === 'listaTamanhosPerso') tr.innerHTML = '<td><input type="text" placeholder="Ex: Pequeno" class="tam-perso-nome"></td><td><input type="number" placeholder="1" class="tam-perso-max" value="1"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td>';
+  else tr.innerHTML = '<td><input type="text" placeholder="Ex: P" class="tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td>';
   tbody.appendChild(tr);
 }
 function adicionarLinhaPrecoSabor() {
   var tbody = document.getElementById('listaPrecosSabor'); if (!tbody) return;
   var tr = document.createElement('tr');
-  tr.innerHTML = '<td><input type="text" placeholder="Ex: G" class="sabor-tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td>';
+  tr.innerHTML = '<td><input type="text" placeholder="Ex: G" class="sabor-tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td>';
   tbody.appendChild(tr);
 }
 function removerLinhaTamanho(btn) {
@@ -589,8 +589,8 @@ function resetarFormularioProdutoLoja() {
   var prev = document.getElementById('previewImagensProduto'); if (prev) prev.innerHTML = '';
   imagensExtrasUrls = [];
   previewVariacoesSelecionadas = {};
-  var tamA = document.getElementById('listaTamanhosAdicionar'); if (tamA) tamA.innerHTML = '<tr><td><input type="text" placeholder="Ex: P" class="tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td></tr>';
-  var tamP = document.getElementById('listaTamanhosPerso'); if (tamP) tamP.innerHTML = '<tr><td><input type="text" placeholder="Ex: Pequeno" class="tam-perso-nome"></td><td><input type="number" placeholder="1" class="tam-perso-max" value="1"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td></tr>';
+  var tamA = document.getElementById('listaTamanhosAdicionar'); if (tamA) tamA.innerHTML = '<tr><td><input type="text" placeholder="Ex: P" class="tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td></tr>';
+  var tamP = document.getElementById('listaTamanhosPerso'); if (tamP) tamP.innerHTML = '<tr><td><input type="text" placeholder="Ex: Pequeno" class="tam-perso-nome"></td><td><input type="number" placeholder="1" class="tam-perso-max" value="1"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td></tr>';
   var sab = document.getElementById('saboresCheckboxLista'); if (sab) sab.innerHTML = '';
   var ex = document.getElementById('extrasCheckboxLista'); if (ex) ex.innerHTML = '';
   var exP = document.getElementById('extrasCheckboxListaPersonalizavel'); if (exP) exP.innerHTML = '';
@@ -619,13 +619,13 @@ function carregarProdutoNoFormulario(item) {
   if (tipo === 'tamanhos' && Array.isArray(item.tamanhos) && item.tamanhos.length) {
     var tbodyA = document.getElementById('listaTamanhosAdicionar');
     tbodyA.innerHTML = item.tamanhos.map(function (t) {
-      return '<tr><td><input type="text" value="' + EU.sanitize(t.nome) + '" class="tam-nome"></td><td><input type="number" step="0.01" value="' + t.preco + '" class="tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td></tr>';
+      return '<tr><td><input type="text" value="' + EU.sanitize(t.nome) + '" class="tam-nome"></td><td><input type="number" step="0.01" value="' + t.preco + '" class="tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td></tr>';
     }).join('');
   }
   if (tipo === 'personalizavel' && Array.isArray(item.tamanhosDisponiveis) && item.tamanhosDisponiveis.length) {
     var tbodyP = document.getElementById('listaTamanhosPerso');
     tbodyP.innerHTML = item.tamanhosDisponiveis.map(function (t) {
-      return '<tr><td><input type="text" value="' + EU.sanitize(t.nome) + '" class="tam-perso-nome"></td><td><input type="number" value="' + (t.maxSabores || 1) + '" class="tam-perso-max"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td></tr>';
+      return '<tr><td><input type="text" value="' + EU.sanitize(t.nome) + '" class="tam-perso-nome"></td><td><input type="number" value="' + (t.maxSabores || 1) + '" class="tam-perso-max"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td></tr>';
     }).join('');
   }
   toggleTipoProduto().then(function () {
@@ -736,11 +736,11 @@ async function editarSaborModal(id, isDuplicar) {
   var modal = document.createElement('div'); modal.className = 'modal-overlay active';
   var titulo = isDuplicar ? 'Duplicar Sabor' : 'Editar Sabor';
   var precos = s.precos || {};
-  var precosHtml = Object.keys(precos).map(function (t) { return '<tr><td><input type="text" value="' + EU.sanitize(t) + '" class="sabor-tam-nome"></td><td><input type="number" step="0.01" value="' + precos[t] + '" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td></tr>'; }).join('') || '<tr><td><input type="text" placeholder="Ex: G" class="sabor-tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td></tr>';
+  var precosHtml = Object.keys(precos).map(function (t) { return '<tr><td><input type="text" value="' + EU.sanitize(t) + '" class="sabor-tam-nome"></td><td><input type="number" step="0.01" value="' + precos[t] + '" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td></tr>'; }).join('') || '<tr><td><input type="text" placeholder="Ex: G" class="sabor-tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td></tr>';
   var nomePadrao = isDuplicar ? s.nome + ' (cópia)' : s.nome;
   modal.innerHTML = '<div class="modal-conteudo"><div class="modal-header"><h3>' + titulo + '</h3><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div><div class="campo"><label>Nome <span class="obrigatorio">*</span></label><input type="text" id="editSaborNome" value="' + EU.sanitize(nomePadrao) + '"></div><div class="campo"><label>Preços por Tamanho <span class="obrigatorio">*</span></label><table class="tabela-tamanhos"><tbody id="editPrecosSabor">' + precosHtml + '</tbody></table><button type="button" class="btn-pequeno" onclick="adicionarLinhaPrecoSaborEdit()">+ Adicionar tamanho</button></div><div class="campo"><label>Descrição</label><textarea id="editSaborDescricao" rows="2">' + EU.sanitize(s.descricao || '') + '</textarea></div><div class="campo"><label>Categorias</label><input type="text" id="editSaborCategorias" value="' + EU.sanitize(s.categorias || '') + '"></div><button class="btn-primary" id="saveSaborEdit"><span class="spinner-btn"></span><span class="btn-text">' + (isDuplicar ? 'Duplicar' : 'Salvar') + '</span></button></div>';
   document.body.appendChild(modal);
-  window.adicionarLinhaPrecoSaborEdit = function () { var tbody = document.getElementById('editPrecosSabor'); var tr = document.createElement('tr'); tr.innerHTML = '<td><input type="text" placeholder="Ex: G" class="sabor-tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td>'; tbody.appendChild(tr); };
+  window.adicionarLinhaPrecoSaborEdit = function () { var tbody = document.getElementById('editPrecosSabor'); var tr = document.createElement('tr'); tr.innerHTML = '<td><input type="text" placeholder="Ex: G" class="sabor-tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td>'; tbody.appendChild(tr); };
   document.getElementById('saveSaborEdit').onclick = async function () {
     var btn = this; btn.classList.add('loading'); btn.disabled = true;
     try {
@@ -1275,9 +1275,9 @@ function abrirModalSaborCadastro() { abrirModalCadastro('modalSabor'); setTimeou
 function fecharModalSaborCadastro() { fecharModalCadastro('modalSabor'); }
 function abrirModalExtraCadastro() { abrirModalCadastro('modalExtra'); setTimeout(function () { var e = document.getElementById('novoExtraNome'); if (e) e.focus(); }, 50); }
 function fecharModalExtraCadastro() { fecharModalCadastro('modalExtra'); }
-function linhaTamanhoInicial() { return '<tr><td><input type="text" placeholder="Ex.: P" class="tam-nome"></td><td><input type="number" step="0.01" placeholder="0,00" class="tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td></tr>'; }
-function linhaTamanhoPersonalizavelInicial() { return '<tr><td><input type="text" placeholder="Ex.: Pequeno" class="tam-perso-nome"></td><td><input type="number" placeholder="1" class="tam-perso-max" value="1"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td></tr>'; }
-function linhaPrecoSaborInicial() { return '<tr><td><input type="text" placeholder="Ex.: G" class="sabor-tam-nome"></td><td><input type="number" step="0.01" placeholder="0,00" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)">✕</button></td></tr>'; }
+function linhaTamanhoInicial() { return '<tr><td><input type="text" placeholder="Ex.: P" class="tam-nome"></td><td><input type="number" step="0.01" placeholder="0,00" class="tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td></tr>'; }
+function linhaTamanhoPersonalizavelInicial() { return '<tr><td><input type="text" placeholder="Ex.: Pequeno" class="tam-perso-nome"></td><td><input type="number" placeholder="1" class="tam-perso-max" value="1"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td></tr>'; }
+function linhaPrecoSaborInicial() { return '<tr><td><input type="text" placeholder="Ex.: G" class="sabor-tam-nome"></td><td><input type="number" step="0.01" placeholder="0,00" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td></tr>'; }
 function limparFormularioSaborCadastro() {
   ['novoSaborNome','novoSaborImagem','novoSaborDescricao','saborCategorias'].forEach(function (id) { var e = document.getElementById(id); if (e) e.value = ''; });
   var a = document.getElementById('novoSaborImagemFile'); if (a) a.value = '';
