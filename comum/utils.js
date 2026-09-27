@@ -290,6 +290,48 @@
     return win;
   }
 
+  // ---------- COMPROVANTE DE PEDIDO (HTML autocontido, aberto em nova aba) ----------
+  function gerarComprovanteHTML(pedido, codigoCurto, opcoes) {
+    opcoes = opcoes || {};
+    function numero(valor) { var c = parseFloat(valor); return Number.isFinite(c) ? c : 0; }
+    function texto(valor, fallback) {
+      var c = String(valor === undefined || valor === null ? '' : valor).trim();
+      return sanitize(c || fallback || '');
+    }
+    function moeda(valor) { return 'R$ ' + numero(valor).toFixed(2).replace('.', ','); }
+
+    var itens = Array.isArray(pedido.itens) ? pedido.itens : [];
+    var itensHTML = itens.length ? '<ul>' + itens.map(function (i) {
+      var nomeItem = String(i.nome || 'Item');
+      if (i.atributos && typeof i.atributos === 'object') nomeItem += ' (' + Object.keys(i.atributos).map(function (chave) { return chave + ': ' + i.atributos[chave]; }).join(', ') + ')';
+      var totalItem = numero(i.precoUnitario) * numero(i.quantidade);
+      return '<li><span class="item-quantidade">' + numero(i.quantidade) + 'x</span><span class="item-nome">' + texto(nomeItem, 'Item') + '</span><strong>' + moeda(totalItem) + '</strong></li>';
+    }).join('') + '</ul>' : '<p class="vazio">Nenhum item informado.</p>';
+
+    var pagamento = texto(pedido.formaPagamento, 'Não informado');
+    if (pagamento === 'Dinheiro' && pedido.trocoPara) pagamento += ' · Troco para ' + moeda(pedido.trocoPara);
+    else if (pagamento === 'Dinheiro') pagamento += ' · Não precisa de troco';
+    var dataPedido = pedido.criadoEm && typeof pedido.criadoEm.toDate === 'function' ? pedido.criadoEm.toDate() : new Date();
+
+    var camposExtras = (opcoes.camposExtras || []).map(function (c) {
+      return '<div><strong>' + sanitize(c.label) + '</strong><span>' + texto(c.valor, '') + '</span></div>';
+    }).join('');
+
+    var dados = '<header class="comprovante-cabecalho"><h1>Comprovante de pedido</h1><p><strong>Pedido #' + texto(codigoCurto, '---') + '</strong><span>' + dataPedido.toLocaleString() + '</span></p></header>' +
+      '<section class="info"><div><strong>Estabelecimento</strong><span>' + texto(pedido.estabelecimentoNome, 'Não informado') + '</span></div><div><strong>Cliente</strong><span>' + texto(pedido.clienteNome, 'Não informado') + '</span></div><div><strong>Endereço</strong><span>' + texto(pedido.endereco, 'Não informado') + '</span></div><div><strong>Telefone</strong><span>' + texto(pedido.clienteTelefone, 'Não informado') + '</span></div>' + camposExtras + '</section>' +
+      '<section class="itens"><h2>Itens do pedido</h2>' + itensHTML + '</section>' +
+      '<section class="resumo"><div><span>Subtotal</span><strong>' + moeda(pedido.subtotal) + '</strong></div><div><span>Frete</span><strong>' + moeda(pedido.taxaEntrega) + '</strong></div>' +
+      (numero(pedido.descontoPromocoes) > 0 ? '<div class="desconto"><span>Promoções</span><strong>- ' + moeda(pedido.descontoPromocoes) + '</strong></div>' : '') +
+      (numero(pedido.descontoAplicado) > 0 ? '<div class="desconto"><span>Cupom</span><strong>- ' + moeda(pedido.descontoAplicado) + '</strong></div>' : '') +
+      '<div class="total"><span>Total</span><strong>' + moeda(pedido.total) + '</strong></div></section>' +
+      '<section class="detalhes-finais"><p><strong>Pagamento</strong><span>' + pagamento + '</span></p><p><strong>Observação</strong><span>' + texto(pedido.observacao, 'Nenhuma') + '</span></p></section>';
+
+    var conteudo = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Comprovante de Pedido #' + texto(codigoCurto, '') + '</title><style>' +
+      '*{box-sizing:border-box}html{background:#eef2f7}body{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;margin:0;padding:clamp(.75rem,3vw,2rem);background:#eef2f7;color:#172033;min-width:0}.comprovante{width:100%;max-width:760px;margin:0 auto;background:#fff;border:1px solid #dbe3ee;border-radius:clamp(.75rem,2vw,1.25rem);padding:clamp(1rem,4vw,2rem);box-shadow:0 8px 28px rgba(15,23,42,.1);overflow:hidden}.comprovante-cabecalho{border-bottom:2px solid #e6edf5;padding-bottom:1rem;margin-bottom:1rem}.comprovante-cabecalho h1{margin:0 0 .65rem;color:#0a66c2;font-size:clamp(1.25rem,4vw,1.75rem);line-height:1.2}.comprovante-cabecalho p{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin:0;color:#526174;font-size:clamp(.78rem,2.5vw,.9rem)}.comprovante-cabecalho p strong{color:#172033}.info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;background:#f7f9fc;border:1px solid #e5ebf3;border-radius:.85rem;padding:clamp(.8rem,3vw,1.1rem);margin-bottom:1.25rem}.info div{min-width:0}.info strong,.detalhes-finais strong{display:block;color:#526174;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:.2rem}.info span,.detalhes-finais span{display:block;overflow-wrap:anywhere;font-size:clamp(.82rem,2.5vw,.95rem);line-height:1.4}.itens{margin:0 0 1.25rem}.itens h2{font-size:1rem;margin:0 0 .5rem;color:#172033}.itens ul{list-style:none;padding:0;margin:0;border-top:1px solid #e5ebf3}.itens li{display:grid;grid-template-columns:2.5rem minmax(0,1fr) auto;align-items:start;gap:.5rem;padding:.7rem 0;border-bottom:1px solid #edf1f5;font-size:clamp(.82rem,2.6vw,.95rem)}.item-quantidade{color:#526174;font-weight:700}.item-nome{overflow-wrap:anywhere}.itens li strong{white-space:nowrap;color:#172033}.vazio{color:#64748b;font-size:.9rem}.resumo{border-top:1px solid #dbe3ee;padding-top:.75rem;margin-left:auto;width:min(100%,360px)}.resumo>div{display:flex;justify-content:space-between;gap:1rem;padding:.28rem 0;font-size:clamp(.82rem,2.5vw,.95rem)}.resumo .desconto{color:#15803d}.resumo .total{margin-top:.45rem;padding-top:.65rem;border-top:2px solid #dbe3ee;color:#0a66c2;font-size:clamp(1rem,3.5vw,1.25rem)}.detalhes-finais{display:grid;gap:.75rem;margin-top:1.25rem;padding-top:1rem;border-top:1px solid #e5ebf3}.detalhes-finais p{margin:0}.obrigado{text-align:center;margin:1.5rem 0 0;color:#64748b;font-size:.82rem}@media(max-width:560px){body{padding:.5rem}.comprovante{border-radius:.75rem;padding:1rem}.info{grid-template-columns:1fr;gap:.65rem}.comprovante-cabecalho p{display:block}.comprovante-cabecalho p span{display:block;margin-top:.25rem}.itens li{grid-template-columns:2.25rem minmax(0,1fr);gap:.4rem}.itens li strong{grid-column:2;text-align:right;margin-top:.15rem}.resumo{width:100%}}@media print{html,body{background:#fff}.comprovante{max-width:none;border:0;box-shadow:none;border-radius:0;padding:0}}' +
+      '</style></head><body><main class="comprovante">' + dados + '<p class="obrigado">Obrigado pela preferência!</p></main></body></html>';
+    return abrirJanelaHTML(conteudo);
+  }
+
   // ---------- POPUP DE CONFIRMAÇÃO ----------
   function mostrarPopupConfirmacao(opcoes) {
     opcoes = opcoes || {};
@@ -469,6 +511,7 @@
     carregarDadosClienteLocal,
     aplicarMascaraTelefone,
     abrirJanelaHTML,
+    gerarComprovanteHTML,
     mostrarPopupConfirmacao,
     // UI geral
     mostrarToast,
