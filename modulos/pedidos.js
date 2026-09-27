@@ -33,22 +33,8 @@ Economizei.Pedido = (function () {
   var enviandoPedido = false;
   var promocoesCache = [];
 
-  function _abrirModalLocal(el) {
-    if (!el) return null;
-    var ctrl = EU.criarModalAcessivel();
-    ctrl.abrir(el, function () { if (el.parentNode) el.remove(); });
-    el.__ctrl = ctrl;
-    el.addEventListener('click', function (e) {
-      if (e.target === el) { e.preventDefault(); e.stopPropagation(); ctrl.fechar(); return; }
-      var btn = e.target.closest('.modal-close-btn, .btn-modal-fechar, [data-fechar-modal]');
-      if (btn) { e.preventDefault(); e.stopPropagation(); ctrl.fechar(); }
-    }, true);
-    return ctrl;
-  }
-  function _fecharModalLocal(el) {
-    if (el && el.__ctrl) el.__ctrl.fechar();
-    else if (el) el.remove();
-  }
+  function _abrirModalLocal(el) { return EU.criarModalLocal(el); }
+  function _fecharModalLocal(el) { EU.fecharModalLocal(el); }
 
   function statusSeguro(s) { return ['aberta', 'pausada', 'fechada'].indexOf(s) !== -1 ? s : 'aberta'; }
   function gerarIniciais(nome) {
