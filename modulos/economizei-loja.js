@@ -22,15 +22,7 @@
         var botoes = document.querySelectorAll('#modalLoja .btn-adicionar-simples[data-prod-id], #modalLoja .btn-escolher[data-prod-id]');
         Array.prototype.forEach.call(botoes, function(botao) {
             if (botao.dataset.prodId !== String(prodId)) return;
-            var textoOriginal = botao.dataset.textoOriginal || botao.innerHTML;
-            botao.dataset.textoOriginal = textoOriginal;
-            botao.classList.add('is-added');
-            botao.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> Adicionado';
-            window.setTimeout(function() {
-                if (!botao.isConnected) return;
-                botao.classList.remove('is-added');
-                botao.innerHTML = textoOriginal;
-            }, 1300);
+            window.EconomizeiUtils.mostrarFeedbackAdicionar(botao);
         });
     }
 
@@ -1357,6 +1349,7 @@ window.abrirModalLoja = function(idx) {
         if (!Core.getCurrentUser()) return;
         var container = document.getElementById('listaHistoricoLoja');
         if (!container) return;
+        container.innerHTML = '<div class="loading"><div class="spinner" aria-hidden="true"></div><span>Carregando histórico...</span></div>';
         Core.db.collection('pedidos').where('clienteId', '==', Core.getCurrentUser().uid)
             .where('estabelecimentoId', '==', estIdLocal)
             .orderBy('criadoEm', 'desc').limit(20).get()
@@ -1375,6 +1368,10 @@ window.abrirModalLoja = function(idx) {
                         '</div>';
                 });
                 container.innerHTML = html;
+            })
+            .catch(function(err) {
+                console.error('Erro ao carregar histórico da Loja:', err);
+                container.innerHTML = '<p style="color:#dc3545;">Não foi possível carregar o histórico agora. Tente novamente mais tarde.</p>';
             });
     }
 
@@ -1682,7 +1679,7 @@ window.abrirModalLoja = function(idx) {
             }
 
             modalLojaEl.addEventListener('click', function(e) {
-                if (e.target === modalLojaEl) fecharModalLoja();
+                if (e.target === modalLojaEl || e.target.closest('[data-fechar-modal]')) fecharModalLoja();
             });
 
             escHandlerLoja = function(e) {
