@@ -1071,7 +1071,7 @@ Economizei.Pedido = (function () {
         '<img src="' + (item.imagem || 'https://via.placeholder.com/40') + '" class="item-carrinho-imagem" alt="' + Core.sanitize(item.nome) + '" onerror="this.style.display=\'none\'">' +
         '<div style="flex:1"><strong>' + Core.sanitize(item.nome) + '</strong><br>R$ ' + item.preco.toFixed(2) + ' un. ' + linhaPreco + '</div>' +
         '<input type="number" min="1" value="' + item.quantidade + '" class="qtd-item" onchange="Economizei.Pedido.alterarQuantidade(\'' + Core.jsEscape(item.id) + '\', this.value)" aria-label="Quantidade de ' + Core.sanitize(item.nome) + '">' +
-        '<button class="btn-pequeno" onclick="Economizei.Pedido.removerItem(\'' + Core.jsEscape(item.id) + '\')" aria-label="Remover ' + Core.sanitize(item.nome) + '">✕</button>' +
+        '<button class="btn-pequeno" onclick="Economizei.Pedido.removerItem(\'' + Core.jsEscape(item.id) + '\')" aria-label="Remover ' + Core.sanitize(item.nome) + '"><i class="fas fa-xmark" aria-hidden="true"></i></button>' +
         '</div>';
     }).join('');
   }
@@ -1125,11 +1125,11 @@ Economizei.Pedido = (function () {
       if (cupomValido) {
         cupomAtual = cupomValido;
         cupomDesconto = cupomValido.desconto;
-        statusDiv.innerHTML = '<span style="color:#10b981;">✅ Cupom aplicado! Desconto de ' + (cupomValido.tipo === 'percentual' ? cupomValido.valor + '%' : 'R$ ' + cupomValido.valor.toFixed(2)) + '</span>';
+        statusDiv.innerHTML = '<span style="color:#10b981;"><i class="fas fa-circle-check" aria-hidden="true"></i> Cupom aplicado! Desconto de ' + (cupomValido.tipo === 'percentual' ? cupomValido.valor + '%' : 'R$ ' + cupomValido.valor.toFixed(2)) + '</span>';
       } else {
         cupomAtual = null;
         cupomDesconto = 0;
-        statusDiv.innerHTML = '<span style="color:#dc3545;">❌ Cupom inválido ou expirado</span>';
+        statusDiv.innerHTML = '<span style="color:#dc3545;"><i class="fas fa-circle-xmark" aria-hidden="true"></i> Cupom inválido ou expirado</span>';
       }
       recalcularTotal();
     }).catch(function () {
@@ -1232,10 +1232,10 @@ Economizei.Pedido = (function () {
       .then(function () {
         gerarComprovantePedido(pedido, codigoCurto);
         EU.mostrarPopupConfirmacao({
-          titulo: '✅ Pedido Confirmado!',
+          titulo: 'Pedido Confirmado!',
           mensagem: 'Seu pedido foi enviado com sucesso!',
           codigo: codigoCurto,
-          botoes: '<button class="btn-pedido-cta" style="width:auto;" onclick="document.getElementById(\'consultaInput\').value=\'' + Core.jsEscape(codigoCurto) + '\'; document.querySelector(\'#modalPedidoRest .modal-tab[data-tab=\\"acompanhar\\"]\').click(); this.closest(\'.popup-confirmacao\').remove();">🔍 Acompanhar</button>',
+          botoes: '<button class="btn-pedido-cta" style="width:auto;" onclick="document.getElementById(\'consultaInput\').value=\'' + Core.jsEscape(codigoCurto) + '\'; document.querySelector(\'#modalPedidoRest .modal-tab[data-tab=\\"acompanhar\\"]\').click(); this.closest(\'.popup-confirmacao\').remove();"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> Acompanhar</button>',
           onClose: ''
         });
         var carrinhoParaEstoque = carrinho.slice();
@@ -1265,9 +1265,9 @@ Economizei.Pedido = (function () {
     var resDiv = document.getElementById('resultadoAcompanhamento');
     if (!cod) { resDiv.innerHTML = '<p style="color:#dc3545;">Digite o código do pedido.</p>'; return; }
     Core.db.collection('pedidos').where('codigoCurto', '==', cod).limit(1).get().then(function (snap) {
-      if (snap.empty) { resDiv.innerHTML = '<p style="color:#dc3545;">🔍 Pedido não encontrado.</p>'; return; }
+      if (snap.empty) { resDiv.innerHTML = '<p style="color:#dc3545;"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> Pedido não encontrado.</p>'; return; }
       var p = snap.docs[0].data();
-      var map = { pendente: { label: 'Aguardando Loja', icon: '⏳', color: '#f59e0b' }, confirmado: { label: 'Pedido Confirmado', icon: '✅', color: '#10b981' }, em_preparo: { label: 'Sendo Preparado', icon: '👨‍🍳', color: '#6366f1' }, saiu_entrega: { label: 'Saiu para Entrega', icon: '🛵', color: '#3b82f6' }, concluido: { label: 'Entregue', icon: '🏁', color: '#10b981' }, cancelado: { label: 'Cancelado', icon: '❌', color: '#ef4444' } };
+      var map = { pendente: { label: 'Aguardando Loja', icon: '<i class="fas fa-hourglass-half"></i>', color: '#f59e0b' }, confirmado: { label: 'Pedido Confirmado', icon: '<i class="fas fa-circle-check"></i>', color: '#10b981' }, em_preparo: { label: 'Sendo Preparado', icon: '<i class="fas fa-kitchen-set"></i>', color: '#6366f1' }, saiu_entrega: { label: 'Saiu para Entrega', icon: '<i class="fas fa-motorcycle"></i>', color: '#3b82f6' }, concluido: { label: 'Entregue', icon: '<i class="fas fa-flag-checkered"></i>', color: '#10b981' }, cancelado: { label: 'Cancelado', icon: '<i class="fas fa-circle-xmark"></i>', color: '#ef4444' } };
       var s = map[p.status] || map['pendente'];
       resDiv.innerHTML = '<div style="background:' + s.color + '10; border:2px solid ' + s.color + '; border-radius:1rem; padding:1rem;">' +
         '<div style="text-align:center;"><span style="font-size:2rem;" aria-hidden="true">' + s.icon + '</span><h3 style="color:' + s.color + ';">' + s.label + '</h3></div>' +
@@ -1298,7 +1298,7 @@ Economizei.Pedido = (function () {
         var p = doc.data();
         historicoCache[doc.id] = p;
         var codigo = p.codigoCurto || doc.id.slice(0, 6).toUpperCase();
-        html += '<div style="border:1px solid var(--gray-200); border-radius:0.75rem; padding:0.75rem; margin-bottom:0.5rem; background:white;"><div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;"><div><strong>Pedido #' + Core.sanitize(codigo) + '</strong> <span style="background:' + (p.status === 'pendente' ? '#fff7ed' : p.status === 'concluido' ? '#ecfdf5' : '#f1f5f9') + '; padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem;">' + Core.sanitize(p.status || 'pendente') + '</span></div><div>' + (p.criadoEm ? new Date(p.criadoEm.toDate()).toLocaleString() : '---') + '</div></div><div><strong>Total:</strong> R$ ' + p.total.toFixed(2) + '</div><button class="btn-consultar-pedido" style="margin-top:0.5rem;" onclick="Economizei.Pedido.verComprovanteHistorico(\'' + doc.id + '\')">🖨️ Ver comprovante</button></div>';
+        html += '<div style="border:1px solid var(--gray-200); border-radius:0.75rem; padding:0.75rem; margin-bottom:0.5rem; background:white;"><div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;"><div><strong>Pedido #' + Core.sanitize(codigo) + '</strong> <span style="background:' + (p.status === 'pendente' ? '#fff7ed' : p.status === 'concluido' ? '#ecfdf5' : '#f1f5f9') + '; padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem;">' + Core.sanitize(p.status || 'pendente') + '</span></div><div>' + (p.criadoEm ? new Date(p.criadoEm.toDate()).toLocaleString() : '---') + '</div></div><div><strong>Total:</strong> R$ ' + p.total.toFixed(2) + '</div><button class="btn-consultar-pedido" style="margin-top:0.5rem;" onclick="Economizei.Pedido.verComprovanteHistorico(\'' + doc.id + '\')"><i class="fas fa-print" aria-hidden="true"></i> Ver comprovante</button></div>';
       });
       container.innerHTML = html;
     }).catch(function(err) {
@@ -1310,7 +1310,7 @@ Economizei.Pedido = (function () {
   function mostrarErroNoModal(msg) {
     var container = document.getElementById('produtosContainer');
     if (container) {
-      container.innerHTML = '<p style="text-align:center;color:#dc3545;padding:2rem;">⚠️ ' + Core.sanitize(msg) + '</p>';
+      container.innerHTML = '<p style="text-align:center;color:#dc3545;padding:2rem;"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> ' + Core.sanitize(msg) + '</p>';
       container.style.display = 'block';
     }
   }
@@ -1395,8 +1395,8 @@ Economizei.Pedido = (function () {
           var html = '<div style="max-height:300px;overflow-y:auto;">';
           pedidos.slice(0, 5).forEach(function (p) {
             var codigo = p.codigoCurto || p.id.slice(0, 6).toUpperCase();
-            var map = { pendente: '⏳ Pendente', confirmado: '✅ Confirmado', em_preparo: '👨‍🍳 Preparando', saiu_entrega: '🛵 Em entrega', concluido: '🏁 Entregue', cancelado: '❌ Cancelado' };
-            var statusText = map[p.status] || p.status || '⏳ Pendente';
+            var map = { pendente: 'Pendente', confirmado: 'Confirmado', em_preparo: 'Preparando', saiu_entrega: 'Em entrega', concluido: 'Entregue', cancelado: 'Cancelado' };
+            var statusText = map[p.status] || p.status || 'Pendente';
             html += '<div style="border-bottom:1px solid #eee;padding:0.4rem 0;font-size:0.8rem;"><strong>#' + Core.sanitize(codigo) + '</strong> - ' + statusText + ' - R$ ' + (p.total || 0).toFixed(2) + (p.numeroMesa ? ' - Mesa ' + Core.sanitize(p.numeroMesa) : '') + '</div>';
           });
           html += '</div>';
@@ -1563,7 +1563,7 @@ Economizei.Pedido = (function () {
         '<div class="modal-conteudo fullscreen">' +
           '<div class="modal-header">' +
             '<div class="modal-estabelecimento-brand">' +
-              '<div class="modal-estabelecimento-logo" id="modalPedidoLogo"><span aria-hidden="true">🍽️</span></div>' +
+              '<div class="modal-estabelecimento-logo" id="modalPedidoLogo"><span aria-hidden="true"><i class="fas fa-utensils"></i></span></div>' +
               '<div class="modal-estabelecimento-meta">' +
                 '<h3 id="modalPedidoTitulo">' + nomeEstabSeguro + '</h3>' +
                 '<span id="modalPedidoStatus" class="modal-estabelecimento-status status-aberta">Aceitando pedidos</span>' +
@@ -1572,10 +1572,10 @@ Economizei.Pedido = (function () {
             '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar pedido">×</button>' +
           '</div>' +
           '<div class="modal-tabs">' +
-            '<button class="modal-tab active" data-tab="produtos" aria-label="Produtos">📦 Produtos</button>' +
-            '<button class="modal-tab" data-tab="carrinho" aria-label="Carrinho">🛒 Carrinho <span class="cart-tab-badge" id="cartBadge" aria-hidden="true">0</span></button>' +
-            '<button class="modal-tab" data-tab="acompanhar" aria-label="Acompanhar pedido">🔍 Acompanhar</button>' +
-            (Core.getCurrentUser() ? '<button class="modal-tab" data-tab="historico" aria-label="Histórico">📋 Histórico</button>' : '') +
+            '<button class="modal-tab active" data-tab="produtos" aria-label="Produtos"><i class="fas fa-box" aria-hidden="true"></i> Produtos</button>' +
+            '<button class="modal-tab" data-tab="carrinho" aria-label="Carrinho"><i class="fas fa-cart-shopping" aria-hidden="true"></i> Carrinho <span class="cart-tab-badge" id="cartBadge" aria-hidden="true">0</span></button>' +
+            '<button class="modal-tab" data-tab="acompanhar" aria-label="Acompanhar pedido"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> Acompanhar</button>' +
+            (Core.getCurrentUser() ? '<button class="modal-tab" data-tab="historico" aria-label="Histórico"><i class="fas fa-clipboard-list" aria-hidden="true"></i> Histórico</button>' : '') +
           '</div>' +
           '<div class="modal-body">' +
             '<div id="tabProdutos" class="modal-tab-content active">' +
@@ -1612,7 +1612,7 @@ Economizei.Pedido = (function () {
                     '<input type="text" id="clienteEndereco" class="input-pedido" placeholder="Endereço completo*" aria-label="Endereço completo">' +
                     '<div style="display:flex; gap:0.5rem; align-items: center;">' +
                       '<input type="text" id="mesaInput" class="input-pedido" placeholder="Número da mesa" style="flex:1; background:#f0f0f0;" readonly disabled aria-label="Número da mesa">' +
-                      '<button type="button" class="btn-escanear-mesa" id="btnEscanearMesa" style="margin-bottom:0.75rem;" aria-label="Escanear QR Code da mesa">📷 Escanear Mesa</button>' +
+                      '<button type="button" class="btn-escanear-mesa" id="btnEscanearMesa" style="margin-bottom:0.75rem;" aria-label="Escanear QR Code da mesa"><i class="fas fa-qrcode" aria-hidden="true"></i> Escanear Mesa</button>' +
                     '</div>' +
                     '<textarea id="observacaoPedido" rows="2" class="input-pedido" placeholder="Observações (ex: sem cebola, portão azul)" aria-label="Observações do pedido"></textarea>' +
                     '<button class="btn-pedido-cta" id="btnFinalizarPedido" onclick="Economizei.Pedido.finalizarPedido(\'' + Core.jsEscape(estId) + '\',\'' + Core.jsEscape(nomeEstab) + '\')">Confirmar Pedido</button>' +
