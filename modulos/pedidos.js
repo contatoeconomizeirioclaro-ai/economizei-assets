@@ -360,14 +360,15 @@ Economizei.Pedido = (function () {
         '<div class="lado-direito">' +
           '<div class="produto-nome">' + Core.sanitize(produto.nome) + '</div>' +
           (temTamanhos ? '<div class="tamanho-botoes-modal" style="display:flex; flex-wrap:wrap; gap:0.75rem; margin:0.5rem 0;">' + produto.tamanhos.map(function (t) { return '<button class="btn-tamanho-modal" data-tamanho="' + Core.sanitize(t.nome) + '" data-preco="' + t.preco + '" style="background:' + (tamanhoSelecionado === t.nome ? '#0a66c2' : '#eee') + '; color:' + (tamanhoSelecionado === t.nome ? 'white' : '#333') + '; border:none; border-radius:2rem; padding:0.6rem 1.2rem; font-size:0.9rem; font-weight:600; cursor:pointer;">' + Core.sanitize(t.nome) + '</button>'; }).join('') + '</div>' : '') +
-          '<div class="preco">R$ ' + precoSelecionado.toFixed(2) + '</div>' +
+          '<div class="preco-unitario-imagem">Preço unitário: R$ ' + precoSelecionado.toFixed(2).replace('.', ',') + '</div>' +
+          '<div class="preco">Total: R$ ' + precoSelecionado.toFixed(2).replace('.', ',') + '</div>' +
           '<div class="descricao">' + Core.sanitize(produto.descricao || 'Sem descrição') + '</div>' +
           '<div class="produto-quantidade-simples" style="display:flex; align-items:center; gap:8px; margin:8px 0;">' +
             '<button id="menosQtdImg" style="background:#333; color:white; border:none; border-radius:50%; width:26px; height:26px; font-size:14px; cursor:pointer;" aria-label="Diminuir quantidade">−</button>' +
             '<input type="number" id="qtdImg" value="1" min="1" style="width:60px; text-align:center; border:1px solid #444; border-radius:2rem; font-size:12px; padding:4px; background:#222; color:white;" aria-label="Quantidade">' +
             '<button id="maisQtdImg" style="background:#333; color:white; border:none; border-radius:50%; width:26px; height:26px; font-size:14px; cursor:pointer;" aria-label="Aumentar quantidade">+</button>' +
           '</div>' +
-          '<button class="btn-adicionar-simples" id="addImagem"><i class="fas fa-cart-plus" aria-hidden="true"></i> ' + ((produto.personalizavel === true || produto.tipo === 'personalizavel') ? 'Voltar para personalização' : 'Adicionar ao carrinho') + '</button>' +
+          '<button class="btn-pedido-cta" id="addImagem"><i class="fas fa-cart-plus" aria-hidden="true"></i> ' + ((produto.personalizavel === true || produto.tipo === 'personalizavel') ? 'Voltar para personalização' : 'Adicionar ao carrinho') + '</button>' +
         '</div>' +
       '</div>';
       modal.innerHTML = html;
@@ -383,7 +384,7 @@ Economizei.Pedido = (function () {
       var precoSpan = modal.querySelector('.preco');
       function atualizarPrecoImagem() {
         var qtd = parseInt(qtdInput.value) || 1;
-        precoSpan.textContent = 'R$ ' + (precoSelecionado * qtd).toFixed(2);
+        precoSpan.textContent = 'Total: R$ ' + (precoSelecionado * qtd).toFixed(2).replace('.', ',');
       }
       menosBtn.addEventListener('click', function () { qtdInput.stepDown(); atualizarPrecoImagem(); });
       maisBtn.addEventListener('click', function () { qtdInput.stepUp(); atualizarPrecoImagem(); });
