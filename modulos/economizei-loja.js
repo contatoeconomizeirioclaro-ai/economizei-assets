@@ -154,7 +154,7 @@ window.abrirModalLoja = function(idx) {
             '<div class="popup-confirmacao-header"><h3>' + Core.sanitize(opcoes.titulo || 'Pedido enviado') + '</h3><button type="button" class="modal-close-btn popup-confirmacao-close" data-fechar-confirmacao aria-label="Fechar">×</button></div>' +
             '<div class="popup-confirmacao-body"><p>Seu pedido foi enviado com sucesso!</p>' +
             '<div class="popup-confirmacao-codigo"><p class="label">Código</p><p class="valor">#' + Core.sanitize(codigo) + '</p>' +
-            '<button type="button" class="btn-copiar-codigo" data-codigo-copiar="' + Core.sanitize(codigo) + '">📋 Copiar código</button></div>' +
+            '<button type="button" class="btn-copiar-codigo" data-codigo-copiar="' + Core.sanitize(codigo) + '"><i class="fas fa-copy" aria-hidden="true"></i> Copiar código</button></div>' +
             '<div class="popup-confirmacao-botoes">' + (opcoes.botoes || '') + '</div></div>' +
             '<div class="popup-confirmacao-footer"><button type="button" class="btn-modal-fechar" data-fechar-confirmacao>Fechar</button></div></div>';
         document.body.appendChild(overlay);
@@ -584,7 +584,7 @@ window.abrirModalLoja = function(idx) {
 
     function renderizarProdutosLoja(produtos) {
         if (!produtos || produtos.length === 0) {
-            return '<div class="loja-estado loja-estado-vazio" role="status"><span class="loja-estado-icone" aria-hidden="true">⌕</span><strong>Vitrine vazia por enquanto</strong><p>Esta loja ainda não publicou produtos. Volte mais tarde para conferir as novidades.</p></div>';
+            return '<div class="loja-estado loja-estado-vazio" role="status"><span class="loja-estado-icone" aria-hidden="true"><i class="fas fa-store-slash"></i></span><strong>Vitrine vazia por enquanto</strong><p>Esta loja ainda não publicou produtos. Volte mais tarde para conferir as novidades.</p></div>';
         }
         var categorias = {};
         produtos.forEach(function(p) {
@@ -966,7 +966,7 @@ window.abrirModalLoja = function(idx) {
         var container = document.getElementById('carrinhoLista');
         if (!container) return;
         if (carrinho.length === 0) {
-            container.innerHTML = '<div class="loja-estado loja-carrinho-vazio" role="status"><span class="loja-estado-icone" aria-hidden="true">🛒</span><strong>Seu carrinho está vazio</strong><p>Explore os produtos e adicione seus favoritos para continuar.</p></div>';
+            container.innerHTML = '<div class="loja-estado loja-carrinho-vazio" role="status"><span class="loja-estado-icone" aria-hidden="true"><i class="fas fa-cart-shopping"></i></span><strong>Seu carrinho está vazio</strong><p>Explore os produtos e adicione seus favoritos para continuar.</p></div>';
             recalcularTotalLoja();
             atualizarBadgeCarrinhoLoja();
             return;
@@ -987,7 +987,7 @@ window.abrirModalLoja = function(idx) {
                 '<img src="' + (item.imagem || 'https://via.placeholder.com/40') + '" class="item-carrinho-imagem" onerror="this.style.display=\'none\'">' +
                 '<div style="flex:1"><strong>' + Core.sanitize(item.nome) + '</strong><br>' + precoItemHtml + '</div>' +
                 '<input type="number" min="1" value="' + item.quantidade + '" class="qtd-item" data-id="' + item.id + '" data-variacao="' + (item.variacaoId || '') + '" onchange="alterarQuantidadeLoja(\'' + item.id + '\', this.value, \'' + (item.variacaoId || '') + '\')">' +
-                '<button class="btn-pequeno" onclick="removerDoCarrinhoLoja(\'' + item.id + '\', \'' + (item.variacaoId || '') + '\')">✕</button>' +
+                '<button class="btn-pequeno" onclick="removerDoCarrinhoLoja(\'' + item.id + '\', \'' + (item.variacaoId || '') + '\')"><i class="fas fa-xmark" aria-hidden="true"></i></button>' +
                 '</div>';
         }).join('');
         document.getElementById('carrinhoSubtotal').innerText = subtotal.toFixed(2);
@@ -1122,13 +1122,13 @@ window.abrirModalLoja = function(idx) {
                 var frete = parseFloat(document.getElementById('selectFreteLoja')?.value) || 0;
                 var desconto = calcularDescontoCupomLoja(resumo.subtotalPromocional, frete);
                 if (cupomAtual.minimoPedido && desconto <= 0) throw new Error('pedido_minimo');
-                statusDiv.innerHTML = '<span style="color:#10b981;">✅ Cupom aplicado! Desconto de ' + (cupomAtual.tipo === 'percentual' ? cupomAtual.valor + '%' : 'R$ ' + (parseFloat(cupomAtual.valor) || 0).toFixed(2)) + '</span>';
+                statusDiv.innerHTML = '<span style="color:#10b981;"><i class="fas fa-circle-check" aria-hidden="true"></i> Cupom aplicado! Desconto de ' + (cupomAtual.tipo === 'percentual' ? cupomAtual.valor + '%' : 'R$ ' + (parseFloat(cupomAtual.valor) || 0).toFixed(2)) + '</span>';
                 recalcularTotalLoja();
             })
             .catch(function(err) {
                 var minimoAnterior = cupomAtual && cupomAtual.minimoPedido;
                 cupomAtual = null;
-                var mensagem = err.message === 'pedido_minimo' ? '❌ Pedido mínimo: R$ ' + (parseFloat(minimoAnterior) || 0).toFixed(2) : (err.message === 'cupom_invalido' ? '❌ Cupom inválido ou expirado' : '❌ Erro ao validar cupom');
+                var mensagem = err.message === 'pedido_minimo' ? 'Pedido mínimo: R$ ' + (parseFloat(minimoAnterior) || 0).toFixed(2) : (err.message === 'cupom_invalido' ? 'Cupom inválido ou expirado' : 'Erro ao validar cupom');
                 statusDiv.innerHTML = '<span style="color:#dc3545;">' + mensagem + '</span>';
                 recalcularTotalLoja();
                 console.error(err);
@@ -1264,10 +1264,10 @@ window.abrirModalLoja = function(idx) {
             .then(function() {
                 gerarComprovanteLoja(pedido, codigoCurto);
                 mostrarPopupConfirmacaoLoja({
-                    titulo: '✅ Pedido Confirmado!',
+                    titulo: 'Pedido Confirmado!',
                     codigo: codigoCurto,
-                    botoes: '<button class="btn-adicionar-filtro" onclick="document.getElementById(\'consultaRastreio\').value=\'' + codigoCurto + '\'; var a=document.querySelector(\'#modalLoja .modal-tab[data-tab=acompanhar]\'); if(a) a.click(); this.closest(\'.popup-confirmacao\').remove();">🔍 Acompanhar</button>' +
-                        '<button class="btn-adicionar-filtro" style="background:#2c3e50;" onclick="gerarComprovanteLoja(' + JSON.stringify(pedido).replace(/"/g, '&quot;') + ', \'' + codigoCurto + '\'); this.closest(\'.popup-confirmacao\').remove();">🖨️ Comprovante</button>',
+                    botoes: '<button class="btn-adicionar-filtro" onclick="document.getElementById(\'consultaRastreio\').value=\'' + codigoCurto + '\'; var a=document.querySelector(\'#modalLoja .modal-tab[data-tab=acompanhar]\'); if(a) a.click(); this.closest(\'.popup-confirmacao\').remove();"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> Acompanhar</button>' +
+                        '<button class="btn-adicionar-filtro" style="background:#2c3e50;" onclick="gerarComprovanteLoja(' + JSON.stringify(pedido).replace(/"/g, '&quot;') + ', \'' + codigoCurto + '\'); this.closest(\'.popup-confirmacao\').remove();"><i class="fas fa-print" aria-hidden="true"></i> Comprovante</button>',
                     onClose: 'var a=document.querySelector(\'#modalLoja .modal-tab[data-tab=produtos]\'); if(a) a.click();'
                 });
                 carrinho = []; cupomAtual = null; cupomDesconto = 0;
@@ -1289,15 +1289,15 @@ window.abrirModalLoja = function(idx) {
         if (!cod) { resDiv.innerHTML = '<p style="color:#dc3545;">Digite o código do pedido.</p>'; return; }
         Core.db.collection('pedidos').where('codigoCurto', '==', cod).limit(1).get()
             .then(function(snap) {
-                if (snap.empty) { resDiv.innerHTML = '<p style="color:#dc3545;">🔍 Pedido não encontrado.</p>'; return; }
+                if (snap.empty) { resDiv.innerHTML = '<p style="color:#dc3545;"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> Pedido não encontrado.</p>'; return; }
                 var p = snap.docs[0].data();
                 var statusMap = {
-                    'pendente': { label: 'Aguardando Loja', icon: '⏳', color: '#f59e0b' },
-                    'confirmado': { label: 'Pedido Confirmado', icon: '✅', color: '#10b981' },
-                    'em_preparo': { label: 'Em Preparação', icon: '📦', color: '#6366f1' },
-                    'saiu_entrega': { label: 'Saiu para Entrega', icon: '🚚', color: '#3b82f6' },
-                    'concluido': { label: 'Entregue', icon: '✅', color: '#10b981' },
-                    'cancelado': { label: 'Cancelado', icon: '❌', color: '#ef4444' }
+                    'pendente': { label: 'Aguardando Loja', icon: '<i class="fas fa-hourglass-half"></i>', color: '#f59e0b' },
+                    'confirmado': { label: 'Pedido Confirmado', icon: '<i class="fas fa-circle-check"></i>', color: '#10b981' },
+                    'em_preparo': { label: 'Em Preparação', icon: '<i class="fas fa-box"></i>', color: '#6366f1' },
+                    'saiu_entrega': { label: 'Saiu para Entrega', icon: '<i class="fas fa-truck"></i>', color: '#3b82f6' },
+                    'concluido': { label: 'Entregue', icon: '<i class="fas fa-flag-checkered"></i>', color: '#10b981' },
+                    'cancelado': { label: 'Cancelado', icon: '<i class="fas fa-circle-xmark"></i>', color: '#ef4444' }
                 };
                 var s = statusMap[p.status] || statusMap.pendente;
                 resDiv.innerHTML = '<div style="background:' + s.color + '10; border:2px solid ' + s.color + '; border-radius:1rem; padding:1rem;">' +
@@ -1328,7 +1328,7 @@ window.abrirModalLoja = function(idx) {
                         '<div><strong>#' + codigo + '</strong> <span style="background:' + (p.status === 'pendente' ? '#fff7ed' : p.status === 'concluido' ? '#ecfdf5' : '#f1f5f9') + '; padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem;">' + (p.status || 'pendente') + '</span></div>' +
                         '<div>' + (p.criadoEm ? new Date(p.criadoEm.toDate()).toLocaleString() : '---') + '</div></div>' +
                         '<div><strong>Total:</strong> R$ ' + p.total.toFixed(2) + '</div>' +
-                        '<button class="btn-consultar-pedido" style="margin-top:0.5rem;" onclick="gerarComprovanteLoja(' + JSON.stringify(p).replace(/"/g, '&quot;') + ', \'' + codigo + '\')">🖨️ Ver comprovante</button>' +
+                        '<button class="btn-consultar-pedido" style="margin-top:0.5rem;" onclick="gerarComprovanteLoja(' + JSON.stringify(p).replace(/"/g, '&quot;') + ', \'' + codigo + '\')"><i class="fas fa-print" aria-hidden="true"></i> Ver comprovante</button>' +
                         '</div>';
                 });
                 container.innerHTML = html;
@@ -1496,7 +1496,7 @@ window.abrirModalLoja = function(idx) {
                     }
                 });
 
-            var logoHtml = logoEstab ? '<img src="' + Core.sanitize(logoEstab) + '" alt="Logo de ' + Core.sanitize(nomeEstab) + '" loading="eager" referrerpolicy="no-referrer">' : '<span aria-hidden="true">🛍️</span>';
+            var logoHtml = logoEstab ? '<img src="' + Core.sanitize(logoEstab) + '" alt="Logo de ' + Core.sanitize(nomeEstab) + '" loading="eager" referrerpolicy="no-referrer">' : '<span aria-hidden="true"><i class="fas fa-bag-shopping"></i></span>';
             var modalHtml = '<div class="modal-overlay loja-padronizada" id="modalLoja" role="dialog" aria-modal="true" aria-labelledby="modalLojaTitulo">' +
                 '<div class="modal-conteudo fullscreen">' +
                 '<div class="modal-header">' +
@@ -1504,10 +1504,10 @@ window.abrirModalLoja = function(idx) {
                 '<div class="modal-estabelecimento-meta"><h3 id="modalLojaTitulo">' + Core.sanitize(nomeEstab) + '</h3><span id="statusLojaBadgeLoja" class="modal-estabelecimento-status status-aberta">Aceitando pedidos</span></div></div>' +
                 '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar loja">×</button></div>' +
                 '<div class="modal-tabs">' +
-                '<button class="modal-tab active" data-tab="produtos">📦 Produtos</button>' +
-                '<button class="modal-tab" data-tab="carrinho">🛒 Carrinho <span class="cart-tab-badge" id="cartBadgeLoja" style="display:none;">0</span></button>' +
-                '<button class="modal-tab" data-tab="acompanhar">🔍 Acompanhar</button>' +
-                (Core.getCurrentUser() ? '<button class="modal-tab" data-tab="historico">📋 Histórico</button>' : '') +
+                '<button class="modal-tab active" data-tab="produtos"><i class="fas fa-box" aria-hidden="true"></i> Produtos</button>' +
+                '<button class="modal-tab" data-tab="carrinho"><i class="fas fa-cart-shopping" aria-hidden="true"></i> Carrinho <span class="cart-tab-badge" id="cartBadgeLoja" style="display:none;">0</span></button>' +
+                '<button class="modal-tab" data-tab="acompanhar"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> Acompanhar</button>' +
+                (Core.getCurrentUser() ? '<button class="modal-tab" data-tab="historico"><i class="fas fa-clipboard-list" aria-hidden="true"></i> Histórico</button>' : '') +
                 '</div>' +
                 '<div class="modal-body">' +
                 '<div id="tabProdutos" class="modal-tab-content active">' +
