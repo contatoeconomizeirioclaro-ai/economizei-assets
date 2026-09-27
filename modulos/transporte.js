@@ -174,7 +174,7 @@ Cards.registrarBadge('transporte', {
 
         var logoHtml = logoEstab
           ? '<img src="' + Core.sanitize(logoEstab) + '" alt="Logo" loading="eager" referrerpolicy="no-referrer">'
-          : '<span aria-hidden="true">🚕</span>';
+          : '<span aria-hidden="true"><i class="fas fa-taxi"></i></span>';
 
         var modalHtml =
           '<div class="modal-overlay" id="modalTransporte" role="dialog" aria-modal="true" aria-labelledby="modalTransporteTitulo">' +
@@ -190,9 +190,9 @@ Cards.registrarBadge('transporte', {
                 '<button class="modal-close-btn" data-fechar-modal aria-label="Fechar">×</button>' +
               '</div>' +
               '<div class="modal-tabs">' +
-                '<button class="modal-tab active" data-tab="solicitar">📍 Solicitar corrida</button>' +
-                '<button class="modal-tab" data-tab="acompanhar">🔍 Acompanhar</button>' +
-                (currentUser ? '<button class="modal-tab" data-tab="historico">📋 Histórico</button>' : '') +
+                '<button class="modal-tab active" data-tab="solicitar"><i class="fas fa-car-side" aria-hidden="true"></i> Solicitar corrida</button>' +
+                '<button class="modal-tab" data-tab="acompanhar"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> Acompanhar</button>' +
+                (currentUser ? '<button class="modal-tab" data-tab="historico"><i class="fas fa-clipboard-list" aria-hidden="true"></i> Histórico</button>' : '') +
               '</div>' +
               '<div class="modal-body">' +
                 '<div id="tabSolicitar" class="modal-tab-content active">' +
@@ -219,8 +219,8 @@ Cards.registrarBadge('transporte', {
                         '<span class="rota-input-icone" aria-hidden="true"></span>' +
                         '<input type="text" id="rotaInput" autocomplete="off" placeholder="De onde você vai sair?" aria-label="Endereço">' +
                       '</div>' +
-                      '<button type="button" class="btn-location-modern" id="btnLocalizacaoAtual" title="Usar minha localização" aria-label="Usar minha localização">📍</button>' +
-                      '<button type="button" class="btn-confirmar-rota" id="btnConfirmarRota" title="Confirmar endereço digitado" aria-label="Confirmar endereço" disabled>✓</button>' +
+                      '<button type="button" class="btn-location-modern" id="btnLocalizacaoAtual" title="Usar minha localização" aria-label="Usar minha localização"><i class="fas fa-location-crosshairs" aria-hidden="true"></i></button>' +
+                      '<button type="button" class="btn-confirmar-rota" id="btnConfirmarRota" title="Confirmar endereço digitado" aria-label="Confirmar endereço" disabled><i class="fas fa-check" aria-hidden="true"></i></button>' +
                     '</div>' +
 
                     '<div class="rota-sugestoes" id="rotaSugestoes"></div>' +
@@ -240,7 +240,7 @@ Cards.registrarBadge('transporte', {
                       tarifas.map(function (f) {
                         return '<option value="' + f.taxa + '">' + Core.sanitize(f.localidade) + ' - R$ ' + f.taxa.toFixed(2) + '</option>';
                       }).join('') +
-                      '<option value="combinar">💬 Combinar com motorista</option>' +
+                      '<option value="combinar">Combinar com motorista</option>' +
                     '</select>' +
                   '</div>' +
 
@@ -530,7 +530,7 @@ Cards.registrarBadge('transporte', {
 
           var resultado = window.EnderecosCache.buscar(q, 8);
           if (!resultado.length) {
-            mostrarMensagemSugestoes('Nenhum endereço encontrado. Clique em ✓ para usar o texto digitado.');
+            mostrarMensagemSugestoes('Nenhum endereço encontrado. Clique no ícone de confirmar para usar o texto digitado.');
             return;
           }
           mostrarSugestoes(resultado);
@@ -643,7 +643,7 @@ Cards.registrarBadge('transporte', {
           }
           if (!hasMap) return;
           info.style.display = 'flex';
-          info.innerHTML = '🔄 Calculando rota...';
+          info.innerHTML = '<i class="fas fa-arrows-rotate" aria-hidden="true"></i> Calculando rota...';
           var url = 'https://api.mapbox.com/directions/v5/mapbox/driving/' +
             rotaState.origem.lng + ',' + rotaState.origem.lat + ';' +
             rotaState.destino.lng + ',' + rotaState.destino.lat +
@@ -652,7 +652,7 @@ Cards.registrarBadge('transporte', {
             .then(function (r) { return r.json(); })
             .then(function (data) {
               if (data.code !== 'Ok' || !data.routes || !data.routes.length) {
-                info.innerHTML = '❌ Não foi possível calcular a rota.';
+                info.innerHTML = '<i class="fas fa-circle-xmark" aria-hidden="true"></i> Não foi possível calcular a rota.';
                 return;
               }
               var route = data.routes[0];
@@ -671,7 +671,7 @@ Cards.registrarBadge('transporte', {
               route.geometry.coordinates.forEach(function (c) { bounds.extend(c); });
               mapboxMap.fitBounds(bounds, { padding: 40 });
             })
-            .catch(function (err) { info.innerHTML = '❌ Erro ao calcular rota: ' + err.message; });
+            .catch(function (err) { info.innerHTML = '<i class="fas fa-circle-xmark" aria-hidden="true"></i> Erro ao calcular rota: ' + err.message; });
         }
 
         window.consultarCorridaTransporte = function () {
@@ -680,15 +680,15 @@ Cards.registrarBadge('transporte', {
           if (!cod) { resDiv.innerHTML = '<p style="color:#dc3545;">Digite o código da corrida.</p>'; return; }
           Core.db.collection('pedidos').where('codigoCurto', '==', cod).limit(1).get()
             .then(function (snap) {
-              if (snap.empty) { resDiv.innerHTML = '<p style="color:#dc3545;">🔍 Corrida não encontrada.</p>'; return; }
+              if (snap.empty) { resDiv.innerHTML = '<p style="color:#dc3545;"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> Corrida não encontrada.</p>'; return; }
               var p = snap.docs[0].data();
               var statusMap = {
-                'pendente': { label: 'Aguardando motorista', icon: '⏳', color: '#f59e0b' },
-                'confirmado': { label: 'Motorista aceitou', icon: '✅', color: '#10b981' },
-                'a_caminho': { label: 'Motorista a caminho', icon: '🚗', color: '#6366f1' },
-                'em_curso': { label: 'Corrida em andamento', icon: '🛣️', color: '#3b82f6' },
-                'concluido': { label: 'Concluída', icon: '🏁', color: '#10b981' },
-                'cancelado': { label: 'Cancelado', icon: '❌', color: '#ef4444' }
+                'pendente': { label: 'Aguardando motorista', icon: '<i class="fas fa-hourglass-half"></i>', color: '#f59e0b' },
+                'confirmado': { label: 'Motorista aceitou', icon: '<i class="fas fa-circle-check"></i>', color: '#10b981' },
+                'a_caminho': { label: 'Motorista a caminho', icon: '<i class="fas fa-car"></i>', color: '#6366f1' },
+                'em_curso': { label: 'Corrida em andamento', icon: '<i class="fas fa-road"></i>', color: '#3b82f6' },
+                'concluido': { label: 'Concluída', icon: '<i class="fas fa-flag-checkered"></i>', color: '#10b981' },
+                'cancelado': { label: 'Cancelado', icon: '<i class="fas fa-circle-xmark"></i>', color: '#ef4444' }
               };
               var s = statusMap[p.status] || statusMap.pendente;
               resDiv.innerHTML = '<div style="background:' + s.color + '10; border:2px solid ' + s.color + '; border-radius:1rem; padding:1rem;">' +
@@ -722,7 +722,7 @@ Cards.registrarBadge('transporte', {
                   '<div><strong>Origem:</strong> ' + Core.sanitize(getEnderecoCurto(p.origem)) + '</div>' +
                   '<div><strong>Destino:</strong> ' + Core.sanitize(getEnderecoCurto(p.destino)) + '</div>' +
                   '<div><strong>Valor:</strong> ' + (p.total === 0 ? 'A combinar' : 'R$ ' + Number(p.total).toFixed(2)) + '</div>' +
-                  '<button class="btn-acao btn-qrcode" style="margin-top:0.5rem;" data-transporte-id="' + doc.id + '">🖨️ Ver comprovante</button>' +
+                  '<button class="btn-consultar-pedido" style="margin-top:0.5rem;" data-transporte-id="' + doc.id + '"><i class="fas fa-print" aria-hidden="true"></i> Ver comprovante</button>' +
                 '</div>';
               });
               container.innerHTML = html;
@@ -801,12 +801,12 @@ Cards.registrarBadge('transporte', {
           Core.db.collection('pedidos').add(pedido)
             .then(function () {
               EU.mostrarPopupConfirmacao({
-                titulo: '✅ Corrida solicitada!',
+                titulo: 'Corrida solicitada!',
                 mensagem: 'Sua corrida foi solicitada com sucesso!',
                 codigo: codigoCurto,
                 botoes:
-                  '<button class="btn-adicionar-filtro" onclick="fecharModalTransporte();">🔍 Acompanhar</button>' +
-                  '<button class="btn-adicionar-filtro" style="background:#2c3e50;" data-transporte-comprovante="1">🖨️ Comprovante</button>',
+                  '<button class="btn-adicionar-filtro" onclick="fecharModalTransporte();"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> Acompanhar</button>' +
+                  '<button class="btn-adicionar-filtro" style="background:#2c3e50;" data-transporte-comprovante="1"><i class="fas fa-print" aria-hidden="true"></i> Comprovante</button>',
                 onClose: 'fecharModalTransporte()'
               });
               setTimeout(function () {
