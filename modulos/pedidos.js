@@ -1320,9 +1320,12 @@ Economizei.Pedido = (function () {
         var p = doc.data();
         historicoCache[doc.id] = p;
         var codigo = p.codigoCurto || doc.id.slice(0, 6).toUpperCase();
-        html += '<div style="border:1px solid var(--gray-200); border-radius:0.75rem; padding:0.75rem; margin-bottom:0.5rem; background:white;"><div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;"><div><strong>Pedido #' + Core.sanitize(codigo) + '</strong> <span style="background:' + (p.status === 'pendente' ? '#fff7ed' : p.status === 'concluido' ? '#ecfdf5' : '#f1f5f9') + '; padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem;">' + Core.sanitize(p.status || 'pendente') + '</span></div><div>' + (p.criadoEm ? new Date(p.criadoEm.toDate()).toLocaleString() : '---') + '</div></div><div><strong>Total:</strong> R$ ' + p.total.toFixed(2) + '</div><button class="btn-acao btn-qrcode" style="margin-top:0.5rem;" onclick="Economizei.Pedido.verComprovanteHistorico(\'' + doc.id + '\')">🖨️ Ver comprovante</button></div>';
+        html += '<div style="border:1px solid var(--gray-200); border-radius:0.75rem; padding:0.75rem; margin-bottom:0.5rem; background:white;"><div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;"><div><strong>Pedido #' + Core.sanitize(codigo) + '</strong> <span style="background:' + (p.status === 'pendente' ? '#fff7ed' : p.status === 'concluido' ? '#ecfdf5' : '#f1f5f9') + '; padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem;">' + Core.sanitize(p.status || 'pendente') + '</span></div><div>' + (p.criadoEm ? new Date(p.criadoEm.toDate()).toLocaleString() : '---') + '</div></div><div><strong>Total:</strong> R$ ' + p.total.toFixed(2) + '</div><button class="btn-consultar-pedido" style="margin-top:0.5rem;" onclick="Economizei.Pedido.verComprovanteHistorico(\'' + doc.id + '\')">🖨️ Ver comprovante</button></div>';
       });
       container.innerHTML = html;
+    }).catch(function(err) {
+      console.error('Erro ao carregar histórico do Pedidos:', err);
+      container.innerHTML = '<p style="color:#dc3545;">Não foi possível carregar o histórico agora. Tente novamente mais tarde.</p>';
     });
   }
 
@@ -1338,34 +1341,14 @@ Economizei.Pedido = (function () {
     var msgDiv = document.getElementById('statusLojaMsg');
     var btnFinalizar = document.getElementById('btnFinalizarPedido');
     var bloqueado = (statusLoja === 'fechada' || statusLoja === 'pausada');
+    var mensagem = String(statusMessage || '').trim();
     statusLojaAtual = statusLoja;
     if (msgDiv) {
-      var mensagem = (statusMessage || '').trim();
-      if (bloqueado || mensagem) {
-        msgDiv.style.display = 'block';
-        var prefixo = statusLoja === 'fechada' ? '🔴 Loja fechada: ' : statusLoja === 'pausada' ? '🟡 Pedidos pausados: ' : '🟢 Aviso da loja: ';
-        msgDiv.innerHTML = prefixo + Core.sanitize(mensagem || 'Indisponível no momento.');
-        msgDiv.style.borderRadius = '0.75rem';
-        msgDiv.style.padding = '0.75rem';
-        msgDiv.style.marginBottom = '0.75rem';
-        msgDiv.style.textAlign = 'center';
-        msgDiv.style.fontWeight = '600';
-        if (statusLoja === 'fechada') {
-          msgDiv.style.background = '#fef2f2';
-          msgDiv.style.border = '1px solid #ef4444';
-          msgDiv.style.color = '#991b1b';
-        } else if (statusLoja === 'pausada') {
-          msgDiv.style.background = '#fef3c7';
-          msgDiv.style.border = '1px solid #f59e0b';
-          msgDiv.style.color = '#92400e';
-        } else {
-          msgDiv.style.background = '#ecfdf5';
-          msgDiv.style.border = '1px solid #10b981';
-          msgDiv.style.color = '#065f46';
-        }
-      } else {
-        msgDiv.style.display = 'none';
-      }
+      var deveExibirMensagem = bloqueado || mensagem !== '';
+      msgDiv.className = 'status-' + statusLoja;
+      msgDiv.style.display = deveExibirMensagem ? 'flex' : 'none';
+      msgDiv.innerHTML = '<span class="modal-status-label">Aviso da loja:</span><span class="modal-status-text">' + Core.sanitize(mensagem || (statusLoja === 'fechada' ? 'A loja está fechada no momento.' : 'Os pedidos estão pausados no momento.')) + '</span>';
+      msgDiv.setAttribute('role', 'alert');
     }
     if (btnFinalizar) {
       if (bloqueado) { btnFinalizar.classList.add('disabled'); btnFinalizar.setAttribute('aria-disabled', 'true'); }
@@ -1553,6 +1536,7 @@ Economizei.Pedido = (function () {
       if (existing) existing.quantidade += quantidade;
       else carrinho.push(Object.assign({}, produto, { id: prodId, nome: produto.nome, preco: preco, quantidade: quantidade, tamanho: null }));
       atualizarCarrinhoVisual(); recalcularTotal(); atualizarBadgeCarrinho();
+      EU.mostrarFeedbackAdicionar(btn);
       UI.mostrarToast('Adicionado ao carrinho');
     }
   }
