@@ -451,6 +451,39 @@
   font-weight: 800;
   letter-spacing: .08em;
 }
+/* ── Modal de personalização (extras + customização) — usado por Loja e Pedidos ── */
+.modal-extras-pontual,
+.modal-customizacao-full {
+  width: min(94vw, 900px) !important;
+  max-width: 900px !important;
+  max-height: min(90vh, 760px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  border-radius: 1.25rem !important;
+}
+.modal-extras-pontual .modal-body,
+.modal-customizacao-full .modal-body {
+  overflow-y: auto !important;
+  min-height: 0;
+}
+.modal-extras-pontual #extrasContainerModal,
+.modal-extras-pontual #extrasSimplesContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: .75rem;
+}
+@media (max-width: 640px) {
+  .modal-extras-pontual,
+  .modal-customizacao-full {
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-width: 100vw !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+}
 .modal-config-body {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) 255px !important;
