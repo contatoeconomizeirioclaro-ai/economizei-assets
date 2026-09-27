@@ -256,3 +256,59 @@ body.modo-app .modal-overlay#modalPedidoRest > .modal-conteudo > .modal-body {
 #modalPedidoRest .modal-estabelecimento-status.status-pausada::before { background: #f59e0b; }
 #modalPedidoRest .modal-estabelecimento-status.status-fechada { color: #b91c1c; }
 #modalPedidoRest .modal-estabelecimento-status.status-fechada::before { background: #ef4444; }
+
+/* ── Banner de status da loja (aviso do lojista) — padrão igual ao módulo Loja ── */
+#modalPedidoRest #statusLojaMsg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  box-sizing: border-box;
+  border-radius: .75rem !important;
+  padding: .75rem !important;
+  margin-bottom: .75rem !important;
+  text-align: center !important;
+  font-weight: 600 !important;
+}
+#modalPedidoRest #statusLojaMsg.status-aberta {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #166534 !important;
+}
+#modalPedidoRest #statusLojaMsg.status-pausada {
+  background: #fffbeb !important;
+  border: 1px solid #fcd34d !important;
+  color: #92400e !important;
+}
+#modalPedidoRest #statusLojaMsg.status-fechada {
+  background: #fef2f2 !important;
+  border: 1px solid #fca5a5 !important;
+  color: #991b1b !important;
+}
+#modalPedidoRest .modal-status-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin: 0;
+  font-size: .8rem;
+  text-transform: none;
+  font-weight: 700;
+  white-space: nowrap;
+}
+#modalPedidoRest .modal-status-label::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+#modalPedidoRest #statusLojaMsg.status-aberta .modal-status-label::before { background: #22c55e; }
+#modalPedidoRest #statusLojaMsg.status-pausada .modal-status-label::before { background: #f59e0b; }
+#modalPedidoRest #statusLojaMsg.status-fechada .modal-status-label::before { background: #ef4444; }
+#modalPedidoRest .modal-status-text {
+  display: inline;
+  font-size: .8rem;
+  line-height: 1.35;
+  font-weight: 650;
+}
