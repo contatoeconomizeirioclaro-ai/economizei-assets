@@ -4,28 +4,6 @@
    Produto-card, tabs, inputs, carrinho → comum/componentes.css
    ============================================================ */
 
-/* ── Modal de personalização (extras + customização) ── */
-.modal-extras-pontual,
-.modal-customizacao-full {
-  width: min(94vw, 900px) !important;
-  max-width: 900px !important;
-  max-height: min(90vh, 760px) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
-  border-radius: 1.25rem !important;
-}
-.modal-extras-pontual .modal-body,
-.modal-customizacao-full .modal-body {
-  overflow-y: auto !important;
-  min-height: 0;
-}
-.modal-extras-pontual #extrasContainerModal,
-.modal-extras-pontual #extrasSimplesContainer {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: .75rem;
-}
 .modal-size-options {
   margin: .75rem 0 0 !important;
   display: flex;
