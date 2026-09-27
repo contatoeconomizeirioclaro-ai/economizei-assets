@@ -350,7 +350,7 @@
           '<p class="valor">#' + sanitize(opcoes.codigo) + '</p>' +
           '<button class="btn-adicionar-filtro" ' +
             'style="background:white;color:var(--primary);border:1px solid var(--primary);padding:0.5rem 1rem;margin-top:0.5rem;" ' +
-            'data-popup-copiar="' + sanitize(opcoes.codigo) + '">📋 Copiar código</button>' +
+            'data-popup-copiar="' + sanitize(opcoes.codigo) + '"><i class="fas fa-copy" aria-hidden="true"></i> Copiar código</button>' +
         '</div>';
     }
 
