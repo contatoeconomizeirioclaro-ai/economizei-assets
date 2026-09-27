@@ -557,6 +557,16 @@
   padding: 1rem;
   min-width: 0;
 }
+.custom-summary-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: .75rem;
+  margin-bottom: .75rem;
+}
 .summary-header {
   display: flex;
   justify-content: space-between;
