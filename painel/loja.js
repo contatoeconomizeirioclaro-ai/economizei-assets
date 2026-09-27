@@ -669,7 +669,7 @@ async function compartilharMotoboy(id) {
 }
 function notificarNovoPedido(p) {
   Shell.mostrarPopupNovo({
-    titulo: '🛎️ NOVO PEDIDO!',
+    titulo: 'Novo pedido!',
     codigo: 'Pedido #' + (p.codigoCurto || p.id.slice(0, 6)),
     valor: 'Total: R$ ' + (p.total || 0).toFixed(2),
     cliente: 'Cliente: ' + p.clienteNome,
