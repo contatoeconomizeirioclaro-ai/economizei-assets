@@ -209,6 +209,25 @@
     return { abrir, fechar };
   }
 
+  // ---------- MODAL LOCAL (criar, abrir e fechar por clique-fora/×) ----------
+  // Substitui os _abrirModalLocal/_fecharModalLocal antes duplicados por módulo.
+  function criarModalLocal(el) {
+    if (!el) return null;
+    const ctrl = criarModalAcessivel();
+    ctrl.abrir(el, function () { if (el.parentNode) el.remove(); });
+    el.__ctrl = ctrl;
+    el.addEventListener('click', function (e) {
+      if (e.target === el) { e.preventDefault(); e.stopPropagation(); ctrl.fechar(); return; }
+      const btn = e.target.closest('.modal-close-btn, .btn-modal-fechar, [data-fechar-modal]');
+      if (btn) { e.preventDefault(); e.stopPropagation(); ctrl.fechar(); }
+    }, true);
+    return ctrl;
+  }
+  function fecharModalLocal(el) {
+    if (el && el.__ctrl) el.__ctrl.fechar();
+    else if (el) el.remove();
+  }
+
   // ---------- DADOS DO CLIENTE (localStorage) ----------
   function salvarDadosClienteLocal(nome, telefone, endereco, mesa) {
     if (!nome && !telefone && !endereco && !mesa) return;
@@ -427,6 +446,8 @@
     gerarImagemQRCode,
     // Modal acessível e confirmação visual comum
     criarModalAcessivel,
+    criarModalLocal,
+    fecharModalLocal,
     confirmar,
     // Compartilhados entre módulos
     salvarDadosClienteLocal,
