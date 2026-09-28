@@ -738,8 +738,8 @@ async function editarSaborModal(id, isDuplicar) {
   var precos = s.precos || {};
   var precosHtml = Object.keys(precos).map(function (t) { return '<tr><td><input type="text" value="' + EU.sanitize(t) + '" class="sabor-tam-nome"></td><td><input type="number" step="0.01" value="' + precos[t] + '" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td></tr>'; }).join('') || '<tr><td><input type="text" placeholder="Ex: G" class="sabor-tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td></tr>';
   var nomePadrao = isDuplicar ? s.nome + ' (cópia)' : s.nome;
-  modal.innerHTML = '<div class="modal-conteudo"><div class="modal-header"><h3>' + titulo + '</h3><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div><div class="campo"><label>Nome <span class="obrigatorio">*</span></label><input type="text" id="editSaborNome" value="' + EU.sanitize(nomePadrao) + '"></div><div class="campo"><label>Preços por Tamanho <span class="obrigatorio">*</span></label><table class="tabela-tamanhos"><tbody id="editPrecosSabor">' + precosHtml + '</tbody></table><button type="button" class="btn-pequeno" onclick="adicionarLinhaPrecoSaborEdit()">+ Adicionar tamanho</button></div><div class="campo"><label>Descrição</label><textarea id="editSaborDescricao" rows="2">' + EU.sanitize(s.descricao || '') + '</textarea></div><div class="campo"><label>Categorias</label><input type="text" id="editSaborCategorias" value="' + EU.sanitize(s.categorias || '') + '"></div><button class="btn-primary" id="saveSaborEdit"><span class="spinner-btn"></span><span class="btn-text">' + (isDuplicar ? 'Duplicar' : 'Salvar') + '</span></button></div>';
-  document.body.appendChild(modal);
+  modal.innerHTML = '<div class="modal-conteudo"><div class="modal-header"><h3>' + titulo + '</h3><button class="btn-pequeno" data-fechar-modal>&times;</button></div><div class="campo"><label>Nome <span class="obrigatorio">*</span></label><input type="text" id="editSaborNome" value="' + EU.sanitize(nomePadrao) + '"></div><div class="campo"><label>Preços por Tamanho <span class="obrigatorio">*</span></label><table class="tabela-tamanhos"><tbody id="editPrecosSabor">' + precosHtml + '</tbody></table><button type="button" class="btn-pequeno" onclick="adicionarLinhaPrecoSaborEdit()">+ Adicionar tamanho</button></div><div class="campo"><label>Descrição</label><textarea id="editSaborDescricao" rows="2">' + EU.sanitize(s.descricao || '') + '</textarea></div><div class="campo"><label>Categorias</label><input type="text" id="editSaborCategorias" value="' + EU.sanitize(s.categorias || '') + '"></div><button class="btn-primary" id="saveSaborEdit"><span class="spinner-btn"></span><span class="btn-text">' + (isDuplicar ? 'Duplicar' : 'Salvar') + '</span></button></div>';
+  document.body.appendChild(modal); EU.criarModalLocal(modal);
   window.adicionarLinhaPrecoSaborEdit = function () { var tbody = document.getElementById('editPrecosSabor'); var tr = document.createElement('tr'); tr.innerHTML = '<td><input type="text" placeholder="Ex: G" class="sabor-tam-nome"></td><td><input type="number" step="0.01" placeholder="0.00" class="sabor-tam-preco"></td><td><button type="button" class="btn-pequeno" onclick="removerLinhaTamanho(this)"><i class="fas fa-xmark" aria-hidden="true"></i></button></td>'; tbody.appendChild(tr); };
   document.getElementById('saveSaborEdit').onclick = async function () {
     var btn = this; btn.classList.add('loading'); btn.disabled = true;
@@ -752,7 +752,7 @@ async function editarSaborModal(id, isDuplicar) {
       var data = { nome: nome, precos: precos, descricao: document.getElementById('editSaborDescricao').value.trim(), categorias: document.getElementById('editSaborCategorias').value.trim(), disponivel: isDuplicar ? 'sim' : (s.disponivel || 'sim') };
       if (isDuplicar) { await db.collection('lojistas').doc(emailAtual).collection('sabores').add(data); EU.mostrarToast('Sabor "' + nome + '" duplicado!', 'sucesso'); }
       else { await db.collection('lojistas').doc(emailAtual).collection('sabores').doc(id).update(data); EU.mostrarToast('Sabor "' + nome + '" atualizado!', 'sucesso'); }
-      await carregarSabores(); modal.remove();
+      await carregarSabores(); EU.fecharModalLocal(modal);
     } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
     finally { btn.classList.remove('loading'); btn.disabled = false; }
   };
@@ -796,8 +796,8 @@ async function editarExtraModal(id, isDuplicar) {
   var modal = document.createElement('div'); modal.className = 'modal-overlay active';
   var titulo = isDuplicar ? 'Duplicar adicional' : 'Editar adicional';
   var nomePadrao = isDuplicar ? e.nome + ' (cópia)' : e.nome;
-  modal.innerHTML = '<div class="modal-conteudo"><div class="modal-header"><h3>' + titulo + '</h3><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div><div class="campo"><label>Nome <span class="obrigatorio">*</span></label><input type="text" id="editExtraNome" value="' + EU.sanitize(nomePadrao) + '"></div><div class="campo"><label>Preço (R$) <span class="obrigatorio">*</span></label><input type="number" step="0.01" id="editExtraPreco" value="' + (e.preco || 0) + '"></div><div class="campo"><label>Descrição</label><textarea id="editExtraDescricao" rows="2">' + EU.sanitize(e.descricao || '') + '</textarea></div><div class="campo"><label>Máximo por pedido</label><input type="number" id="editExtraMax" value="' + (e.max || 0) + '"></div><div class="campo"><label>Categorias</label><input type="text" id="editExtraCategorias" value="' + EU.sanitize(e.categorias || '') + '"></div><button class="btn-primary" id="saveExtraEdit"><span class="spinner-btn"></span><span class="btn-text">' + (isDuplicar ? 'Duplicar' : 'Salvar') + '</span></button></div>';
-  document.body.appendChild(modal);
+  modal.innerHTML = '<div class="modal-conteudo"><div class="modal-header"><h3>' + titulo + '</h3><button class="btn-pequeno" data-fechar-modal>&times;</button></div><div class="campo"><label>Nome <span class="obrigatorio">*</span></label><input type="text" id="editExtraNome" value="' + EU.sanitize(nomePadrao) + '"></div><div class="campo"><label>Preço (R$) <span class="obrigatorio">*</span></label><input type="number" step="0.01" id="editExtraPreco" value="' + (e.preco || 0) + '"></div><div class="campo"><label>Descrição</label><textarea id="editExtraDescricao" rows="2">' + EU.sanitize(e.descricao || '') + '</textarea></div><div class="campo"><label>Máximo por pedido</label><input type="number" id="editExtraMax" value="' + (e.max || 0) + '"></div><div class="campo"><label>Categorias</label><input type="text" id="editExtraCategorias" value="' + EU.sanitize(e.categorias || '') + '"></div><button class="btn-primary" id="saveExtraEdit"><span class="spinner-btn"></span><span class="btn-text">' + (isDuplicar ? 'Duplicar' : 'Salvar') + '</span></button></div>';
+  document.body.appendChild(modal); EU.criarModalLocal(modal);
   document.getElementById('saveExtraEdit').onclick = async function () {
     var btn = this; btn.classList.add('loading'); btn.disabled = true;
     try {
@@ -808,7 +808,7 @@ async function editarExtraModal(id, isDuplicar) {
       var data = { nome: nome, preco: preco, descricao: document.getElementById('editExtraDescricao').value.trim(), max: parseInt(document.getElementById('editExtraMax').value) || 0, categorias: document.getElementById('editExtraCategorias').value.trim(), disponivel: isDuplicar ? 'sim' : (e.disponivel || 'sim') };
       if (isDuplicar) { await db.collection('lojistas').doc(emailAtual).collection('extras').add(data); EU.mostrarToast('Adicional "' + nome + '" duplicado!', 'sucesso'); }
       else { await db.collection('lojistas').doc(emailAtual).collection('extras').doc(id).update(data); EU.mostrarToast('Adicional "' + nome + '" atualizado!', 'sucesso'); }
-      await carregarExtras(); modal.remove();
+      await carregarExtras(); EU.fecharModalLocal(modal);
     } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
     finally { btn.classList.remove('loading'); btn.disabled = false; }
   };
@@ -855,8 +855,8 @@ function editarFreteModal(id, loc, taxa, ativo, isDuplicar) {
   var modal = document.createElement('div');
   modal.className = 'modal-overlay entrega-modal active';
   var titulo = isDuplicar ? 'Duplicar taxa de entrega' : 'Editar taxa de entrega';
-  modal.innerHTML = '<div class="modal-conteudo entrega-modal-conteudo"><div class="modal-header"><div><span class="modal-eyebrow">Taxas de entrega</span><h3>' + titulo + '</h3></div><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div><div class="campanha-form"><div class="campanha-secao-titulo">1. DADOS DA ENTREGA</div><div class="campo"><label>Localidade</label><input type="text" id="editLoc" value="' + EU.sanitize(loc) + '"></div><div class="campo"><label>Taxa (R$)</label><input type="number" step="0.01" id="editTaxa" value="' + taxa + '"></div><div class="campanha-modal-acoes"><button class="btn-secundario" onclick="this.closest(\'.modal-overlay\').remove()">Cancelar</button><button class="btn-primary" id="salvarFrete"><span class="spinner-btn"></span><span class="btn-text">' + (isDuplicar ? 'Duplicar' : 'Salvar') + '</span></button></div></div></div>';
-  document.body.appendChild(modal);
+  modal.innerHTML = '<div class="modal-conteudo entrega-modal-conteudo"><div class="modal-header"><div><span class="modal-eyebrow">Taxas de entrega</span><h3>' + titulo + '</h3></div><button class="btn-pequeno" data-fechar-modal>×</button></div><div class="campanha-form"><div class="campanha-secao-titulo">1. DADOS DA ENTREGA</div><div class="campo"><label>Localidade</label><input type="text" id="editLoc" value="' + EU.sanitize(loc) + '"></div><div class="campo"><label>Taxa (R$)</label><input type="number" step="0.01" id="editTaxa" value="' + taxa + '"></div><div class="campanha-modal-acoes"><button class="btn-secundario" data-fechar-modal>Cancelar</button><button class="btn-primary" id="salvarFrete"><span class="spinner-btn"></span><span class="btn-text">' + (isDuplicar ? 'Duplicar' : 'Salvar') + '</span></button></div></div></div>';
+  document.body.appendChild(modal); EU.criarModalLocal(modal);
   document.getElementById('salvarFrete').onclick = async function () {
     var btn = this; btn.classList.add('loading'); btn.disabled = true;
     var l = document.getElementById('editLoc').value.trim();
@@ -866,7 +866,7 @@ function editarFreteModal(id, loc, taxa, ativo, isDuplicar) {
       var ref = db.collection('lojistas').doc(emailAtual).collection('fretes');
       if (isDuplicar) { await ref.add({ localidade: l, taxa: t, ativo: 'sim' }); EU.mostrarToast('Taxa "' + l + '" duplicada!', 'sucesso'); }
       else { await ref.doc(id).update({ localidade: l, taxa: t }); EU.mostrarToast('Taxa "' + l + '" atualizada!', 'sucesso'); }
-      await carregarFretes(); modal.remove();
+      await carregarFretes(); EU.fecharModalLocal(modal);
     } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); btn.classList.remove('loading'); btn.disabled = false; }
   };
 }
@@ -1354,13 +1354,13 @@ document.getElementById('btnAdicionarPromocao').onclick = salvarPromocao;
    ============================================================ */
 function abrirModal(titulo, conteudo) {
   var m = document.createElement('div'); m.className = 'modal-overlay active';
-  m.innerHTML = '<div class="modal-conteudo"><div class="modal-header"><h3>' + titulo + '</h3><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div><div class="modal-body">' + conteudo + '</div></div>';
-  document.body.appendChild(m);
+  m.innerHTML = '<div class="modal-conteudo"><div class="modal-header"><h3>' + titulo + '</h3><button class="btn-pequeno" data-fechar-modal>×</button></div><div class="modal-body">' + conteudo + '</div></div>';
+  document.body.appendChild(m); EU.criarModalLocal(m);
 }
-function mostrarPedidosPeriodo() { if (!pedidosAtuais.length) return EU.mostrarToast('Nenhum pedido.', 'erro'); var lista = pedidosAtuais.map(function (p) { return '<div onclick="verDetalhesPedido(\'' + p.id + '\')">#' + (p.codigoCurto || p.id.slice(0, 6)) + ' - R$ ' + (p.total || 0).toFixed(2) + ' - ' + p.clienteNome + '</div>'; }).join(''); abrirModal('Lista de Pedidos', lista); }
-function mostrarRankingVendas() { if (!rankingVendas.length) return EU.mostrarToast('Nenhuma venda.', 'erro'); var lista = rankingVendas.map(function (r, i) { return '<div>' + (i + 1) + 'º ' + r[0] + ' - ' + r[1] + ' vendidos</div>'; }).join(''); abrirModal('Itens Mais Vendidos', lista); }
-function mostrarPedidoMaisCaro() { if (!pedidosAtuais.length) return; var mais = pedidosAtuais.slice().sort(function (a, b) { return (b.total || 0) - (a.total || 0); })[0]; abrirModal('Maior Venda', '<div><h3>#' + (mais.codigoCurto || mais.id.slice(0, 6)) + '</h3><p>R$ ' + (mais.total || 0).toFixed(2) + '</p><p>Cliente: ' + mais.clienteNome + '</p><button class="btn-primary" onclick="verDetalhesPedido(\'' + mais.id + '\')">Ver Pedido</button></div>'); }
-function verDetalhesPedido(id) { var el = document.querySelector('.pedido-card[data-id="' + id + '"]'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); document.querySelectorAll('.modal-overlay').forEach(function (m) { m.remove(); }); }
+function mostrarPedidosPeriodo() { if (!pedidosAtuais.length) return EU.mostrarToast('Nenhum pedido.', 'erro'); var lista = pedidosAtuais.map(function (p) { return '<div onclick="verDetalhesPedido(\'' + p.id + '\')">#' + (p.codigoCurto || p.id.slice(0, 6)) + ' - R$ ' + (p.total || 0).toFixed(2) + ' - ' + EU.sanitize(p.clienteNome) + '</div>'; }).join(''); abrirModal('Lista de Pedidos', lista); }
+function mostrarRankingVendas() { if (!rankingVendas.length) return EU.mostrarToast('Nenhuma venda.', 'erro'); var lista = rankingVendas.map(function (r, i) { return '<div>' + (i + 1) + 'º ' + EU.sanitize(r[0]) + ' - ' + r[1] + ' vendidos</div>'; }).join(''); abrirModal('Itens Mais Vendidos', lista); }
+function mostrarPedidoMaisCaro() { if (!pedidosAtuais.length) return; var mais = pedidosAtuais.slice().sort(function (a, b) { return (b.total || 0) - (a.total || 0); })[0]; abrirModal('Maior Venda', '<div><h3>#' + (mais.codigoCurto || mais.id.slice(0, 6)) + '</h3><p>R$ ' + (mais.total || 0).toFixed(2) + '</p><p>Cliente: ' + EU.sanitize(mais.clienteNome) + '</p><button class="btn-primary" onclick="verDetalhesPedido(\'' + mais.id + '\')">Ver Pedido</button></div>'); }
+function verDetalhesPedido(id) { var el = document.querySelector('.pedido-card[data-id="' + id + '"]'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); document.querySelectorAll('.modal-overlay').forEach(function (m) { if (m.id) m.classList.remove('active'); else EU.fecharModalLocal(m); }); }
 function toggleCollapse(headerElement, contentId) {
   var content = document.getElementById(contentId);
   var btn = headerElement.querySelector('.collapse-btn');
