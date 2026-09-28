@@ -1,0 +1,26 @@
+/* ============================================================
+   MÓDULO TRANSPORTE — painel do empreendedor (CSS específico)
+   Modal-config, modal-close-btn, modais → comum/modais.css
+   Cards, tabs, inputs, listas → comum/painel.css
+   ============================================================ */
+
+.mapa-container { height: 450px; width: 100%; margin: var(--spacing-lg) 0; border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+.heatmap-controls { margin: var(--spacing-lg) 0; display: flex; gap: var(--spacing-lg); align-items: center; flex-wrap: wrap; }
+.heatmap-controls label { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.heatmap-controls input[type="range"] { width: 100px; }
+.heatmap-controls select { padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); font-size: 12px; }
+.heatmap-status { font-size: 12px; color: var(--text-muted); margin-left: auto; background: #f8fafc; padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); }
+.heatmap-status.erro { color: #991b1b; background: var(--status-cancelado-bg); border-color: #fecaca; }
+.badge-combinar { background: #f59e0b; color: white; border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 700; display: inline-block; margin-left: 6px; vertical-align: middle; }
+
+/* ── Modal Rota (mapa da corrida) ── */
+#modalRota .modal-header { flex-shrink: 0; }
+#rotaInfo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }
+#mapaRota { flex: 1; min-height: 300px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.rota-acoes { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; flex-shrink: 0; }
+#modalRota .modal-conteudo.fullscreen { display: flex; flex-direction: column; }
+.rota-corpo { flex: 1; display: flex; flex-direction: column; padding: var(--spacing-md); overflow: hidden; }
+.btn-primary.btn-maps, .btn-primary.btn-waze { width: auto; }
+.btn-primary.btn-maps { background: #1a73e8; }
+.btn-primary.btn-waze { background: #33ccff; }
+.btn-fechar-rota { background: #6c757d; color: white; border: none; }
