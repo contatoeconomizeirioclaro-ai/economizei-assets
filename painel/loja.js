@@ -935,8 +935,8 @@ function editarFreteModal(id, loc, taxa, ativo, isDuplicar) {
   modal.className = 'modal-overlay entrega-modal active';
   var titulo = isDuplicar ? 'Duplicar taxa de entrega' : 'Editar taxa de entrega';
   var textoBotao = isDuplicar ? 'Duplicar taxa' : 'Salvar taxa';
-  modal.innerHTML = '<div class="modal-conteudo entrega-modal-conteudo"><div class="modal-header"><div><span class="modal-eyebrow">Taxas de entrega</span><h3>' + titulo + '</h3></div><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Fechar">×</button></div><div class="campanha-form"><div class="campanha-secao-titulo">1. DADOS DA ENTREGA</div><div class="campo"><label>Localidade <span class="obrigatorio">*</span></label><input type="text" id="editLoc" value="' + EU.sanitize(loc) + '"></div><div class="campo"><label>Taxa (R$) <span class="obrigatorio">*</span></label><input type="number" step="0.01" min="0" id="editTaxa" value="' + taxa + '"></div><div class="campanha-modal-acoes"><button class="btn-secundario" onclick="this.closest(\'.modal-overlay\').remove()">Cancelar</button><button class="btn-primary" id="salvarFrete"><span class="spinner-btn"></span><span class="btn-text">' + textoBotao + '</span></button></div></div></div>';
-  document.body.appendChild(modal);
+  modal.innerHTML = '<div class="modal-conteudo entrega-modal-conteudo"><div class="modal-header"><div><span class="modal-eyebrow">Taxas de entrega</span><h3>' + titulo + '</h3></div><button class="btn-pequeno" data-fechar-modal aria-label="Fechar">×</button></div><div class="campanha-form"><div class="campanha-secao-titulo">1. DADOS DA ENTREGA</div><div class="campo"><label>Localidade <span class="obrigatorio">*</span></label><input type="text" id="editLoc" value="' + EU.sanitize(loc) + '"></div><div class="campo"><label>Taxa (R$) <span class="obrigatorio">*</span></label><input type="number" step="0.01" min="0" id="editTaxa" value="' + taxa + '"></div><div class="campanha-modal-acoes"><button class="btn-secundario" data-fechar-modal>Cancelar</button><button class="btn-primary" id="salvarFrete"><span class="spinner-btn"></span><span class="btn-text">' + textoBotao + '</span></button></div></div></div>';
+  document.body.appendChild(modal); EU.criarModalLocal(modal);
   document.getElementById('salvarFrete').onclick = async function () {
     var btn = this; btn.classList.add('loading'); btn.disabled = true;
     var dados = { localidade: document.getElementById('editLoc').value.trim(), taxa: parseFloat(document.getElementById('editTaxa').value), ativo: ativo === 'nao' ? 'nao' : 'sim' };
@@ -945,7 +945,7 @@ function editarFreteModal(id, loc, taxa, ativo, isDuplicar) {
       var ref = db.collection('lojistas').doc(emailAtual).collection('fretes');
       if (isDuplicar) { await ref.add(dados); EU.mostrarToast('Taxa "' + dados.localidade + '" duplicada!', 'sucesso'); }
       else { await ref.doc(id).update(dados); EU.mostrarToast('Taxa "' + dados.localidade + '" atualizada!', 'sucesso'); }
-      await carregarFretes(); modal.remove();
+      await carregarFretes(); EU.fecharModalLocal(modal);
     } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); btn.classList.remove('loading'); btn.disabled = false; }
   };
 }
@@ -1397,13 +1397,13 @@ function configurarModaisCadastroLoja() {
 function abrirModal(titulo, conteudo) {
   var modal = document.createElement('div');
   modal.className = 'modal-overlay active';
-  modal.innerHTML = '<div class="modal-conteudo"><div class="modal-header"><h3>' + titulo + '</h3><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div><div class="modal-body">' + conteudo + '</div></div>';
-  document.body.appendChild(modal);
+  modal.innerHTML = '<div class="modal-conteudo"><div class="modal-header"><h3>' + titulo + '</h3><button class="btn-pequeno" data-fechar-modal>×</button></div><div class="modal-body">' + conteudo + '</div></div>';
+  document.body.appendChild(modal); EU.criarModalLocal(modal);
 }
-function mostrarPedidosPeriodo() { if (!pedidosAtuais.length) return EU.mostrarToast('Nenhum pedido.', 'erro'); var lista = pedidosAtuais.map(function (p) { return '<div onclick="verDetalhesPedido(\'' + p.id + '\')">#' + (p.codigoCurto || p.id.slice(0, 6)) + ' - R$ ' + (p.total || 0).toFixed(2) + ' - ' + p.clienteNome + '</div>'; }).join(''); abrirModal('Lista de Pedidos', lista); }
-function mostrarRankingVendas() { if (!rankingVendas.length) return EU.mostrarToast('Nenhuma venda.', 'erro'); var lista = rankingVendas.map(function (r, i) { return '<div>' + (i + 1) + 'º ' + r[0] + ' - ' + r[1] + ' vendidos</div>'; }).join(''); abrirModal('Itens Mais Vendidos', lista); }
-function mostrarPedidoMaisCaro() { if (!pedidosAtuais.length) return; var maisCaro = pedidosAtuais.slice().sort(function (a, b) { return (b.total || 0) - (a.total || 0); })[0]; abrirModal('Maior Venda', '<div><h3>#' + (maisCaro.codigoCurto || maisCaro.id.slice(0, 6)) + '</h3><p>R$ ' + (maisCaro.total || 0).toFixed(2) + '</p><p>Cliente: ' + maisCaro.clienteNome + '</p><button class="btn-primary" onclick="verDetalhesPedido(\'' + maisCaro.id + '\')">Ver Pedido</button></div>'); }
-function verDetalhesPedido(id) { var el = document.querySelector('.pedido-card[data-id="' + id + '"]'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); document.querySelectorAll('.modal-overlay').forEach(function (m) { m.remove(); }); }
+function mostrarPedidosPeriodo() { if (!pedidosAtuais.length) return EU.mostrarToast('Nenhum pedido.', 'erro'); var lista = pedidosAtuais.map(function (p) { return '<div onclick="verDetalhesPedido(\'' + p.id + '\')">#' + (p.codigoCurto || p.id.slice(0, 6)) + ' - R$ ' + (p.total || 0).toFixed(2) + ' - ' + EU.sanitize(p.clienteNome) + '</div>'; }).join(''); abrirModal('Lista de Pedidos', lista); }
+function mostrarRankingVendas() { if (!rankingVendas.length) return EU.mostrarToast('Nenhuma venda.', 'erro'); var lista = rankingVendas.map(function (r, i) { return '<div>' + (i + 1) + 'º ' + EU.sanitize(r[0]) + ' - ' + r[1] + ' vendidos</div>'; }).join(''); abrirModal('Itens Mais Vendidos', lista); }
+function mostrarPedidoMaisCaro() { if (!pedidosAtuais.length) return; var maisCaro = pedidosAtuais.slice().sort(function (a, b) { return (b.total || 0) - (a.total || 0); })[0]; abrirModal('Maior Venda', '<div><h3>#' + (maisCaro.codigoCurto || maisCaro.id.slice(0, 6)) + '</h3><p>R$ ' + (maisCaro.total || 0).toFixed(2) + '</p><p>Cliente: ' + EU.sanitize(maisCaro.clienteNome) + '</p><button class="btn-primary" onclick="verDetalhesPedido(\'' + maisCaro.id + '\')">Ver Pedido</button></div>'); }
+function verDetalhesPedido(id) { var el = document.querySelector('.pedido-card[data-id="' + id + '"]'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); document.querySelectorAll('.modal-overlay').forEach(function (m) { if (m.id) m.classList.remove('active'); else EU.fecharModalLocal(m); }); }
 
 /* ============================================================
    TABS
