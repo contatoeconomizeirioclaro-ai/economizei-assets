@@ -165,22 +165,22 @@
     }).join('');
   }
 
+  async function excluirPedido(id) {
+    var cod = '#' + id.slice(0, 6).toUpperCase();
+    if (!await EU.confirmar('Excluir a corrida ' + cod + '? Essa ação não pode ser desfeita.')) return;
+    EU.showLoading('Excluindo...');
+    try {
+      await db.collection('pedidos').doc(id).delete();
+      EU.mostrarToast('Corrida ' + cod + ' excluída.', 'sucesso');
+    } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
+    finally { EU.hideLoading(); }
+  }
+
   async function atualizarStatus(id, novoStatus) {
     EU.showLoading('Atualizando...');
     try {
       await db.collection('pedidos').doc(id).update({ status: novoStatus });
       EU.mostrarToast('Corrida #' + id.slice(0, 6).toUpperCase() + ' agora está ' + novoStatus + '.', 'sucesso');
-    } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
-    finally { EU.hideLoading(); }
-  }
-
-  async function excluirPedido(id) {
-    var cod = '#' + id.slice(0, 6).toUpperCase();
-    if (!confirm('Excluir a corrida ' + cod + '? Essa ação não pode ser desfeita.')) return;
-    EU.showLoading('Excluindo...');
-    try {
-      await db.collection('pedidos').doc(id).delete();
-      EU.mostrarToast('Corrida ' + cod + ' excluída.', 'sucesso');
     } catch (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); }
     finally { EU.hideLoading(); }
   }
@@ -226,8 +226,8 @@
         }
       }).then(function () {
         var link = window.location.origin + '/p/entregador.html?token=' + encodeURIComponent(token);
-        navigator.clipboard.writeText(link).then(function () {
-          if (p.clienteTelefone && confirm('Link copiado! Abrir WhatsApp do passageiro para enviar?')) {
+        navigator.clipboard.writeText(link).then(async function () {
+          if (p.clienteTelefone && await EU.confirmar('Link copiado! Abrir WhatsApp do passageiro para enviar?')) {
             window.open('https://wa.me/' + EU.formatarWhatsapp(p.clienteTelefone) + '?text=' + encodeURIComponent('Olá! Aqui está o link para acompanhar sua corrida: ' + link), '_blank');
           } else {
             EU.mostrarToast('Link copiado!', 'sucesso');
@@ -367,8 +367,8 @@
       var data = doc.data();
       var modal = document.createElement('div');
       modal.className = 'modal-overlay active';
-      modal.innerHTML = '<div class="modal-conteudo" style="max-width:400px;"><div class="modal-header"><h3>Editar Tarifa</h3><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div><div class="campo"><label>Localidade</label><input type="text" id="editLoc" value="' + EU.sanitize(data.localidade) + '"></div><div class="campo"><label>Valor (R$)</label><input type="number" step="0.01" id="editVal" value="' + data.valor + '"></div><div class="campo"><label>Descrição</label><textarea id="editDesc">' + EU.sanitize(data.descricao || '') + '</textarea></div><button class="btn-primary" id="saveEditTarifa"><span class="spinner-btn"></span><span class="btn-text">Salvar</span></button></div>';
-      document.body.appendChild(modal);
+      modal.innerHTML = '<div class="modal-conteudo" style="max-width:400px;"><div class="modal-header"><h3>Editar Tarifa</h3><button class="btn-pequeno" data-fechar-modal>&times;</button></div><div class="campo"><label>Localidade</label><input type="text" id="editLoc" value="' + EU.sanitize(data.localidade) + '"></div><div class="campo"><label>Valor (R$)</label><input type="number" step="0.01" id="editVal" value="' + data.valor + '"></div><div class="campo"><label>Descrição</label><textarea id="editDesc">' + EU.sanitize(data.descricao || '') + '</textarea></div><button class="btn-primary" id="saveEditTarifa"><span class="spinner-btn"></span><span class="btn-text">Salvar</span></button></div>';
+      document.body.appendChild(modal); EU.criarModalLocal(modal);
       document.getElementById('saveEditTarifa').onclick = function () {
         var btn = this;
         var loc = document.getElementById('editLoc').value.trim();
@@ -377,7 +377,7 @@
         btn.classList.add('loading'); btn.disabled = true;
         db.collection('lojistas').doc(emailAtual).collection('tarifas').doc(id).update({
           localidade: loc, valor: val, descricao: document.getElementById('editDesc').value.trim()
-        }).then(function () { EU.mostrarToast('Tarifa atualizada!', 'sucesso'); modal.remove(); })
+        }).then(function () { EU.mostrarToast('Tarifa atualizada!', 'sucesso'); EU.fecharModalLocal(modal); })
         .catch(function (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); btn.classList.remove('loading'); btn.disabled = false; });
       };
     });
@@ -394,8 +394,8 @@
     });
   }
 
-  function excluirTarifa(id) {
-    if (!confirm('Excluir esta tarifa? Essa ação não pode ser desfeita.')) return;
+  async function excluirTarifa(id) {
+    if (!(await EU.confirmar('Excluir esta tarifa? Essa ação não pode ser desfeita.'))) return;
     db.collection('lojistas').doc(emailAtual).collection('tarifas').doc(id).delete()
       .then(function () { EU.mostrarToast('Tarifa removida.', 'sucesso'); })
       .catch(function (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); });
@@ -438,8 +438,8 @@
       var data = doc.data();
       var modal = document.createElement('div');
       modal.className = 'modal-overlay active';
-      modal.innerHTML = '<div class="modal-conteudo" style="max-width:400px;"><div class="modal-header"><h3>Editar Cupom</h3><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div><div class="campo"><label>Código</label><input type="text" id="editCod" value="' + EU.sanitize(data.codigo) + '"></div><div class="campo"><label>Valor</label><input type="number" step="0.01" id="editVal" value="' + data.valor + '"></div><div class="campo"><label>Ativo</label><select id="editAt"><option value="sim"' + (data.ativo==='sim'?' selected':'') + '>Sim</option><option value="nao"' + (data.ativo==='nao'?' selected':'') + '>Não</option></select></div><button class="btn-primary" id="saveEditCupom"><span class="spinner-btn"></span><span class="btn-text">Salvar</span></button></div>';
-      document.body.appendChild(modal);
+      modal.innerHTML = '<div class="modal-conteudo" style="max-width:400px;"><div class="modal-header"><h3>Editar Cupom</h3><button class="btn-pequeno" data-fechar-modal>&times;</button></div><div class="campo"><label>Código</label><input type="text" id="editCod" value="' + EU.sanitize(data.codigo) + '"></div><div class="campo"><label>Valor</label><input type="number" step="0.01" id="editVal" value="' + data.valor + '"></div><div class="campo"><label>Ativo</label><select id="editAt"><option value="sim"' + (data.ativo==='sim'?' selected':'') + '>Sim</option><option value="nao"' + (data.ativo==='nao'?' selected':'') + '>Não</option></select></div><button class="btn-primary" id="saveEditCupom"><span class="spinner-btn"></span><span class="btn-text">Salvar</span></button></div>';
+      document.body.appendChild(modal); EU.criarModalLocal(modal);
       document.getElementById('saveEditCupom').onclick = function () {
         var btn = this;
         var cod = document.getElementById('editCod').value.trim().toUpperCase();
@@ -448,7 +448,7 @@
         btn.classList.add('loading'); btn.disabled = true;
         db.collection('lojistas').doc(emailAtual).collection('cupons').doc(id).update({
           codigo: cod, valor: val, ativo: document.getElementById('editAt').value
-        }).then(function () { EU.mostrarToast('Cupom atualizado!', 'sucesso'); modal.remove(); })
+        }).then(function () { EU.mostrarToast('Cupom atualizado!', 'sucesso'); EU.fecharModalLocal(modal); })
         .catch(function (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); btn.classList.remove('loading'); btn.disabled = false; });
       };
     });
@@ -466,8 +466,8 @@
     });
   }
 
-  function excluirCupom(id) {
-    if (!confirm('Excluir este cupom? Essa ação não pode ser desfeita.')) return;
+  async function excluirCupom(id) {
+    if (!(await EU.confirmar('Excluir este cupom? Essa ação não pode ser desfeita.'))) return;
     db.collection('lojistas').doc(emailAtual).collection('cupons').doc(id).delete()
       .then(function () { EU.mostrarToast('Cupom removido.', 'sucesso'); })
       .catch(function (e) { EU.mostrarToast('Erro: ' + e.message, 'erro'); });
@@ -678,14 +678,14 @@
   function verDetalhesPedido(id) {
     var el = document.querySelector('.pedido-card[data-id="' + id + '"]');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    document.querySelectorAll('.modal-overlay').forEach(function (m) { if (!m.id) m.remove(); else m.classList.remove('active'); });
+    document.querySelectorAll('.modal-overlay').forEach(function (m) { if (m.id) m.classList.remove('active'); else EU.fecharModalLocal(m); });
   }
 
   function abrirModal(titulo, conteudo) {
     var modal = document.createElement('div');
     modal.className = 'modal-overlay active';
-    modal.innerHTML = '<div class="modal-conteudo"><div class="modal-header"><h3>' + titulo + '</h3><button class="btn-pequeno" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div><div class="modal-body">' + conteudo + '</div></div>';
-    document.body.appendChild(modal);
+    modal.innerHTML = '<div class="modal-conteudo"><div class="modal-header"><h3>' + titulo + '</h3><button class="btn-pequeno" data-fechar-modal>&times;</button></div><div class="modal-body">' + conteudo + '</div></div>';
+    document.body.appendChild(modal); EU.criarModalLocal(modal);
   }
 
   function toggleCollapse(header, contentId) {
