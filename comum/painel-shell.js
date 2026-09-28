@@ -36,16 +36,16 @@
 
   var ROTULOS_PADRAO = {
     loja: {
-      aberta:  '<i class="fas fa-circle-check"></i> Aberta',
-      pausada: '<i class="fas fa-circle-pause"></i> Pausada',
-      fechada: '<i class="fas fa-circle-xmark"></i> Fechada',
+      aberta:  'Aberta',
+      pausada: 'Pausada',
+      fechada: 'Fechada',
       labelMensagem: 'Mensagem exibida aos clientes (opcional)',
       ajudaMensagem: 'Esta mensagem continuará disponível mesmo quando a loja estiver aberta, pausada ou fechada.'
     },
     servico: {
-      aberta:  '<i class="fas fa-circle-check"></i> Serviço Ativo',
-      pausada: '<i class="fas fa-circle-pause"></i> Serviço Pausado',
-      fechada: '<i class="fas fa-circle-xmark"></i> Serviço Indisponível',
+      aberta:  'Serviço Ativo',
+      pausada: 'Serviço Pausado',
+      fechada: 'Serviço Indisponível',
       labelMensagem: 'Mensagem exibida aos clientes (opcional)',
       ajudaMensagem: 'Esta mensagem continuará disponível mesmo quando o serviço estiver ativo, pausado ou indisponível.'
     }
