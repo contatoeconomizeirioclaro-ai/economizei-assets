@@ -388,7 +388,6 @@ input:checked + .slider:before { transform: translateX(22px); }
    ============================================================ */
 
 /* ===== MODAL DE CADASTRO ===== */
-.cadastro-modal { align-items: flex-end; padding: 10px 10px 130px; }
 .cadastro-modal .cadastro-modal-conteudo {
   width: 100%; max-width: 860px; max-height: calc(100dvh - 32px);
   overflow-y: auto; padding: var(--spacing-xl);
@@ -401,7 +400,6 @@ input:checked + .slider:before { transform: translateX(22px); }
 .cadastro-modal-acoes .btn-secundario { width: auto; min-width: 130px; }
 
 /* ===== MODAL DE CAMPANHA ===== */
-.campanha-modal { align-items: flex-end; padding: 10px 10px 130px; }
 .campanha-modal .campanha-modal-conteudo {
   width: 100%; max-width: 860px; max-height: calc(100dvh - 32px);
   overflow-y: auto; padding: var(--spacing-xl);
