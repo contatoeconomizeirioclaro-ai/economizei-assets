@@ -36,16 +36,16 @@
 
   var ROTULOS_PADRAO = {
     loja: {
-      aberta:  '<i class="fas fa-circle-check"></i> Aberta',
-      pausada: '<i class="fas fa-circle-pause"></i> Pausada',
-      fechada: '<i class="fas fa-circle-xmark"></i> Fechada',
+      aberta:  'Aberta',
+      pausada: 'Pausada',
+      fechada: 'Fechada',
       labelMensagem: 'Mensagem exibida aos clientes (opcional)',
       ajudaMensagem: 'Esta mensagem continuará disponível mesmo quando a loja estiver aberta, pausada ou fechada.'
     },
     servico: {
-      aberta:  '<i class="fas fa-circle-check"></i> Serviço Ativo',
-      pausada: '<i class="fas fa-circle-pause"></i> Serviço Pausado',
-      fechada: '<i class="fas fa-circle-xmark"></i> Serviço Indisponível',
+      aberta:  'Serviço Ativo',
+      pausada: 'Serviço Pausado',
+      fechada: 'Serviço Indisponível',
       labelMensagem: 'Mensagem exibida aos clientes (opcional)',
       ajudaMensagem: 'Esta mensagem continuará disponível mesmo quando o serviço estiver ativo, pausado ou indisponível.'
     }
@@ -192,10 +192,11 @@
 
   function preencherSelectStatus(sel) {
     var r = estado.rotulos;
+    function textoPuro(s) { return sanitize(String(s || '').replace(/<[^>]*>/g, '').trim()); }
     sel.innerHTML =
-      '<option value="aberta">'  + sanitize(r.aberta)  + '</option>' +
-      '<option value="pausada">' + sanitize(r.pausada) + '</option>' +
-      '<option value="fechada">' + sanitize(r.fechada) + '</option>';
+      '<option value="aberta">'  + textoPuro(r.aberta)  + '</option>' +
+      '<option value="pausada">' + textoPuro(r.pausada) + '</option>' +
+      '<option value="fechada">' + textoPuro(r.fechada) + '</option>';
   }
 
   // ==================================================================
@@ -562,11 +563,16 @@
     EU.confirmar('Deseja realmente sair do painel?', { titulo: 'Confirmar saída', confirmar: 'Sair' })
       .then(function (ok) {
         if (!ok) return;
-        if (global.EconomizeiFirebase && global.EconomizeiFirebase.auth) {
-          global.EconomizeiFirebase.auth.signOut();
-        } else {
-          location.reload();
-        }
+        if (!global.EconomizeiFirebase || !global.EconomizeiFirebase.auth) { location.reload(); return; }
+        var auth = global.EconomizeiFirebase.auth;
+        auth.signOut().catch(function () {
+          // Uma falha na primeira tentativa costuma ser um estado interno passageiro
+          // do SDK do Firebase (ex.: logo após um login por popup) — tenta mais uma vez
+          // antes de recarregar a página, em vez de deixar o usuário preso.
+          setTimeout(function () {
+            auth.signOut().catch(function () { location.reload(); });
+          }, 300);
+        });
       });
   }
 
