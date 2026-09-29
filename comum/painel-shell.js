@@ -36,16 +36,16 @@
 
   var ROTULOS_PADRAO = {
     loja: {
-      aberta:  'Aberta',
-      pausada: 'Pausada',
-      fechada: 'Fechada',
+      aberta:  '<i class="fas fa-circle-check"></i> Aberta',
+      pausada: '<i class="fas fa-circle-pause"></i> Pausada',
+      fechada: '<i class="fas fa-circle-xmark"></i> Fechada',
       labelMensagem: 'Mensagem exibida aos clientes (opcional)',
       ajudaMensagem: 'Esta mensagem continuará disponível mesmo quando a loja estiver aberta, pausada ou fechada.'
     },
     servico: {
-      aberta:  'Serviço Ativo',
-      pausada: 'Serviço Pausado',
-      fechada: 'Serviço Indisponível',
+      aberta:  '<i class="fas fa-circle-check"></i> Serviço Ativo',
+      pausada: '<i class="fas fa-circle-pause"></i> Serviço Pausado',
+      fechada: '<i class="fas fa-circle-xmark"></i> Serviço Indisponível',
       labelMensagem: 'Mensagem exibida aos clientes (opcional)',
       ajudaMensagem: 'Esta mensagem continuará disponível mesmo quando o serviço estiver ativo, pausado ou indisponível.'
     }
@@ -559,34 +559,15 @@
   // SAIR
   // ==================================================================
   function pedirSair() {
-    var modal = document.createElement('div');
-    modal.className = 'modal-overlay active';
-    modal.innerHTML =
-      '<div class="modal-conteudo" style="max-width:320px;">' +
-        '<div class="modal-header">' +
-          '<h3>Confirmar saída</h3>' +
-          '<button class="btn-pequeno" data-cancelar-sair aria-label="Fechar">×</button>' +
-        '</div>' +
-        '<p style="margin-bottom:var(--spacing-lg);">Deseja realmente sair do painel?</p>' +
-        '<div style="display:flex; gap:var(--spacing-md);">' +
-          '<button class="btn-primary" id="confirmarSairPainel">Sair</button>' +
-          '<button class="btn-pequeno" data-cancelar-sair>Cancelar</button>' +
-        '</div>' +
-      '</div>';
-    document.body.appendChild(modal);
-
-    modal.addEventListener('click', function (e) {
-      if (e.target === modal) modal.remove();
-      if (e.target.closest('[data-cancelar-sair]')) modal.remove();
-    });
-    $id('confirmarSairPainel').addEventListener('click', function () {
-      modal.remove();
-      if (global.EconomizeiFirebase && global.EconomizeiFirebase.auth) {
-        global.EconomizeiFirebase.auth.signOut();
-      } else {
-        location.reload();
-      }
-    });
+    EU.confirmar('Deseja realmente sair do painel?', { titulo: 'Confirmar saída', confirmar: 'Sair' })
+      .then(function (ok) {
+        if (!ok) return;
+        if (global.EconomizeiFirebase && global.EconomizeiFirebase.auth) {
+          global.EconomizeiFirebase.auth.signOut();
+        } else {
+          location.reload();
+        }
+      });
   }
 
   // ==================================================================
