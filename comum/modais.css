@@ -40,6 +40,7 @@
 }
 .modal-overlay.active { display: flex; }
 .modal-overlay:has(> .modal-conteudo.fullscreen) { padding: 0; }
+body:has(.modal-overlay.active) { overflow: hidden; }
 
 .modal-conteudo {
   position: relative;
@@ -165,6 +166,12 @@
 }
 .modal-close-btn:active { transform: scale(0.92); }
 .modal-header > .modal-close-btn { margin-left: auto; }
+
+/* Cabeçalhos do painel que envolvem o <h3> numa div (eyebrow + título):
+   a div precisa ser o item flexível que cresce, não o h3 (que não é filho direto). */
+.modal-header > div:first-child { flex: 1; min-width: 0; }
+.modal-header > div:first-child h3 { margin: 0; }
+.modal-header > .btn-pequeno { margin-left: auto; flex-shrink: 0; }
 
 /* ===== BOTÕES DE AÇÃO ===== */
 .btn-modal-fechar,
