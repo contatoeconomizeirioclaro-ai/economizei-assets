@@ -311,6 +311,14 @@ if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errad
       state.timeoutAnonimo = null;
     }
 
+    // Garante o fechamento do modal de login e o fim do spinner assim que um usuário
+    // real é detectado, mesmo que a Promise de signInWithPopup() nunca resolva (o que
+    // acontece quando o navegador bloqueia a checagem de popup fechado por COOP).
+    if (user && !user.isAnonymous) {
+      fecharModalLogin();
+      EU.hideLoading();
+    }
+
     if (!user && state.modoLogin === 'pagina' && state.redirecionarAnonimo) {
       if (!state.timeoutAnonimo) {
         log('User null — aguardando ' + TEMPO_TOLERANCIA_ANONIMO + 'ms antes de redirecionar pro Hub.');
