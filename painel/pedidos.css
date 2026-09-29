@@ -2,66 +2,9 @@
    ECONOMIZEI! — CSS DO MÓDULO PEDIDOS
    ============================================================ */
 
-/* ===== GRID DE PEDIDOS ===== */
-.pedidos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--spacing-lg); }
-@media (max-width: 480px) { .pedidos-grid { grid-template-columns: 1fr; } }
-
-/* ===== CARD DE PEDIDO ===== */
-.pedido-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: var(--spacing-md); border-left: 4px solid var(--border); display: flex; flex-direction: column; gap: var(--spacing-sm); transition: 0.2s; }
-.pedido-card.status-pendente { border-left-color: var(--status-pendente-text); animation: blink-border 1s infinite; }
-.pedido-card.status-confirmado { border-left-color: var(--status-confirmado-text); }
-.pedido-card.status-em_preparo { border-left-color: var(--status-em_preparo-text); }
-.pedido-card.status-saiu_entrega { border-left-color: var(--status-saiu_entrega-text); }
-.pedido-card.status-concluido { border-left-color: var(--status-concluido-text); }
-.pedido-card.status-cancelado { border-left-color: var(--status-cancelado-text); }
-@keyframes blink-border { 0% { border-left-color: var(--status-pendente-text); } 50% { border-left-color: #fca5a5; } 100% { border-left-color: var(--status-pendente-text); } }
-
-.pedido-card.status-pendente .pedido-corpo, .pedido-card.status-pendente .pedido-id, .pedido-card.status-pendente .cliente-info, .pedido-card.status-pendente .itens-lista, .pedido-card.status-pendente .info-pagamento, .pedido-card.status-pendente .info-pagamento .total { color: var(--status-pendente-text); }
-.pedido-card.status-confirmado .pedido-corpo, .pedido-card.status-confirmado .pedido-id, .pedido-card.status-confirmado .cliente-info, .pedido-card.status-confirmado .itens-lista, .pedido-card.status-confirmado .info-pagamento, .pedido-card.status-confirmado .info-pagamento .total { color: var(--status-confirmado-text); }
-.pedido-card.status-em_preparo .pedido-corpo, .pedido-card.status-em_preparo .pedido-id, .pedido-card.status-em_preparo .cliente-info, .pedido-card.status-em_preparo .itens-lista, .pedido-card.status-em_preparo .info-pagamento, .pedido-card.status-em_preparo .info-pagamento .total { color: var(--status-em_preparo-text); }
-.pedido-card.status-saiu_entrega .pedido-corpo, .pedido-card.status-saiu_entrega .pedido-id, .pedido-card.status-saiu_entrega .cliente-info, .pedido-card.status-saiu_entrega .itens-lista, .pedido-card.status-saiu_entrega .info-pagamento, .pedido-card.status-saiu_entrega .info-pagamento .total { color: var(--status-saiu_entrega-text); }
-.pedido-card.status-concluido .pedido-corpo, .pedido-card.status-concluido .pedido-id, .pedido-card.status-concluido .cliente-info, .pedido-card.status-concluido .itens-lista, .pedido-card.status-concluido .info-pagamento, .pedido-card.status-concluido .info-pagamento .total { color: var(--status-concluido-text); }
-.pedido-card.status-cancelado .pedido-corpo, .pedido-card.status-cancelado .pedido-id, .pedido-card.status-cancelado .cliente-info, .pedido-card.status-cancelado .itens-lista, .pedido-card.status-cancelado .info-pagamento, .pedido-card.status-cancelado .info-pagamento .total { color: var(--status-cancelado-text); }
-
-/* ===== STATUS SELECT ===== */
-.status-select { padding: 4px 8px; border-radius: 20px; font-weight: 600; border: none; cursor: pointer; font-size: 12px; width: auto; margin-bottom: var(--spacing-sm); }
-.status-pendente { background: var(--status-pendente-bg); color: var(--status-pendente-text); }
-.status-confirmado { background: var(--status-confirmado-bg); color: var(--status-confirmado-text); }
-.status-em_preparo { background: var(--status-em_preparo-bg); color: var(--status-em_preparo-text); }
-.status-saiu_entrega { background: var(--status-saiu_entrega-bg); color: var(--status-saiu_entrega-text); }
-.status-concluido { background: var(--status-concluido-bg); color: var(--status-concluido-text); }
-.status-cancelado { background: var(--status-cancelado-bg); color: var(--status-cancelado-text); }
-
-.pedido-card .status-select { display: block; width: 100%; min-height: 40px; margin: 2px 0 8px; border: 2px solid var(--primary); background: var(--primary-light); color: var(--primary); font-size: 13px; font-weight: 800; text-align: center; box-shadow: 0 0 0 2px rgba(10,102,194,.08); cursor: pointer; }
-.pedido-card .status-select:focus { outline: 3px solid rgba(10,102,194,.25); }
-
-/* ===== HEADER DO PEDIDO ===== */
-.pedido-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--spacing-sm); }
-.pedido-id { font-weight: 800; font-size: 0.95rem; }
-.pedido-data { font-size: 11px; color: var(--text-muted); }
-
-/* ===== CORPO ===== */
-.cliente-info { background: #f8fafc; padding: var(--spacing-sm); border-radius: 8px; border-left: 3px solid var(--primary); margin: var(--spacing-sm) 0; font-size: 12px; display: flex; flex-direction: column; gap: 4px; }
-.cliente-nome { font-weight: 700; font-size: 0.9rem; }
-.cliente-contato { font-size: 11px; }
-.itens-lista { background: #f8fafc; padding: var(--spacing-sm); border-radius: 8px; margin: var(--spacing-sm) 0; font-size: 12px; }
-.itens-lista strong { display: block; margin-bottom: 4px; font-size: 11px; text-transform: uppercase; }
-.item-linha { display: flex; justify-content: space-between; margin-bottom: 2px; }
-.item-obs { font-size: 10px; font-style: italic; margin-top: 2px; padding-left: 8px; border-left: 2px solid var(--border); }
-.info-pagamento { font-size: 12px; margin: var(--spacing-sm) 0; }
-.info-pagamento .linha { display: flex; justify-content: space-between; margin-bottom: 4px; }
-.info-pagamento .total { font-weight: 800; font-size: 1rem; border-top: 2px solid #e2e8f0; margin-top: 6px; padding-top: 6px; }
-
-/* ===== AÇÕES DO CARD ===== */
-.pedido-acoes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
-.btn-acao-pedido { background: #fff; border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; transition: 0.2s; color: var(--text); }
-.btn-acao-pedido:hover { background: #f1f5f9; border-color: var(--primary); }
-.btn-falar-cliente { color: #087f3e; border-color: #86efac; background: #f0fdf4; font-weight: 800; }
-.btn-falar-cliente:hover { background: #dcfce7; border-color: #16a34a; }
-@media (max-width:640px) { .pedido-acoes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-
-/* ===== BADGE PENDENTES NA TAB ===== */
-.badge-pendente { background-color: #ef4444; color: white; border-radius: 30px; padding: 2px 8px; font-size: 11px; font-weight: bold; margin-left: 8px; vertical-align: middle; display: none; }
+/* ===== GRID/CARD DE PEDIDO, STATUS, AÇÕES E BOTÃO DE REMOVER IMAGEM =====
+   movidos para comum/painel-modulos.css (compartilhados com a Loja, que
+   gera a mesma marcação em painel/loja.js) */
 
 /* ===== BADGE DE TIPO DE PRODUTO NA LISTA ===== */
 .badge-variavel {
@@ -105,25 +48,7 @@
 
 /* Upload compartilhado: comum/painel-modulos.css */
 
-.imagem-produto-preview-item .btn-remover-imagem { position: absolute; top: 4px; right: 4px; margin: 0; }
-
-/* Botões secundários compartilhados: comum/painel-modulos.css */
-
-.btn-remover-imagem {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(220, 38, 38, .9);
-  color: #fff;
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
+/* .btn-remover-imagem movido para comum/painel-modulos.css (compartilhado com a Loja) */
 
 /* ===== SELETOR DE TIPO — movido para comum/painel-modulos.css =====
    (compartilhado com a Loja, que também usa .tipo-produto-cards/.tipo-card) */
