@@ -17,6 +17,34 @@
   var COL_LOJISTAS = 'lojistas';
   var TEMPO_TOLERANCIA_ANONIMO = 3000;
 
+  // ==================================================================
+  // PONTE COM O APP NATIVO (Android WebView do Painel do Empreendedor)
+  // O Google recusa signInWithPopup/signInWithRedirect dentro de qualquer
+  // WebView embutida (erro disallowed_useragent), então quando o app expõe
+  // Android.iniciarLoginGoogle(), o login do Google é feito pelo Google
+  // Play Services nativo (fora da WebView) e o app devolve o idToken via
+  // window.onLoginSuccess/onLoginError — mesma convenção já usada pelo
+  // app EconomizeiRioClaro4 (CategoriasActivity) para o login de avaliações.
+  // ==================================================================
+  global.onLoginSuccess = function (idToken) {
+    if (!idToken) { global.onLoginError(); return; }
+    var credential = firebase.auth.GoogleAuthProvider.credential(idToken);
+    FB.auth.signInWithCredential(credential).catch(function (e) {
+      EU.hideLoading();
+      var msg = traduzirErroAuth(e.code);
+      if (msg) EU.mostrarToast(msg, 'erro');
+    });
+    // fecharModalLogin()/hideLoading() acontecem via onAuthStateChanged assim que o login concluir.
+  };
+  global.onLoginError = function (motivo) {
+    EU.hideLoading();
+    if (motivo) EU.mostrarToast(motivo, 'erro');
+  };
+
+  function loginGoogleViaApp() {
+    return !!(global.Android && typeof global.Android.iniciarLoginGoogle === 'function');
+  }
+
   var state = {
     tipo: 'lojista',
     modoLogin: 'pagina',
@@ -226,6 +254,10 @@ if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errad
 
   function loginGoogle() {
     EU.showLoading('Autenticando...');
+    if (loginGoogleViaApp()) {
+      global.Android.iniciarLoginGoogle();
+      return;
+    }
     FB.auth.signInWithPopup(FB.provider)
       .then(function () { fecharModalLogin(); })
       .catch(function (e) {
