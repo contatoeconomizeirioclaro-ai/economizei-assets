@@ -36,16 +36,16 @@
 
   var ROTULOS_PADRAO = {
     loja: {
-      aberta:  'Aberta',
-      pausada: 'Pausada',
-      fechada: 'Fechada',
+      aberta:  '🟢 Aberta',
+      pausada: '🟡 Pausada',
+      fechada: '🔴 Fechada',
       labelMensagem: 'Mensagem exibida aos clientes (opcional)',
       ajudaMensagem: 'Esta mensagem continuará disponível mesmo quando a loja estiver aberta, pausada ou fechada.'
     },
     servico: {
-      aberta:  'Serviço Ativo',
-      pausada: 'Serviço Pausado',
-      fechada: 'Serviço Indisponível',
+      aberta:  '🟢 Serviço Ativo',
+      pausada: '🟡 Serviço Pausado',
+      fechada: '🔴 Serviço Indisponível',
       labelMensagem: 'Mensagem exibida aos clientes (opcional)',
       ajudaMensagem: 'Esta mensagem continuará disponível mesmo quando o serviço estiver ativo, pausado ou indisponível.'
     }
@@ -564,6 +564,9 @@
       .then(function (ok) {
         if (!ok) return;
         if (!global.EconomizeiFirebase || !global.EconomizeiFirebase.auth) { location.reload(); return; }
+        if (global.Android && typeof global.Android.sairDoGoogle === 'function') {
+          try { global.Android.sairDoGoogle(); } catch (e) {}
+        }
         var auth = global.EconomizeiFirebase.auth;
         auth.signOut().catch(function () {
           // Uma falha na primeira tentativa costuma ser um estado interno passageiro
