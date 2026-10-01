@@ -258,13 +258,9 @@ if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errad
       global.Android.iniciarLoginGoogle();
       return;
     }
-    FB.auth.signInWithPopup(FB.provider)
-      .then(function () { fecharModalLogin(); })
-      .catch(function (e) {
-        var msg = traduzirErroAuth(e.code);
-        if (msg) EU.mostrarToast(msg, 'erro');
-      })
-      .finally(function () { EU.hideLoading(); });
+    FB.auth.signInWithRedirect(FB.provider);
+    // A página navega pro Google e volta; getRedirectResult() (chamado em iniciar())
+    // trata o retorno. fecharModalLogin()/hideLoading() acontecem via onAuthStateChanged.
   }
 
   function loginEmail() {
@@ -396,7 +392,13 @@ if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errad
     if (!FB.auth) { console.error('[Painel.Auth] FB.auth indisponível'); return; }
 
     if (typeof FB.auth.getRedirectResult === 'function') {
-      FB.auth.getRedirectResult().catch(function () {});
+      EU.showLoading('Autenticando...');
+      FB.auth.getRedirectResult()
+        .catch(function (e) {
+          var msg = traduzirErroAuth(e.code);
+          if (msg) EU.mostrarToast(msg, 'erro');
+        })
+        .finally(function () { EU.hideLoading(); });
     }
 
     FB.auth.onAuthStateChanged(function (user) {
