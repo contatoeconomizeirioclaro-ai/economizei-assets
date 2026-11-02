@@ -61,13 +61,30 @@ function abrirModal(el) {
 // ============================================================
 // UTILITÁRIOS DA PÁGINA
 // ============================================================
-function parseMultiplosLinks(valor, sep = ';') {
+// Separadores aceitos: ";" , quebra de linha, ou espaço antes de um novo http(s)://
+function parseMultiplosLinks(valor) {
   if (!valor) return [];
-  return valor.split(sep).map(l => l.trim()).filter(Boolean).map(ensureHttps);
+  return String(valor).split(/[;\n\r]+|\s+(?=https?:\/\/)/).map(l => l.trim()).filter(Boolean).map(l => ensureHttps(l));
 }
-function parseListaSeparada(valor, sep = ';') {
+function parseListaSeparada(valor) {
   if (!valor) return [];
-  return valor.split(sep).map(v => v.trim()).filter(Boolean);
+  return String(valor).split(/[;\n\r]+/).map(v => v.trim()).filter(Boolean);
+}
+// Formato igual ao grupos.js: "Nome|valor, Nome2|valor2" (separadores: vírgula, ; ou quebra de linha). "Nome|" é opcional.
+function parseNomeValor(valor) {
+  if (!valor) return [];
+  return String(valor).split(/[,\n\r;]+/).map(s => s.trim()).filter(Boolean).map(parte => {
+    const i = parte.indexOf('|');
+    if (i === -1) return { nome: '', valor: parte };
+    return { nome: parte.slice(0, i).trim(), valor: parte.slice(i + 1).trim() };
+  }).filter(it => it.valor);
+}
+function getComprasItens(livro) {
+  const lojasLegado = parseListaSeparada(livro[COLUNAS.NOME_LOJAS]); // compatibilidade com a coluna antiga
+  return parseNomeValor(livro[COLUNAS.LINK_COMPRA]).map((it, i) => ({
+    nome: it.nome || lojasLegado[i] || `Loja ${i + 1}`,
+    url: ensureHttps(it.valor)
+  }));
 }
 function normalizarTelefone(t) { return String(t || '').replace(/\D/g, ''); }
 function normalizarNumeroWhatsApp(numero) {
@@ -171,16 +188,14 @@ function abrirLinksCompra(event, index) {
   event.stopPropagation();
   const livro = dadosProcessados[index];
   const nomeLivro = livro[COLUNAS.NOME] || '';
-  const links = parseMultiplosLinks(livro[COLUNAS.LINK_COMPRA]);
-  const lojas = parseListaSeparada(livro[COLUNAS.NOME_LOJAS]);
-  const itens = links.map((url, i) => ({
-    nome: lojas[i] || `Loja ${i + 1}`, url, classe: 'item-compra', icone: 'fa-solid fa-cart-shopping'
+  const itens = getComprasItens(livro).map(it => ({
+    nome: it.nome, url: it.url, classe: 'item-compra', icone: 'fa-solid fa-cart-shopping'
   }));
-  const whats = parseListaSeparada(livro[COLUNAS.WHATSAPP])[0];
+  const whats = parseNomeValor(livro[COLUNAS.WHATSAPP])[0];
   if (whats) {
     itens.push({
       nome: 'Comprar direto com o autor', sublabel: 'WhatsApp',
-      url: gerarLinkWhatsApp(whats, nomeLivro), classe: 'item-whatsapp', icone: 'fa-brands fa-whatsapp'
+      url: gerarLinkWhatsApp(whats.valor, nomeLivro), classe: 'item-whatsapp', icone: 'fa-brands fa-whatsapp'
     });
   }
   EU.abrirModalMulti('Onde comprar', itens, 'fa-solid fa-cart-shopping');
@@ -192,16 +207,17 @@ function abrirLinksContato(event, index) {
   const nomeLivro = livro[COLUNAS.NOME] || '';
   const itens = [];
 
-  parseListaSeparada(livro[COLUNAS.WHATSAPP]).forEach(n => {
-    const url = gerarLinkWhatsApp(n, nomeLivro);
-    if (url) itens.push({ nome: 'WhatsApp', sublabel: formatarTelefone(n), url, classe: 'item-whatsapp', icone: 'fa-brands fa-whatsapp' });
+  parseNomeValor(livro[COLUNAS.WHATSAPP]).forEach(it => {
+    const url = gerarLinkWhatsApp(it.valor, nomeLivro);
+    if (url) itens.push({ nome: it.nome || 'WhatsApp', sublabel: formatarTelefone(it.valor), url, classe: 'item-whatsapp', icone: 'fa-brands fa-whatsapp' });
   });
-  parseListaSeparada(livro[COLUNAS.TELEFONES]).forEach(n => {
-    const limpo = normalizarTelefone(n);
-    if (limpo) itens.push({ nome: 'Ligar', sublabel: formatarTelefone(n), url: `tel:${limpo}`, classe: 'item-telefone', icone: 'fa-solid fa-phone' });
+  parseNomeValor(livro[COLUNAS.TELEFONES]).forEach(it => {
+    const limpo = normalizarTelefone(it.valor);
+    if (limpo) itens.push({ nome: it.nome || 'Ligar', sublabel: formatarTelefone(it.valor), url: `tel:${limpo}`, classe: 'item-telefone', icone: 'fa-solid fa-phone' });
   });
-  parseMultiplosLinks(livro[COLUNAS.REDES_SOCIAIS]).forEach(url => {
-    itens.push({ nome: nomeDaRedeSocial(url), url, classe: 'item-social', icone: 'fa-solid fa-share-nodes' });
+  parseNomeValor(livro[COLUNAS.REDES_SOCIAIS]).forEach(it => {
+    const url = ensureHttps(it.valor);
+    itens.push({ nome: it.nome || nomeDaRedeSocial(url), url, classe: 'item-social', icone: 'fa-solid fa-share-nodes' });
   });
   parseListaSeparada(livro[COLUNAS.CONTATO]).forEach(c => {
     const url = gerarLinkContatoLegado(c);
@@ -408,18 +424,18 @@ function renderizarCards() {
     const autor = c[COLUNAS.SUBCATEGORIA] || '';
     const sinopse = c[COLUNAS.SINOPSE] || '';
     const imagem = ensureHttps(c[COLUNAS.IMAGEM]) || fallbackImage;
-    const linksCompra = parseMultiplosLinks(c[COLUNAS.LINK_COMPRA]);
+    const compras = getComprasItens(c);
     const bioAutor = c[COLUNAS.BIO_AUTOR] || '';
     const preco = c[COLUNAS.PRECO] || 'Preço sob consulta';
     const degustacao = c[COLUNAS.DEGUSTACAO] ? ensureHttps(c[COLUNAS.DEGUSTACAO].trim()) : '';
     const isFavorito = gerFav.tem(nome);
 
-    const whatsapps = parseListaSeparada(c[COLUNAS.WHATSAPP]);
-    const whatsapp = whatsapps[0] || '';
+    const whatsapps = parseNomeValor(c[COLUNAS.WHATSAPP]);
+    const whatsapp = whatsapps[0]?.valor || '';
     const linkWhats = whatsapp ? gerarLinkWhatsApp(whatsapp, nome) : '';
-    const totalCompra = linksCompra.length + (whatsapp ? 1 : 0);
-    const totalContato = whatsapps.length + parseListaSeparada(c[COLUNAS.TELEFONES]).length +
-      parseMultiplosLinks(c[COLUNAS.REDES_SOCIAIS]).length + parseListaSeparada(c[COLUNAS.CONTATO]).length;
+    const totalCompra = compras.length + (whatsapp ? 1 : 0);
+    const totalContato = whatsapps.length + parseNomeValor(c[COLUNAS.TELEFONES]).length +
+      parseNomeValor(c[COLUNAS.REDES_SOCIAIS]).length + parseListaSeparada(c[COLUNAS.CONTATO]).length;
 
     const stats = estatisticasGlobais[nome] || { media: 0, total: 0 };
     const mediaFmt = stats.media > 0 ? stats.media.toFixed(1) : '0.0';
@@ -468,7 +484,7 @@ function renderizarCards() {
 
     let botaoComprar = '';
     if (totalCompra > 1) botaoComprar = `<button class="btn-acao btn-comprar" onclick="abrirLinksCompra(event, ${index})"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Comprar</button>`;
-    else if (totalCompra === 1) botaoComprar = `<a href="${sanitize(linksCompra[0] || linkWhats)}" target="_blank" rel="noopener noreferrer" class="btn-acao btn-comprar"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Comprar</a>`;
+    else if (totalCompra === 1) botaoComprar = `<a href="${sanitize(compras[0]?.url || linkWhats)}" target="_blank" rel="noopener noreferrer" class="btn-acao btn-comprar"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Comprar</a>`;
 
     ex.innerHTML = `
       <div class="card-expanded">
