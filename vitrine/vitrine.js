@@ -500,7 +500,7 @@ function renderizarCards() {
       </div>`;
 
     const qrImg = gerarImagemQRCode(nome), qrUrl = gerarURLQRCode(nome);
-    ex.querySelector('.btn-compartilhar').addEventListener('click', ev => { ev.stopPropagation(); abrirQRCode(ev, nome, qrImg, qrUrl); });
+    ex.querySelector('.btn-compartilhar').addEventListener('click', ev => { ev.stopPropagation(); window.abrirQRCode(ev, nome, qrImg, qrUrl); });
 
     todosCardsRenderizados.push({ card, expanded: ex, index });
   });
@@ -803,3 +803,7 @@ function iniciarVitrine() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciarVitrine);
 else iniciarVitrine();
+
+// Contrato do app Android: o app sequestra window.abrirQRCode (AndroidQR) e abre a QrCodeActivity nativa.
+// Assinatura fixa: (event, nome, qrCodeURL=imagem, urlQRCode=link). Manter por último, como no grupos.js.
+window.abrirQRCode = abrirQRCode;
