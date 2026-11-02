@@ -127,65 +127,41 @@ function gerarImagemQRCode(nome, tamanho = 200) {
 }
 
 function abrirQRCode(event, nome, qrCodeURL, urlQRCode) {
-  const mobile = /Android|iPhone|iPad|iPod|Mobile|WebView|wv/i.test(navigator.userAgent) || window.innerWidth <= 768;
-  if (mobile) {
-    const existente = $('modalQRCode');
-    if (existente) existente.remove();
-    const x = event.clientX, y = event.clientY;
-    const vw = window.innerWidth, vh = window.innerHeight;
-    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const bg = dark ? '#1e1e1e' : 'white', txt = dark ? '#e0e0e0' : '#1f2937';
-    const sec = dark ? '#2d2d2d' : '#f8fafc', btnBg = dark ? '#333' : '#f1f5f9', btnTxt = dark ? '#ccc' : '#1f2937';
-
-    const overlay = document.createElement('div');
-    overlay.id = 'modalQRCode';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.5);z-index:999999;';
-    const box = document.createElement('div');
-    box.style.cssText = `position:absolute;background:${bg};width:280px;border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.3);box-sizing:border-box;color:${txt};`;
-    let left = x - 140, top = y - 40;
-    if (left < 10) left = 10;
-    if (left + 280 > vw - 10) left = vw - 290;
-    if (top < 10) top = 10;
-    if (top + 350 > vh - 10) top = vh - 360;
-    box.style.left = left + 'px';
-    box.style.top = top + 'px';
-    box.innerHTML = `
-      <h3 style="margin:0 0 8px;font-size:18px;line-height:1.2;padding-right:20px;color:${txt};">${sanitize(nome)}</h3>
-      <button data-fechar style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;" aria-label="Fechar">✕</button>
-      <div style="background:${sec};padding:10px;border-radius:10px;margin-bottom:12px;">
-        <img src="${sanitize(qrCodeURL)}" width="200" height="200" alt="QR Code" style="width:160px;height:160px;margin:0 auto;display:block;">
-      </div>
-      <p style="color:#6b7280;font-size:12px;margin-bottom:12px;">Escaneie ou compartilhe</p>
-      <div style="display:flex;gap:8px;justify-content:center;">
-        <button class="qr-share" style="background:#0a66c2;color:white;border:none;padding:10px;border-radius:8px;font-weight:bold;flex:1;font-size:13px;">📤 Compartilhar</button>
-        <button class="qr-copy" style="background:${btnBg};color:${btnTxt};border:1px solid #cbd5e1;padding:10px;border-radius:8px;font-weight:bold;flex:1;font-size:13px;">📋 Copiar</button>
-      </div>`;
-    box.querySelector('.qr-share').onclick = () => {
-      if (navigator.share) navigator.share({ title: nome, url: urlQRCode }); else alert('Compartilhamento não suportado');
-    };
-    box.querySelector('.qr-copy').onclick = () => navigator.clipboard.writeText(urlQRCode).then(() => alert('URL copiada!'));
-    box.querySelector('[data-fechar]').onclick = () => overlay.remove();
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-  } else {
-    const j = window.open('', '_blank', 'width=400,height=500,scrollbars=yes,resizable=yes');
-    if (!j) return;
-    const n = sanitize(nome), u = sanitize(urlQRCode), q = sanitize(qrCodeURL);
-    j.document.write(`<!DOCTYPE html><html><head><title>QR Code - ${n}</title><style>
-      body{font-family:Arial,sans-serif;text-align:center;padding:20px;background:#f5f5f5;margin:0}
-      .c{max-width:400px;margin:0 auto;background:white;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1)}
-      h2{color:#333}.qr{width:250px;height:250px;margin:20px auto;border:1px solid #ddd;border-radius:5px;padding:10px;background:white}
-      .url{background:#f8f9fa;padding:10px;border-radius:5px;margin:15px 0;word-break:break-all;font-size:12px}
-      button{padding:10px 15px;margin:5px;border:none;border-radius:5px;cursor:pointer;font-weight:bold}
-    </style></head><body><div class="c"><h2>${n}</h2><p>Escaneie o QR Code para acessar este livro</p>
-    <div class="qr"><img src="${q}" alt="QR Code" style="width:100%;height:100%"></div>
-    <div class="url"><strong>URL:</strong><br>${u}</div>
-    <button style="background:#28a745;color:white" onclick="location.href='${q}&download=1'">⬇️ Baixar</button>
-    <button style="background:#007bff;color:white" onclick="navigator.clipboard.writeText('${u}').then(()=>alert('URL copiada!'))">📋 Copiar</button>
-    <button style="background:#6c757d;color:white" onclick="window.close()">Fechar</button></div></body></html>`);
-    j.document.close();
-  }
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-label', 'QR Code de ' + nome);
+  modal.innerHTML =
+    '<div class="modal-conteudo modal-sm modal-midia">' +
+      '<div class="modal-header">' +
+        '<h3><i class="fa-solid fa-qrcode" aria-hidden="true"></i> QR Code</h3>' +
+        '<button class="modal-close-btn" data-fechar-qr aria-label="Fechar QR Code">×</button>' +
+      '</div>' +
+      '<div class="modal-body">' +
+        '<div class="midia-wrap"><img src="' + sanitize(qrCodeURL) + '" alt="QR Code para ' + sanitize(nome) + '" decoding="async" width="220" height="220"></div>' +
+        '<p class="midia-titulo">' + sanitize(nome) + '</p>' +
+        '<div class="midia-acoes">' +
+          '<button class="btn-modal-secundario" data-acao="compartilhar"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Compartilhar</button>' +
+          '<button class="btn-modal-primario" data-acao="copiar"><i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(modal);
+  const ctrl = EU.criarModalAcessivel();
+  ctrl.abrir(modal, () => modal.remove());
+  modal.addEventListener('click', e => {
+    const t = e.target;
+    if (t === modal || t.closest('[data-fechar-qr]')) { ctrl.fechar(); return; }
+    const btn = t.closest('[data-acao]');
+    if (!btn) return;
+    if (btn.dataset.acao === 'compartilhar') {
+      if (navigator.share) navigator.share({ title: nome, url: urlQRCode });
+      else EU.mostrarToast('Compartilhamento não suportado');
+    } else {
+      navigator.clipboard.writeText(urlQRCode).then(() => EU.mostrarToast('URL copiada!'));
+    }
+  });
 }
 
 // ============================================================
@@ -491,8 +467,8 @@ function renderizarCards() {
       : `<span class="link-entrar" style="margin-left:auto;">Entrar</span>`;
 
     let botaoComprar = '';
-    if (totalCompra > 1) botaoComprar = `<button class="btn-acao btn-comprar" onclick="abrirLinksCompra(event, ${index})">Comprar</button>`;
-    else if (totalCompra === 1) botaoComprar = `<a href="${sanitize(linksCompra[0] || linkWhats)}" target="_blank" rel="noopener noreferrer" class="btn-acao btn-comprar">Comprar</a>`;
+    if (totalCompra > 1) botaoComprar = `<button class="btn-acao btn-comprar" onclick="abrirLinksCompra(event, ${index})"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Comprar</button>`;
+    else if (totalCompra === 1) botaoComprar = `<a href="${sanitize(linksCompra[0] || linkWhats)}" target="_blank" rel="noopener noreferrer" class="btn-acao btn-comprar"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Comprar</a>`;
 
     ex.innerHTML = `
       <div class="card-expanded">
@@ -517,14 +493,14 @@ function renderizarCards() {
         </div>
         <div class="card-acoes">
           ${botaoComprar}
-          ${degustacao ? `<a href="${sanitize(degustacao)}" target="_blank" rel="noopener noreferrer" class="btn-acao btn-degustacao">📖 Degustação</a>` : ''}
+          ${degustacao ? `<a href="${sanitize(degustacao)}" target="_blank" rel="noopener noreferrer" class="btn-acao btn-degustacao"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Degustação</a>` : ''}
           ${totalContato > 0 ? `<button type="button" class="btn-acao btn-contato" onclick="abrirLinksContato(event, ${index})"><i class="fa-solid fa-address-book" aria-hidden="true"></i> Contato</button>` : ''}
-          <button type="button" class="btn-acao btn-qrcode">📱 QR Code</button>
+          <button type="button" class="btn-acao btn-compartilhar"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Compartilhar</button>
         </div>
       </div>`;
 
     const qrImg = gerarImagemQRCode(nome), qrUrl = gerarURLQRCode(nome);
-    ex.querySelector('.btn-qrcode').addEventListener('click', ev => { ev.stopPropagation(); abrirQRCode(ev, nome, qrImg, qrUrl); });
+    ex.querySelector('.btn-compartilhar').addEventListener('click', ev => { ev.stopPropagation(); abrirQRCode(ev, nome, qrImg, qrUrl); });
 
     todosCardsRenderizados.push({ card, expanded: ex, index });
   });
