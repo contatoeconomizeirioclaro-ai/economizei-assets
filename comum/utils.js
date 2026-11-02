@@ -209,6 +209,49 @@
     return { abrir, fechar };
   }
 
+  // ---------- MODAL MULTI (lista de links/ações, família .modal-multis) ----------
+  // itens: [{nome, url, icone?, sublabel?, classe?}]. Requer modais.css.
+  function abrirModalMulti(titulo, itens, icone) {
+    if (!itens || !itens.length) return null;
+    var icoTitulo = icone || 'fa-solid fa-list';
+    var modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', titulo);
+    modal.innerHTML =
+      '<div class="modal-conteudo modal-multis">' +
+        '<div class="modal-header">' +
+          '<h3><i class="' + icoTitulo + '" aria-hidden="true"></i> ' + sanitize(titulo) + '</h3>' +
+          '<button class="modal-close-btn" data-fechar-multi aria-label="Fechar">\u00d7</button>' +
+        '</div>' +
+        '<div class="modal-body"><div class="lista-itens-modal"></div></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+    var cont = modal.querySelector('.lista-itens-modal');
+    itens.forEach(function (it) {
+      var a = document.createElement('a');
+      a.href = it.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.className = 'item-opcao' + (it.classe ? ' ' + it.classe : '');
+      a.setAttribute('aria-label', 'Abrir ' + it.nome);
+      a.innerHTML =
+        '<span class="item-icone" aria-hidden="true"><i class="' + (it.icone || icoTitulo) + '"></i></span>' +
+        '<span class="item-texto"><span class="item-label">' + sanitize(it.nome) + '</span>' +
+          (it.sublabel ? '<span class="item-sublabel">' + sanitize(it.sublabel) + '</span>' : '') +
+        '</span>' +
+        '<span class="item-seta" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>';
+      cont.appendChild(a);
+    });
+    var ctrl = criarModalAcessivel();
+    ctrl.abrir(modal, function () { modal.remove(); });
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal || e.target.closest('[data-fechar-multi]')) ctrl.fechar();
+    });
+    return ctrl;
+  }
+
   // ---------- MODAL LOCAL (criar, abrir e fechar por clique-fora/×) ----------
   // Substitui os _abrirModalLocal/_fecharModalLocal antes duplicados por módulo.
   function criarModalLocal(el) {
@@ -503,6 +546,7 @@
     // Modal acessível e confirmação visual comum
     criarModalAcessivel,
     criarModalLocal,
+    abrirModalMulti,
     fecharModalLocal,
     mostrarFeedbackAdicionar,
     confirmar,
