@@ -11,6 +11,7 @@ const { db, auth, provider } = EconomizeiFirebase;
 const { sanitize, ensureHttps, gerarSlug, parseCSV } = EU;
 
 const csvUrl = VCFG.csvUrl;
+const paginaHome = VCFG.paginaHome || 'https://www.economizeirioclaro.com.br/';
 const paginaCategorias = VCFG.paginaCategorias || 'https://www.economizeirioclaro.com.br/p/categorias.html';
 const cache = EU.criarCacheCSV(VCFG.cacheKey || 'vitrineEscritorCacheV2', 3600000);
 const gerFav = EU.criarGerenciadorFavoritos('vitrineFavoritos');
@@ -383,7 +384,7 @@ function processarQR() {
   livroViaQR = livro;
   const nome = livro[COLUNAS.NOME];
   $('busca').value = nome;
-  criarIndicadorQRCodeLivro(nome);
+  criarIndicadorQRCodeLivro(nome, livro[COLUNAS.CATEGORIA]);
   const index = dadosProcessados.indexOf(livro);
   listaFiltradaIndices = [index];
   paginaAtual = 1;
@@ -403,17 +404,34 @@ async function carregarEstatisticas() {
 // ============================================================
 // RENDERIZAR CARDS
 // ============================================================
-const GENEROS_CLASSE = [
-  ['fantasia', 'genero-fantasia'], ['suspense', 'genero-suspense'], ['poesia', 'genero-poesia'],
-  ['autoajuda', 'genero-autoajuda'], ['romance', 'genero-romance'],
-  ['ficção científica', 'genero-ficcao-cientifica'], ['ficcao cientifica', 'genero-ficcao-cientifica'],
-  ['terror', 'genero-terror'], ['biografia', 'genero-biografia'],
-  ['infantojuvenil', 'genero-infantojuvenil'], ['infantil', 'genero-infantojuvenil']
+// Cores por família de gênero. "chaves" casam por trecho (sem acento, minúsculo), então
+// subgêneros como "Romance histórico" ou "Fantasia urbana" herdam a cor da família.
+// Para adicionar um gênero: inclua uma linha aqui. Sem correspondência, a cor é gerada
+// automaticamente a partir do nome (sempre a mesma para o mesmo gênero).
+const GENEROS_CORES = [
+  { chaves: ['fantasia', 'magia', 'fabula', 'conto de fada'],       bg: '#ede9fe', fg: '#5b21b6' },
+  { chaves: ['ficcao cientifica', 'sci-fi', 'distopia', 'cyberpunk'], bg: '#dbeafe', fg: '#1e40af' },
+  { chaves: ['suspense', 'thriller', 'policial', 'misterio', 'crime'], bg: '#fee2e2', fg: '#991b1b' },
+  { chaves: ['terror', 'horror', 'sobrenatural'],                    bg: '#1f2937', fg: '#f3f4f6' },
+  { chaves: ['romance', 'erotico', 'chick'],                         bg: '#fce7f3', fg: '#9d174d' },
+  { chaves: ['poesia', 'poema', 'cordel', 'haicai'],                 bg: '#ccfbf1', fg: '#0f766e' },
+  { chaves: ['autoajuda', 'desenvolvimento', 'motivacional', 'financ'], bg: '#d1fae5', fg: '#065f46' },
+  { chaves: ['biografia', 'autobiograf', 'memoria', 'relato'],       bg: '#fef3c7', fg: '#92400e' },
+  { chaves: ['infantojuvenil', 'infantil', 'juvenil', 'young adult'], bg: '#fce4ec', fg: '#c62828' },
+  { chaves: ['religio', 'espiritu', 'cristao', 'devocional', 'espirita'], bg: '#e0e7ff', fg: '#3730a3' },
+  { chaves: ['historia', 'historico', 'epoca'],                      bg: '#ffedd5', fg: '#9a3412' },
+  { chaves: ['aventura', 'acao', 'ficcao'],                          bg: '#cffafe', fg: '#155e75' },
+  { chaves: ['cronica', 'humor', 'comedia', 'satira'],               bg: '#fef9c3', fg: '#854d0e' },
+  { chaves: ['drama', 'ensaio', 'social', 'filosofia'],              bg: '#f1f5f9', fg: '#334155' }
 ];
-function classeGenero(categoria) {
-  const g = categoria.toLowerCase();
-  const achado = GENEROS_CLASSE.find(([k]) => g.includes(k));
-  return achado ? achado[1] : 'genero-outro';
+const normGenero = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+function estiloGenero(categoria) {
+  const g = normGenero(categoria);
+  const achado = GENEROS_CORES.find(f => f.chaves.some(k => g.includes(k)));
+  if (achado) return `background:${achado.bg};color:${achado.fg}`;
+  let h = 0;
+  for (const ch of g) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return `background:hsl(${h},70%,91%);color:hsl(${h},55%,26%)`;
 }
 
 function renderizarCards() {
@@ -454,8 +472,8 @@ function renderizarCards() {
         <img class="card-img" src="${sanitize(imagem)}" alt="${sanitize(nome)}" loading="${index < 4 ? 'eager' : 'lazy'}" decoding="async" />
         <div class="fallback-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5V4.5A2.5 2.5 0 0 1 6.5 2h11A2.5 2.5 0 0 1 20 4.5v15a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 19.5z"/><path d="M8 6h8"/><path d="M8 10h6"/><path d="M8 14h4"/></svg></div>
       </div>
-      <div class="card-status ${classeGenero(categoria)}">📖 ${sanitize(categoria)}</div>
-      <button class="btn-favorito ${isFavorito ? 'ativo' : ''}" data-index="${index}" aria-label="Favoritar">${isFavorito ? '♥' : '♡'}</button>
+      <div class="card-status" style="${estiloGenero(categoria)}"><i class="fa-solid fa-book" aria-hidden="true"></i> ${sanitize(categoria)}</div>
+      <button class="btn-favorito ${isFavorito ? 'ativo' : ''}" data-index="${index}" aria-label="Favoritar"><i class="${isFavorito ? 'fa-solid' : 'fa-regular'} fa-heart" aria-hidden="true"></i></button>
       <div class="card-content">
         <h3 class="card-title">${sanitize(nome)}</h3>
         <div class="card-categoria-container"><div class="card-subcategoria">por ${sanitize(autor)}</div></div>
@@ -489,16 +507,16 @@ function renderizarCards() {
     ex.innerHTML = `
       <div class="card-expanded">
         <div class="detalhes-grid">
-          <div class="detalhe-item"><strong>📖 Sinopse</strong> ${sanitize(sinopse)}</div>
-          <div class="detalhe-item"><strong>✍️ Autor</strong> ${sanitize(autor)}</div>
-          <div class="detalhe-item"><strong>💰 Preço</strong> ${sanitize(preco)}</div>
-          <div class="detalhe-item" style="grid-column:1/-1;"><strong>👤 Biografia</strong> ${sanitize(bioAutor)}</div>
+          <div class="detalhe-item"><strong><i class="fa-solid fa-book-open" aria-hidden="true"></i> Sinopse</strong> ${sanitize(sinopse)}</div>
+          <div class="detalhe-item"><strong><i class="fa-solid fa-pen-nib" aria-hidden="true"></i> Autor</strong> ${sanitize(autor)}</div>
+          <div class="detalhe-item"><strong><i class="fa-solid fa-tag" aria-hidden="true"></i> Preço</strong> ${sanitize(preco)}</div>
+          <div class="detalhe-item" style="grid-column:1/-1;"><strong><i class="fa-solid fa-user" aria-hidden="true"></i> Biografia</strong> ${sanitize(bioAutor)}</div>
         </div>
         <div class="avaliacao-section">
           <div class="avaliacao-conteudo">
             <div class="avaliacao-texto-instrucao">
               <div class="avaliacao-titulo">
-                <span>⭐ Avalie este livro</span><span class="avaliacao-separador">•</span>
+                <span><i class="fa-solid fa-star" aria-hidden="true"></i> Avalie este livro</span><span class="avaliacao-separador">•</span>
                 <span class="avaliacao-instrucao">Clique nas estrelas para avaliar</span>
               </div>
             </div>
@@ -591,7 +609,7 @@ function handleFavoritoClick(e) {
   const card = this.closest('.card');
   const fav = gerFav.toggle(card.dataset.nome);
   this.classList.toggle('ativo', fav);
-  this.innerHTML = fav ? '♥' : '♡';
+  this.innerHTML = `<i class="${fav ? 'fa-solid' : 'fa-regular'} fa-heart" aria-hidden="true"></i>`;
   card.classList.toggle('card-favorito', fav);
   aplicarFiltrosEOrdenacao();
 }
@@ -730,22 +748,30 @@ function limparTodosFiltros() {
 
 function criarIndicadorCategoria(categoria) {
   $('indicadorCategoriaContainer').innerHTML =
-    `<div class="indicador-categoria-selecionada"><div class="categoria-info"><div class="categoria-icone">📋</div><div class="categoria-texto"><div class="categoria-titulo">Você está explorando</div><div class="categoria-nome">${sanitize(categoria)}</div></div></div><a href="${sanitize(paginaCategorias)}" class="botao-voltar-categorias">← Voltar para página de categorias</a></div>`;
+    `<div class="indicador-categoria-selecionada"><div class="categoria-info"><div class="categoria-icone"><i class="fa-solid fa-list" aria-hidden="true"></i></div><div class="categoria-texto"><div class="categoria-titulo">Você está explorando</div><div class="categoria-nome">${sanitize(categoria)}</div></div></div><a href="${sanitize(paginaCategorias)}" class="botao-voltar-categorias">← Voltar para página de categorias</a></div>`;
 }
-function criarIndicadorQRCodeLivro(nome) {
+function criarIndicadorQRCodeLivro(nome, categoria) {
   $('indicadorQRCodeContainer').innerHTML = `
     <div class="indicador-qr-code">
-      <div class="qr-info"><div class="qr-icone">📱</div>
+      <div class="qr-info"><div class="qr-icone"><i class="fa-solid fa-qrcode" aria-hidden="true"></i></div>
         <div class="qr-texto"><div class="qr-titulo">Você escaneou um QR Code</div><div class="qr-nome">${sanitize(nome)}</div></div></div>
-      <button class="botao-fechar-qr" onclick="fecharQRCodeLivro()">← Ver todos os livros</button>
+      <div class="qr-botoes">
+        <button class="botao-fechar-qr" data-categoria="${sanitize(categoria || '')}">← Voltar para ${sanitize(categoria || 'todos os livros')}</button>
+        <a class="botao-voltar-categorias" href="${sanitize(paginaHome)}"><i class="fa-solid fa-house" aria-hidden="true"></i> Ir para o início</a>
+      </div>
     </div>`;
 }
-function fecharQRCodeLivro() {
+function fecharQRCodeLivro(categoria) {
   livroViaQR = null;
   $('indicadorQRCodeContainer').innerHTML = '';
   $('busca').value = '';
   limparUrlQR();
-  aplicarFiltrosEOrdenacao();
+  if (categoria) {
+    $('indicadorCategoriaContainer').innerHTML = '';
+    adicionarFiltro('categoria', categoria);
+  } else {
+    aplicarFiltrosEOrdenacao();
+  }
 }
 
 // Modais de filtro (modal-lista: × no header, sem footer)
@@ -806,6 +832,10 @@ function iniciarVitrine() {
   $('btnAdicionarFiltro').addEventListener('click', abrirModalTiposFiltro);
   $('btnLimparFiltros').addEventListener('click', limparTodosFiltros);
   $('busca').addEventListener('input', aplicarFiltrosEOrdenacao);
+  $('indicadorQRCodeContainer').addEventListener('click', e => {
+    const b = e.target.closest('.botao-fechar-qr');
+    if (b) fecharQRCodeLivro(b.dataset.categoria);
+  });
 
   auth.onAuthStateChanged(user => {
     definirUsuario(user);
