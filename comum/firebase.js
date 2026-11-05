@@ -46,6 +46,32 @@ firebase.firestore().settings({ experimentalAutoDetectLongPolling: true, merge: 
         return !!(global.Android && typeof global.Android.iniciarLoginGoogle === 'function');
     };
 
+    /* Handlers globais permanentes (contrato fixo do app: o app chama
+       javascript:onLoginSuccess(idToken) / onLoginError(msg)). Ficam definidos
+       desde o carregamento da página, para funcionarem mesmo se a WebView
+       recarregar a página enquanto a tela nativa do Google está aberta. */
+    var loginPendente = null;
+
+    global.onLoginSuccess = function (idToken) {
+        var p = loginPendente; loginPendente = null;
+        if (!idToken) {
+            var e = erroLogin('app/sem-token', 'Não foi possível obter o token do Google.');
+            if (p) p.reject(e); else console.error('[EconomizeiFirebase]', e.message);
+            return;
+        }
+        var cred = firebase.auth.GoogleAuthProvider.credential(idToken);
+        EF.auth.signInWithCredential(cred).then(function (r) {
+            if (p) p.resolve(r.user);   // sem pendência (página recarregada): onAuthStateChanged assume
+        }, function (err) {
+            if (p) p.reject(err); else { console.error('[EconomizeiFirebase]', err); alert('Erro ao fazer login. Tente novamente.'); }
+        });
+    };
+    global.onLoginError = function (msg) {
+        var p = loginPendente; loginPendente = null;
+        var e = erroLogin('app/login-error', msg || 'Falha no login.');
+        if (p) p.reject(e); else { console.error('[EconomizeiFirebase]', e.message); alert('Erro ao fazer login: ' + e.message); }
+    };
+
     /* opts: { rating, nome } repassados ao app (avaliação pendente);
              modoWeb: 'popup' (padrão) ou 'redirect' (fora do app).
        Retorna Promise<user>. No modo redirect (fora do app) a página navega
@@ -57,17 +83,11 @@ firebase.firestore().settings({ experimentalAutoDetectLongPolling: true, merge: 
             return EF.auth.signInWithPopup(EF.provider).then(function (r) { return r.user; });
         }
         return new Promise(function (resolve, reject) {
-            global.onLoginSuccess = function (idToken) {
-                if (!idToken) { reject(erroLogin('app/sem-token', 'Não foi possível obter o token do Google.')); return; }
-                var cred = firebase.auth.GoogleAuthProvider.credential(idToken);
-                EF.auth.signInWithCredential(cred).then(function (r) { resolve(r.user); }, reject);
-            };
-            global.onLoginError = function (msg) {
-                reject(erroLogin('app/login-error', msg || 'Falha no login.'));
-            };
+            loginPendente = { resolve: resolve, reject: reject };
             try {
-                global.Android.iniciarLoginGoogle(opts.rating != null ? String(opts.rating) : '', 0, opts.nome || '');
-            } catch (e) { reject(e); }
+                // O app espera 3 Strings; passa sempre strings (nunca número)
+                global.Android.iniciarLoginGoogle(opts.rating != null ? String(opts.rating) : '', '', opts.nome ? String(opts.nome) : '');
+            } catch (e) { loginPendente = null; reject(e); }
         });
     };
 })(window);
