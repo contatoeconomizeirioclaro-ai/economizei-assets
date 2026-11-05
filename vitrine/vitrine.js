@@ -274,12 +274,20 @@ function definirUsuario(user) {
 
 // Login Google (site e app) centralizado em EconomizeiFirebase.loginGoogle (comum/firebase.js)
 
-function salvarPosicaoEAntesRecarregar() {
-  sessionStorage.setItem('scrollPos', window.scrollY);
+// Atualiza a tela após login/logout/avaliação SEM recarregar a página:
+// recarrega as notas do usuário, redesenha os cards e mantém rolagem e card aberto.
+async function salvarPosicaoEAntesRecarregar() {
+  const scroll = window.scrollY;
   const aberto = document.querySelector('.card-expanded-container.active');
-  if (aberto) sessionStorage.setItem('expandedIndex', aberto.dataset.index);
-  else sessionStorage.removeItem('expandedIndex');
-  location.reload();
+  const idx = aberto ? aberto.dataset.index : null;
+  try { await carregarEstatisticas(); } catch (e) { console.warn('Erro ao atualizar notas', e); }
+  if (dadosProcessados.length) { renderizarCards(); aplicarFiltrosEOrdenacao(); }
+  window.scrollTo(0, scroll);
+  if (idx !== null) {
+    const ex = document.querySelector(`.card-expanded-container[data-index="${idx}"]`);
+    const t = ex?.previousElementSibling?.querySelector('.card-toggle');
+    if (ex) { ex.classList.add('active'); if (t) t.textContent = 'Ocultar detalhes'; }
+  }
 }
 function restaurarPosicao() {
   const scrollPos = sessionStorage.getItem('scrollPos');
