@@ -272,18 +272,7 @@ function definirUsuario(user) {
   userDisplayName = user ? (user.displayName || user.email?.split('@')[0] || 'Usuário') : '';
 }
 
-// Contratos do app Android (nomes fixos)
-window.onLoginSuccess = function (idToken) {
-  const pending = JSON.parse(sessionStorage.getItem('pendingRating') || 'null');
-  const credential = firebase.auth.GoogleAuthProvider.credential(idToken);
-  auth.signInWithCredential(credential).then(result => {
-    definirUsuario(result.user);
-    const seguir = () => { sessionStorage.removeItem('pendingRating'); salvarPosicaoEAntesRecarregar(); };
-    if (pending && pending.nome && pending.rating) salvarAvaliacaoFirebase(pending.nome, pending.rating).then(seguir);
-    else seguir();
-  }).catch(e => { console.error('Erro ao autenticar com token:', e); alert('Erro ao fazer login. Tente novamente.'); });
-};
-window.onLoginError = function (msg) { alert('Erro no login: ' + msg); };
+// Login Google (site e app) centralizado em EconomizeiFirebase.loginGoogle (comum/firebase.js)
 
 function salvarPosicaoEAntesRecarregar() {
   sessionStorage.setItem('scrollPos', window.scrollY);
@@ -311,21 +300,24 @@ function restaurarPosicao() {
 }
 
 // Modal de aviso de login (modal-confirmar) + login Google (nativo no app ou popup)
-function pedirLoginGoogle(aoLogar) {
-  if (window.Android && typeof window.Android.iniciarLoginGoogle === 'function') return false;
+function executarLoginGoogle(aoLogar, pending) {
+  EconomizeiFirebase.loginGoogle({ rating: pending && pending.rating, nome: pending && pending.nome })
+    .then(user => { definirUsuario(user); return aoLogar(); })
+    .catch(e => {
+      console.error('Erro no login:', e);
+      if (e.code === 'auth/popup-blocked') alert('O pop-up foi bloqueado. Permita pop-ups para este site ou tente novamente.');
+      else if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') alert('Erro ao fazer login: ' + e.message);
+    });
+}
+function pedirLoginGoogle(aoLogar, pending) {
+  if (EconomizeiFirebase.noApp()) { executarLoginGoogle(aoLogar, pending); return; }
   const modal = $('modalAvisoLogin');
   const ctrl = abrirModal(modal);
   $('btnCancelarAviso').onclick = () => ctrl.fechar();
   $('btnContinuarGoogle').onclick = () => {
     ctrl.fechar();
-    auth.signInWithPopup(provider).then(r => { definirUsuario(r.user); return aoLogar(); })
-      .catch(e => {
-        console.error('Erro no login:', e);
-        if (e.code === 'auth/popup-blocked') alert('O pop-up foi bloqueado. Permita pop-ups para este site ou tente novamente.');
-        else if (e.code !== 'auth/popup-closed-by-user') alert('Erro ao fazer login: ' + e.message);
-      });
+    executarLoginGoogle(aoLogar, pending);
   };
-  return true;
 }
 
 // ============================================================
@@ -564,12 +556,7 @@ function handleEstrelaClick(e) {
   const nome = dadosProcessados[this.dataset.index][COLUNAS.NOME];
 
   if (!currentUser) {
-    if (window.Android && typeof window.Android.iniciarLoginGoogle === 'function') {
-      sessionStorage.setItem('pendingRating', JSON.stringify({ rating, nome }));
-      window.Android.iniciarLoginGoogle(rating.toString(), 0, nome);
-      return;
-    }
-    pedirLoginGoogle(() => salvarAvaliacaoFirebase(nome, rating).then(salvarPosicaoEAntesRecarregar));
+    pedirLoginGoogle(() => salvarAvaliacaoFirebase(nome, rating).then(salvarPosicaoEAntesRecarregar), { rating, nome });
     return;
   }
   const container = this.closest('.avaliacao-estrelas');
@@ -615,11 +602,6 @@ function handleFavoritoClick(e) {
 }
 function handleLinkEntrarClick(e) {
   e.stopPropagation();
-  if (window.Android && typeof window.Android.iniciarLoginGoogle === 'function') {
-    sessionStorage.setItem('pendingRating', JSON.stringify({ rating: null, nome: null }));
-    window.Android.iniciarLoginGoogle('', 0, '');
-    return;
-  }
   pedirLoginGoogle(salvarPosicaoEAntesRecarregar);
 }
 function handleLinkSairClick(e) {
