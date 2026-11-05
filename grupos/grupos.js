@@ -1507,38 +1507,31 @@ Economizei.Cards = (function () {
     }).catch(function (err) { UI.mostrarToast('Erro ao salvar avaliação: ' + err.message); })
       .finally(function () { notasEmSalvamento[idx] = false; });
   }
+  function iniciarLoginGoogle(pending) {
+    Core.showLoginOverlay();
+    var timeoutId = setTimeout(function () {
+      Core.hideLoginOverlay();
+      UI.mostrarToast('O login demorou demais. Tente novamente.');
+    }, 30000);
+    function finalizar() { clearTimeout(timeoutId); Core.hideLoginOverlay(); }
+    window.EconomizeiFirebase.loginGoogle({ rating: pending ? pending.rating : null, nome: pending ? pending.nome : '' }).then(function (user) {
+      finalizar();
+      finalizarLogin(user, pending);
+    }).catch(function (err) {
+      finalizar();
+      if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/user-cancelled')) return;
+      if (err.code === 'auth/popup-blocked') UI.mostrarToast('O pop-up foi bloqueado. Permita pop-ups para este site.');
+      else UI.mostrarToast('Erro ao fazer login: ' + (err.message || err));
+    });
+  }
   function abrirLoginParaAcao(pending) {
+    // No app (WebView) o Google abre direto o login nativo: sem aviso intermediário.
+    if (window.EconomizeiFirebase && window.EconomizeiFirebase.noApp()) { iniciarLoginGoogle(pending); return; }
     var modal = document.getElementById('modalAvisoLogin');
-    var estaNoApp = !!(window.Android && typeof window.Android.iniciarLoginGoogle === 'function');
-    var header = modal.querySelector('.modal-header');
-    if (estaNoApp && header && !header.querySelector('.modal-close-btn')) {
-      var btnX = document.createElement('button');
-      btnX.type = 'button';
-      btnX.className = 'modal-close-btn';
-      btnX.setAttribute('aria-label', 'Fechar');
-      btnX.textContent = '×';
-      btnX.onclick = function () { UI.restoreFocus(); };
-      header.appendChild(btnX);
-    }
     UI.trapFocus(modal);
-    var btnGoogle = document.getElementById('btnContinuarGoogle');
-    btnGoogle.onclick = function () {
+    document.getElementById('btnContinuarGoogle').onclick = function () {
       UI.restoreFocus();
-      Core.showLoginOverlay();
-      var timeoutId = setTimeout(function () {
-        Core.hideLoginOverlay();
-        UI.mostrarToast('O login demorou demais. Tente novamente.');
-      }, 30000);
-      function finalizar() { clearTimeout(timeoutId); Core.hideLoginOverlay(); }
-      window.EconomizeiFirebase.loginGoogle({ rating: pending ? pending.rating : null, nome: pending ? pending.nome : '' }).then(function (user) {
-        finalizar();
-        finalizarLogin(user, pending);
-      }).catch(function (err) {
-        finalizar();
-        if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/user-cancelled')) return;
-        if (err.code === 'auth/popup-blocked') UI.mostrarToast('O pop-up foi bloqueado. Permita pop-ups para este site.');
-        else UI.mostrarToast('Erro ao fazer login: ' + (err.message || err));
-      });
+      iniciarLoginGoogle(pending);
     };
     document.getElementById('btnCancelarAviso').onclick = function () { UI.restoreFocus(); };
   }
