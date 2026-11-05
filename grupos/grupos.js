@@ -1530,9 +1530,9 @@ Economizei.Cards = (function () {
         UI.mostrarToast('O login demorou demais. Tente novamente.');
       }, 30000);
       function finalizar() { clearTimeout(timeoutId); Core.hideLoginOverlay(); }
-      Core.auth.signInWithPopup(Core.provider).then(function (result) {
+      window.EconomizeiFirebase.loginGoogle({ rating: pending ? pending.rating : null, nome: pending ? pending.nome : '' }).then(function (user) {
         finalizar();
-        finalizarLogin(result.user, pending);
+        finalizarLogin(user, pending);
       }).catch(function (err) {
         finalizar();
         if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/user-cancelled')) return;
