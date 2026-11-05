@@ -17,33 +17,10 @@
   var COL_LOJISTAS = 'lojistas';
   var TEMPO_TOLERANCIA_ANONIMO = 3000;
 
-  // ==================================================================
-  // PONTE COM O APP NATIVO (Android WebView do Painel do Empreendedor)
-  // O Google recusa signInWithPopup/signInWithRedirect dentro de qualquer
-  // WebView embutida (erro disallowed_useragent), então quando o app expõe
-  // Android.iniciarLoginGoogle(), o login do Google é feito pelo Google
-  // Play Services nativo (fora da WebView) e o app devolve o idToken via
-  // window.onLoginSuccess/onLoginError — mesma convenção já usada pelo
-  // app EconomizeiRioClaro4 (CategoriasActivity) para o login de avaliações.
-  // ==================================================================
-  global.onLoginSuccess = function (idToken) {
-    if (!idToken) { global.onLoginError(); return; }
-    var credential = firebase.auth.GoogleAuthProvider.credential(idToken);
-    FB.auth.signInWithCredential(credential).catch(function (e) {
-      EU.hideLoading();
-      var msg = traduzirErroAuth(e.code);
-      if (msg) EU.mostrarToast(msg, 'erro');
-    });
-    // fecharModalLogin()/hideLoading() acontecem via onAuthStateChanged assim que o login concluir.
-  };
-  global.onLoginError = function (motivo) {
-    EU.hideLoading();
-    if (motivo) EU.mostrarToast(motivo, 'erro');
-  };
-
-  function loginGoogleViaApp() {
-    return !!(global.Android && typeof global.Android.iniciarLoginGoogle === 'function');
-  }
+  // Login Google (site e app Android) centralizado em
+  // EconomizeiFirebase.loginGoogle (comum/firebase.js): no app usa o login
+  // nativo (Android.iniciarLoginGoogle); no site usa redirect.
+  // fecharModalLogin()/hideLoading() acontecem via onAuthStateChanged.
 
   var state = {
     tipo: 'lojista',
@@ -254,11 +231,11 @@ if (motivo !== 'em-analise' && motivo !== 'vencendo' && motivo !== 'modulo-errad
 
   function loginGoogle() {
     EU.showLoading('Autenticando...');
-    if (loginGoogleViaApp()) {
-      global.Android.iniciarLoginGoogle();
-      return;
-    }
-    FB.auth.signInWithRedirect(FB.provider);
+    FB.loginGoogle({ modoWeb: 'redirect' }).catch(function (e) {
+      EU.hideLoading();
+      var msg = (e && e.code && e.code.indexOf('app/') === 0) ? e.message : traduzirErroAuth(e && e.code);
+      if (msg) EU.mostrarToast(msg, 'erro');
+    });
     // A página navega pro Google e volta; getRedirectResult() (chamado em iniciar())
     // trata o retorno. fecharModalLogin()/hideLoading() acontecem via onAuthStateChanged.
   }
