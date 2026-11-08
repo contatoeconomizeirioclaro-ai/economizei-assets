@@ -1,0 +1,81 @@
+/* Economizei! Rio Claro — anúncios (anuncios/anuncios.css) */
+.eb-wrap{margin:28px 0}
+.espaco-anuncio .eb-wrap{margin:12px 0 0}
+.grupo-conteudo.recolhido .espaco-anuncio{display:none}
+.eb-wrap picture{display:block}
+
+/* Identificação: texto acima do bloco, com linha fina dos lados */
+.eb-rotulo{display:flex;align-items:center;gap:10px;margin:0 0 6px;
+  font:600 .62rem/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  letter-spacing:.08em;text-transform:uppercase;color:#64748b}
+.eb-rotulo::before,.eb-rotulo::after{content:"";flex:1;height:1px;background:#e2e8f0}
+
+.eb{
+  --eb-a:#0a66c2;--eb-b:#1e88e5;--eb-t:#fff;--eb-s:#e6f1ff;
+  --eb-bt:#ffd700;--eb-bt-t:#1a3463;--eb-bt-h:#ffe34d;
+  position:relative;display:flex;align-items:center;gap:18px;box-sizing:border-box;width:100%;
+  padding:22px 24px;border-radius:16px;overflow:hidden;color:var(--eb-t);text-align:left;
+  font:400 1rem/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:linear-gradient(135deg,var(--eb-a),var(--eb-b));box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.eb *{box-sizing:border-box}
+.eb-txt{flex:1;min-width:0}
+.eb .eb-t{display:block;margin:0 0 6px;font-size:1.25rem;line-height:1.3;font-weight:700;color:var(--eb-t)}
+.eb .eb-p{display:block;margin:0;font-size:.98rem;line-height:1.5;color:var(--eb-s)}
+.eb a.eb-btn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+  padding:13px 26px;border-radius:30px;white-space:nowrap;background:var(--eb-bt);color:var(--eb-bt-t)!important;
+  font-weight:700;font-size:1rem;line-height:1.2;text-decoration:none!important;
+  box-shadow:0 3px 6px rgba(0,0,0,.18);transition:transform .2s,background-color .2s}
+.eb a.eb-btn:hover,.eb a.eb-btn:focus-visible{background:var(--eb-bt-h);transform:scale(1.04)}
+
+/* Layout logo (seletor duplo vence a regra ".post-body img" do tema) */
+.eb .eb-img,.post-body .eb.eb .eb-img.eb-img{flex:0 0 auto;display:block!important;width:64px!important;height:64px!important;
+  max-width:none!important;margin:0!important;border-radius:50%!important;object-fit:cover;background:#fff;
+  border:3px solid rgba(255,255,255,.7)!important;box-shadow:none!important}
+
+/* Layout imagem (arte pronta, clicável) */
+.eb--img{display:block;padding:0;background:none;box-shadow:none;line-height:0}
+.eb .eb-pic,.post-body .eb.eb .eb-pic.eb-pic{display:block!important;width:100%!important;height:auto!important;
+  margin:0!important;border-radius:16px!important;box-shadow:0 4px 12px rgba(0,0,0,.08)!important}
+
+/* Temas (azul = padrão da marca) */
+.eb--dourado{--eb-a:#ffd700;--eb-b:#ffb300;--eb-t:#1a3463;--eb-s:#3b4a68;--eb-bt:#1a3463;--eb-bt-t:#fff;--eb-bt-h:#0f2247}
+.eb--verde{--eb-a:#075e54;--eb-b:#128c7e;--eb-s:#d1f2eb;--eb-bt:#25d366;--eb-bt-t:#fff;--eb-bt-h:#1ebe5d}
+.eb--escuro{--eb-a:#111827;--eb-b:#1f2937;--eb-s:#cbd5e1}
+.eb--vermelho{--eb-a:#991b1b;--eb-b:#ef4444;--eb-s:#ffe4e4;--eb-bt:#fff;--eb-bt-t:#991b1b;--eb-bt-h:#fee2e2}
+.eb--claro{--eb-a:#fff;--eb-b:#f4f9ff;--eb-t:#1a3463;--eb-s:#475569;--eb-bt:#0a66c2;--eb-bt-t:#fff;--eb-bt-h:#084d94;border:1px solid #0a66c2}
+
+/* Tablet e dobrável aberto */
+@media (min-width:601px) and (max-width:1024px){
+  .eb:not(.eb--img){padding:24px 28px;gap:22px}
+  .eb .eb-t{font-size:1.35rem}}
+/* Desktop */
+@media (min-width:1025px){
+  .eb:not(.eb--img){padding:28px 34px;gap:26px}
+  .eb .eb-t{font-size:1.5rem}
+  .eb .eb-p{font-size:1.05rem}
+  .eb a.eb-btn{padding:15px 32px}}
+/* Celular e app: retângulo na largura dos cards */
+@media (max-width:600px){
+  .eb:not(.eb--img){flex-direction:column;justify-content:center;text-align:center;min-height:96px;padding:18px 16px;gap:12px}
+  .eb a.eb-btn{width:100%;padding:14px 18px}}
+
+/* Efeitos (só rodam com o bloco visível na tela) */
+.eb:not(.eb-vis),.eb:not(.eb-vis) *,.eb:not(.eb-vis)::after{animation-play-state:paused!important}
+@keyframes eb-brilho{0%{transform:translateX(-100%)}55%,100%{transform:translateX(100%)}}
+@keyframes eb-zoom{from{transform:scale(1)}to{transform:scale(1.08)}}
+@keyframes eb-flutuar{from{transform:translateY(0)}to{transform:translateY(-4px)}}
+@keyframes eb-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.eb--brilho::after{content:"";position:absolute;inset:0;pointer-events:none;transform:translateX(-100%);
+  background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.3) 50%,transparent 65%);
+  animation:eb-brilho 4s ease-in-out infinite}
+.eb--zoom .eb-pic{animation:eb-zoom 14s ease-in-out infinite alternate}
+.eb--flutuar .eb-txt{animation:eb-flutuar 3s ease-in-out infinite alternate}
+.eb--pulse a.eb-btn{animation:eb-pulse 2s ease-in-out infinite}
+.eb--entrar{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.eb--entrar.eb-on{opacity:1;transform:none}
+.eb--img{overflow:hidden}
+
+@media (prefers-reduced-motion:reduce){
+  .eb,.eb *,.eb::after{animation:none!important;transition:none!important}
+  .eb--entrar{opacity:1;transform:none}}
+@media print{.eb-wrap{display:none}}
