@@ -7,7 +7,7 @@
   'use strict';
   if (window.EconomizeiAnuncios) return;
 
-  var CSV_URL = window.EB_CSV || 'COLE-AQUI-O-LINK-CSV-DA-PLANILHA';
+  var CSV_URL = window.EB_CSV || 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQcjCC6rL61fXu0zX5Do5InEr5CCjCzNOzVcjjhwt_dXQx0GNhyleBI1E9Xp6Rhinbgd2nUCYr07Gdj/pub?output=csv';
   var CACHE_KEY = 'eb_csv_v2', CACHE_MS = 30 * 60 * 1000;
   var TEMAS = ['azul', 'dourado', 'verde', 'escuro', 'claro', 'vermelho'];
   var EFEITOS = ['brilho', 'zoom', 'flutuar', 'entrar', 'pulse'];
