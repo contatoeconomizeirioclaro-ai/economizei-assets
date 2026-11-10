@@ -75,7 +75,29 @@
 .eb--entrar.eb-on{opacity:1;transform:none}
 .eb--img{overflow:hidden}
 
+/* Zoom com movimento (Ken Burns): só no layout imagem. Deslocamento menor que a folga do zoom, sem bordas vazias */
+@keyframes eb-aproximar{from{transform:scale(1) translate(0,0)}to{transform:scale(1.22) translate(-3%,-2.5%)}}
+@keyframes eb-afastar{from{transform:scale(1.22) translate(3%,2.5%)}to{transform:scale(1) translate(0,0)}}
+@keyframes eb-panorama{from{transform:scale(1.2) translateX(-5%)}to{transform:scale(1.2) translateX(5%)}}
+.eb--aproximar .eb-pic{animation:eb-aproximar 12s ease-in-out infinite alternate;will-change:transform}
+.eb--afastar .eb-pic{animation:eb-afastar 12s ease-in-out infinite alternate;will-change:transform}
+.eb--panorama .eb-pic{animation:eb-panorama 14s ease-in-out infinite alternate;will-change:transform}
+
+/* Carrossel: slides na mesma célula da grade (altura = a do maior), troca com fade */
+.eb-car-palco{display:grid}
+.eb-slide{grid-area:1/1;align-self:center;min-width:0;opacity:0;visibility:hidden;
+  transition:opacity .6s ease,visibility 0s linear .6s}
+.eb-slide.eb-ativo{opacity:1;visibility:visible;transition:opacity .6s ease}
+.eb-car .eb-dots{display:flex;justify-content:center;gap:0;margin:4px 0 0}
+.eb-car .eb-dots button.eb-dot{appearance:none;-webkit-appearance:none;border:0;background:none;box-shadow:none;
+  margin:0;padding:8px 5px;cursor:pointer;line-height:0;min-width:0;min-height:0}
+.eb-car .eb-dots button.eb-dot::before{content:"";display:block;width:8px;height:8px;border-radius:99px;
+  background:#cbd5e1;transition:width .3s ease,background-color .3s ease}
+.eb-car .eb-dots button.eb-dot.eb-ativo::before{width:22px;background:#0a66c2}
+.eb-car .eb-dots button.eb-dot:focus-visible{outline:2px solid #0a66c2;outline-offset:1px;border-radius:8px}
+
 @media (prefers-reduced-motion:reduce){
+  .eb-slide,.eb-slide.eb-ativo,.eb-dot::before{transition:none!important}
   .eb,.eb *,.eb::after{animation:none!important;transition:none!important}
   .eb--entrar{opacity:1;transform:none}}
 @media print{.eb-wrap{display:none}}
