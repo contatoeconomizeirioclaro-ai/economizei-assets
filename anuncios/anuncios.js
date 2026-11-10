@@ -2,15 +2,17 @@
    Um motor para todos os espaços, lendo uma planilha (CSV publicado):
    - artigos: rotativo, no meio do artigo (ou onde houver <div class="eb-slot"></div>)
    - página de categorias: 1 anunciante por grupo (.espaco-anuncio[data-categoria="id-do-grupo"])
-   Contrato = inicio + dias. Sem contrato vigente: volta ao anúncio padrão; sem padrão: o espaço some. */
+   Contrato = inicio + dias. Sem contrato vigente: volta ao anúncio padrão; sem padrão: o espaço some.
+   Carrossel: linhas do mesmo espaço (e mesmo nível: contrato ou padrão) com carrossel = sim alternam entre si. */
 (function () {
   'use strict';
   if (window.EconomizeiAnuncios) return;
 
   var CSV_URL = window.EB_CSV || 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQcjCC6rL61fXu0zX5Do5InEr5CCjCzNOzVcjjhwt_dXQx0GNhyleBI1E9Xp6Rhinbgd2nUCYr07Gdj/pub?output=csv';
-  var CACHE_KEY = 'eb_csv_v2', CACHE_MS = 30 * 60 * 1000;
+  var CACHE_KEY = 'eb_csv_v3', CACHE_MS = 30 * 60 * 1000;
   var TEMAS = ['azul', 'dourado', 'verde', 'escuro', 'claro', 'vermelho'];
-  var EFEITOS = ['brilho', 'zoom', 'flutuar', 'entrar', 'pulse'];
+  var EFEITOS = ['brilho', 'zoom', 'flutuar', 'entrar', 'pulse', 'aproximar', 'afastar', 'panorama'];
+  var CARROSSEL_MS = 6000;                              // tempo de cada anúncio no carrossel
 
   function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
   function el(tag, cls, txt) {
@@ -95,6 +97,9 @@
   function espacos(r) { return String(r.espaco || '').split(/[,;]/).map(norm).filter(Boolean); }
   function sorteio(a) { return a[Math.floor(Math.random() * a.length)]; }
 
+  function sim(v) { return /^(sim|s|1|true)$/.test(norm(v)); }
+
+  // Retorna { lista: [linhas], contrato: bool }. lista com 2+ itens = carrossel.
   function escolher(rows, espaco) {
     espaco = norm(espaco);
     var con = [], padEsp = [], padGeral = [];
@@ -106,13 +111,20 @@
       else if (t === 'padrao' && meu) padEsp.push(r);
       else if (t === 'padrao' && es.indexOf('padrao') > -1) padGeral.push(r);
     });
-    if (con.length) {
-      if (espaco === 'artigos') return { r: sorteio(con), contrato: true };      // rotativo
-      con.sort(function (a, b) { return data(a.inicio) - data(b.inicio); });     // exclusivo: quem começou antes
-      return { r: con[0], contrato: true };
+    var contrato = con.length > 0;
+    var nivel = contrato ? con : (padEsp.length ? padEsp : padGeral);
+    if (!nivel.length) return null;
+
+    // carrossel: só as linhas marcadas com carrossel = sim, dentro do mesmo nível
+    var car = nivel.filter(function (r) { return sim(r.carrossel); });
+    if (car.length > 1) return { lista: car, contrato: contrato };
+
+    if (contrato) {
+      if (espaco === 'artigos') return { lista: [sorteio(con)], contrato: true };   // rotativo
+      con.sort(function (a, b) { return data(a.inicio) - data(b.inicio); });         // exclusivo: quem começou antes
+      return { lista: [con[0]], contrato: true };
     }
-    var pad = padEsp.length ? padEsp : padGeral;
-    return pad.length ? { r: sorteio(pad), contrato: false } : null;
+    return { lista: [sorteio(nivel)], contrato: false };
   }
 
   /* ---------- montagem (textContent: nada da planilha vira HTML) ---------- */
@@ -179,19 +191,91 @@
     io.observe(bloco);
   }
 
+  // Carrossel: anúncios empilhados na mesma célula (a altura é a do maior), troca com fade.
+  // Pausa fora da tela, com mouse/foco em cima e com a aba em segundo plano. Aceita deslizar o dedo.
+  function carrossel(wrap, lista, contrato) {
+    var n = lista.length;
+    var car = el('div', 'eb-car'), palco = el('div', 'eb-car-palco'), pontos = el('div', 'eb-dots');
+    car.setAttribute('role', 'region');
+    car.setAttribute('aria-roledescription', 'carrossel');
+    car.setAttribute('aria-label', 'Publicidade');
+
+    var itens = lista.map(function (r, i) {
+      var s = el('div', 'eb-slide'), b = montar(r, contrato), p = el('button', 'eb-dot');
+      s.setAttribute('role', 'group');
+      s.setAttribute('aria-roledescription', 'slide');
+      s.setAttribute('aria-label', (i + 1) + ' de ' + n);
+      s.appendChild(b); palco.appendChild(s);
+      p.type = 'button'; p.setAttribute('aria-label', 'Anúncio ' + (i + 1));
+      p.addEventListener('click', function () { ir(i); agendar(); });
+      pontos.appendChild(p);
+      return { s: s, b: b, p: p };
+    });
+    car.appendChild(palco); car.appendChild(pontos); wrap.appendChild(car);
+
+    var atual = Math.floor(Math.random() * n);          // ponto de partida sorteado: ninguém fica sempre em 1º
+    var visivel = false, pausado = false, timer = null;
+    var reduz = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function ir(i) {
+      atual = (i + n) % n;
+      itens.forEach(function (o, k) {
+        var on = k === atual;
+        o.s.classList.toggle('eb-ativo', on);
+        o.p.classList.toggle('eb-ativo', on);
+        o.p.setAttribute('aria-current', on ? 'true' : 'false');
+        o.s.setAttribute('aria-hidden', on ? 'false' : 'true');
+        if (on) o.b.classList.add('eb-on');
+        o.b.classList.toggle('eb-vis', on && visivel);  // efeitos só no anúncio ativo e visível
+      });
+    }
+    function agendar() {
+      clearInterval(timer); timer = null;
+      if (visivel && !pausado && !reduz && !document.hidden) {
+        timer = setInterval(function () { ir(atual + 1); }, CARROSSEL_MS);
+      }
+    }
+
+    car.addEventListener('mouseenter', function () { pausado = true; agendar(); });
+    car.addEventListener('mouseleave', function () { pausado = false; agendar(); });
+    car.addEventListener('focusin', function () { pausado = true; agendar(); });
+    car.addEventListener('focusout', function () { pausado = false; agendar(); });
+    document.addEventListener('visibilitychange', agendar);
+
+    var x0 = null;                                       // deslizar com o dedo
+    palco.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+    palco.addEventListener('touchend', function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 40) { ir(atual + (dx < 0 ? 1 : -1)); agendar(); }
+    }, { passive: true });
+
+    ir(atual);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) {
+        visivel = es[0].isIntersecting; ir(atual); agendar();
+      }, { threshold: 0.2 }).observe(car);
+    } else { visivel = true; ir(atual); agendar(); }
+  }
+
   function preencher(slot) {
     var espaco = slot.getAttribute('data-espaco') || slot.getAttribute('data-categoria') || 'artigos';
     carregar(function (rows) {
       var e = escolher(rows, espaco);
       if (!e) return;                                    // sem contrato e sem padrão: espaço fica vazio
-      var b = montar(e.r, e.contrato), w = el('div', 'eb-wrap');
+      var w = el('div', 'eb-wrap');
       if (e.contrato) {                                  // anúncio de terceiro é identificado; o da casa não
         w.appendChild(el('div', 'eb-rotulo', slot.getAttribute('data-rotulo') ||
           (norm(espaco) === 'artigos' ? 'Continua após a publicidade' : 'Publicidade')));
       }
-      w.appendChild(b);
+      if (e.lista.length > 1) {
+        carrossel(w, e.lista, e.contrato);
+      } else {
+        var b = montar(e.lista[0], e.contrato);
+        w.appendChild(b);
+        vigiar(b);
+      }
       slot.appendChild(w);
-      vigiar(b);
     });
   }
 
