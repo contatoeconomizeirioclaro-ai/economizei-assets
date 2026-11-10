@@ -78,10 +78,10 @@
 /* Zoom com movimento (Ken Burns): só no layout imagem. Deslocamento menor que a folga do zoom, sem bordas vazias */
 @keyframes eb-aproximar{from{transform:scale(1) translate(0,0)}to{transform:scale(1.22) translate(-3%,-2.5%)}}
 @keyframes eb-afastar{from{transform:scale(1.22) translate(3%,2.5%)}to{transform:scale(1) translate(0,0)}}
-@keyframes eb-panorama{from{transform:scale(1.2) translateX(-5%)}to{transform:scale(1.2) translateX(5%)}}
+@keyframes eb-panorama{from{transform:scale(1.3) translateX(-10%)}to{transform:scale(1.3) translateX(10%)}}
 .eb--aproximar .eb-pic{animation:eb-aproximar 12s ease-in-out infinite alternate;will-change:transform}
 .eb--afastar .eb-pic{animation:eb-afastar 12s ease-in-out infinite alternate;will-change:transform}
-.eb--panorama .eb-pic{animation:eb-panorama 14s ease-in-out infinite alternate;will-change:transform}
+.eb--panorama .eb-pic{animation:eb-panorama 9s cubic-bezier(.4,.1,.6,.9) infinite alternate;will-change:transform}
 
 /* Carrossel: slides na mesma célula da grade (altura = a do maior), troca com fade */
 .eb-car-palco{display:grid}
