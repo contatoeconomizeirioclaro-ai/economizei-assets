@@ -292,6 +292,7 @@
   /* ---------- onde entra nos artigos ---------- */
   // Padrão: depois da primeira seção (antes do 2º subtítulo do conteúdo); artigo curto: no meio dos parágrafos.
   function slotDoArtigo() {
+    if (document.body.classList.contains('static_page')) return;   // páginas fixas (ex.: categorias) não recebem o anúncio dos artigos
     var s = document.querySelector('.eb-slot');
     if (s) return;
     var corpo = document.querySelector('.item-post .post-body');
